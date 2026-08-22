@@ -140,7 +140,10 @@ export function VoiceAssistant() {
       try {
         const response = await fetch(apiUrl("/api/voice-command"), {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
           body: JSON.stringify({ command: clean, pathname, locale }),
         });
         const json = await readJsonResponse<{ intent?: VoiceIntent; error?: string }>(response);
@@ -174,6 +177,7 @@ export function VoiceAssistant() {
         formData.set("locale", locale);
         const response = await fetch(apiUrl("/api/voice-transcribe"), {
           method: "POST",
+          headers: { Accept: "application/json" },
           body: formData,
         });
         const json = await readJsonResponse<{ transcript?: string; error?: string }>(response);

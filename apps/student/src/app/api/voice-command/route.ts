@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+/** Allow Groq chat to finish on Vercel (requires Pro for >10s; harmless on Hobby). */
+export const maxDuration = 60;
+
+const GROQ_FETCH_MS = 25_000;
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const DEFAULT_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
@@ -207,6 +212,7 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
+      signal: AbortSignal.timeout(GROQ_FETCH_MS),
       body: JSON.stringify({
         model: process.env.GROQ_MODEL || DEFAULT_MODEL,
         temperature: 0,

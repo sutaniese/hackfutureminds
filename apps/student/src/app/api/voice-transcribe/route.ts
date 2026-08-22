@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+/** Whisper can exceed the default 10s hobby limit; set in vercel.json too. */
+export const maxDuration = 60;
 
 const GROQ_TRANSCRIBE_URL = "https://api.groq.com/openai/v1/audio/transcriptions";
-const DEFAULT_AUDIO_MODEL = "whisper-large-v3";
+/** Faster than whisper-large-v3; reduces gateway timeouts on Vercel. Override with GROQ_AUDIO_MODEL. */
+const DEFAULT_AUDIO_MODEL = "whisper-large-v3-turbo";
+const GROQ_TRANSCRIBE_FETCH_MS = 55_000;
 
 function parseGroqTranscriptionJson(text: string): { text?: string } | null {
   const trimmed = text.trim();
@@ -52,6 +57,7 @@ export async function POST(request: Request) {
       headers: {
         Authorization: `Bearer ${apiKey}`,
       },
+      signal: AbortSignal.timeout(GROQ_TRANSCRIBE_FETCH_MS),
       body: groqForm,
     });
 
@@ -79,8 +85,19 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     console.error("[voice-transcribe]", err);
+    const name = err instanceof Error ? err.name : "";
+    if (name === "AbortError" || name === "TimeoutError") {
+      return NextResponse.json(
+        {
+          error:
+            "Transcription timed out. Try a shorter phrase, type the command below, or set a longer Vercel function maxDuration for this route.",
+          transcript: "",
+        },
+        { status: 504 },
+      );
+    }
     return NextResponse.json(
-      { error: "Transcription failed unexpectedly. Check server logs." },
+      { error: "Transcription failed unexpectedly. Check server logs.", transcript: "" },
       { status: 500 },
     );
   }

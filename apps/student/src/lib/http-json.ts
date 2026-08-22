@@ -15,7 +15,7 @@ export async function readJsonResponse<T>(res: Response): Promise<T | { error: s
   const text = await res.text();
   if (!text) return {} as T;
 
-  const trimmed = text.trim();
+  const trimmed = text.replace(/^\uFEFF/, "").trim();
   if (trimmed.startsWith("<")) {
     return {
       error: res.ok
@@ -25,7 +25,7 @@ export async function readJsonResponse<T>(res: Response): Promise<T | { error: s
   }
 
   try {
-    return JSON.parse(text) as T;
+    return JSON.parse(trimmed) as T;
   } catch {
     return {
       error: res.ok
