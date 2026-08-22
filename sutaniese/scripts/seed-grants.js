@@ -1,3 +1,4 @@
+const path = require("node:path");
 const grants = require("../data/grants.json");
 
 async function seed() {
@@ -10,6 +11,9 @@ async function seed() {
   }
 
   const supabase = createClient(supabaseUrl, serviceKey);
+  const sqlPath = path.join(__dirname, "create-grants-table.sql");
+  console.log(`Ensure the grants table exists first: ${sqlPath}`);
+
   const { error } = await supabase
     .from("grants")
     .upsert(grants, { onConflict: "id" });
