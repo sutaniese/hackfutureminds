@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { speakText } from "@/lib/speech";
 import { usePathname, useRouter } from "next/navigation";
 import { useI18n } from "@/i18n/I18nProvider";
 import { looksLikeHttpHtmlFailureMessage, readJsonResponse } from "@/lib/http-json";
@@ -26,19 +27,8 @@ declare global {
   }
 }
 
-function recognitionLanguage(locale: string) {
-  if (locale === "en") return "en-US";
-  if (locale === "kk") return "kk-KZ";
-  return "ru-RU";
-}
-
 function speak(text: string, locale: string) {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = recognitionLanguage(locale);
-  utterance.rate = 0.96;
-  window.speechSynthesis.speak(utterance);
+  speakText(text, locale);
 }
 
 function apiUrl(path: string) {

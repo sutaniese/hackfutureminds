@@ -22,6 +22,7 @@ import { MATERIAL_KIND_LABELS, isAnswerCorrect, taskCorrectLabel } from "@/lib/l
 import type { Task } from "@/lib/learning/types";
 import { AnswerField } from "./AnswerField";
 import { DifficultyBadge, EmptyState, Pill, ProgressBar, StatTile } from "./LearningUI";
+import { SpeakButton } from "./SpeakButton";
 import { TutorChat } from "./TutorChat";
 import { useLearning } from "./useLearning";
 
@@ -348,7 +349,16 @@ export function TopicPractice({ topicId }: { topicId: string }) {
                 </p>
               ) : null}
 
-              <p className="mt-4 text-lg font-black leading-7 text-pathwise-ink">{task.prompt}</p>
+              <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
+                <p className="text-lg font-black leading-7 text-pathwise-ink">{task.prompt}</p>
+                <SpeakButton
+                  className="shrink-0"
+                  label="Прослушать задание"
+                  text={[task.passage, task.prompt, ...(task.options ?? [])]
+                    .filter(Boolean)
+                    .join(". ")}
+                />
+              </div>
               <AnswerField task={task} value={answer} onChange={setAnswer} />
 
               <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -382,7 +392,10 @@ export function TopicPractice({ topicId }: { topicId: string }) {
       {tab === "theory" ? (
         <div className="grid gap-5 lg:grid-cols-[1.3fr_0.7fr]">
           <ContentCard>
-            <h3 className="text-lg font-black tracking-tight text-pathwise-ink">Конспект темы</h3>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-lg font-black tracking-tight text-pathwise-ink">Конспект темы</h3>
+              <SpeakButton label="Прослушать конспект" text={topic.theory.join(" ")} />
+            </div>
             <div className="mt-4 grid gap-3">
               {topic.theory.map((paragraph, index) => (
                 <p
