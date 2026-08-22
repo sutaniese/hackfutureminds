@@ -1,0 +1,156 @@
+{
+  "pipeline": "vesper-grants-v1",
+  "collected_at": "2026-04-26T06:25:52.046Z",
+  "sources": [
+    {
+      "url": "https://bolashak.gov.kz/ru/strany-predostavlyayushchie-granty",
+      "source": "bolashak.gov.kz",
+      "ok": true,
+      "content_type": "table",
+      "extraction_method": "vesper_extract_web:crawl4ai",
+      "data": {
+        "tables": [
+          [
+            "Общее количество предоставляемых грантов: | Бакалавриат: | Бакалавриат + Магистратура (ОТМ): | Магистратура: | Докторантура: | Язык обучения: | Срок подачи документов:",
+            "250 грантов | 110 грантов | 30 грантов | 90 грантов | 20 грантов | венгерский, английский, французский | декабрь - январь"
+          ]
+        ]
+      }
+    },
+    {
+      "url": "https://bolashak.gov.kz/ru/usloviya-i-dokumenty",
+      "source": "bolashak.gov.kz",
+      "ok": true,
+      "content_type": "table",
+      "extraction_method": "vesper_extract_web:crawl4ai",
+      "data": {
+        "tables": [
+          [
+            "При выборе программы обучения «БАКАЛАВРИАТ»",
+            "Текущий статус претендента | Необходимые документы об образовании | Требования к среднему баллу | Вид документа",
+            "Ученик выпускного класса | свидетельство с приложением об основном среднем образовании, справка о статусе обучающегося, табель или транскрипт | средний балл не менее 4.00 из 5.00 | электронная копия",
+            "Выпускник школы | Аттестат о среднем образовании с приложением.",
+            "Студент колледжа | аттестат или свидетельство с приложением, справка о статусе обучающегося, табель или транскрипт.",
+            "Выпускник колледжа | диплом о специальном среднем образовании с приложением",
+            "При выборе программы обучения «МАГИСТРАТУРА»",
+            "Выпускник вуза | диплом бакалавра/специалиста с приложением | GPA не менее 3.00 из 4.00",
+            "Студент выпускного курса ВУЗов | справка о статусе обучающегося; транскрипт | GPA не менее 3.00 из 4.00",
+            "При выборе программы обучения «ДОКТОРАНТУРА»",
+            "Выпускник магистратуры | диплом магистра с приложением | GPA не менее 3.00 из 4.00",
+            "Магистр выпускного курса | справка о статусе обучающегося с транскриптом"
+          ]
+        ]
+      }
+    },
+    {
+      "url": "https://bolashak.gov.kz/ru/pretendentu",
+      "source": "bolashak.gov.kz",
+      "ok": true,
+      "content_type": "list",
+      "extraction_method": "vesper_extract_web:crawl4ai",
+      "data": {
+        "items": [
+          "Cтипендия болашак Претенденту",
+          "Межправительственные гранты",
+          "Научные стажировки",
+          "Претенденту",
+          "Стипендиату",
+          "Выпускнику"
+        ]
+      }
+    },
+    {
+      "url": "https://edu.gov.kz",
+      "source": "edu.gov.kz",
+      "ok": false,
+      "content_type": "list",
+      "extraction_method": "vesper_extract_web:crawl4ai",
+      "error": {
+        "code": "LIVE_EXTRACTION_FAILED",
+        "message": "fetch failed"
+      }
+    }
+  ],
+  "candidate_records": [
+    {
+      "id": "hungary_intergovernmental_grants",
+      "name": "Intergovernmental Grants - Hungary allocation",
+      "name_kz": null,
+      "country": "Hungary",
+      "type": "full",
+      "amount_kzt": null,
+      "amount_usd": null,
+      "amount_label": "250 grants total",
+      "level": "any",
+      "fields": ["any"],
+      "eligible": ["top applicants"],
+      "gpa_min": null,
+      "language_req": "Hungarian, English, or French",
+      "deadline_month": "December",
+      "deadline_label": "December - January annually",
+      "url": "https://bolashak.gov.kz/ru/strany-predostavlyayushchie-granty",
+      "source": "bolashak.gov.kz",
+      "last_updated": "2026-04-26"
+    },
+    {
+      "id": "bolashak_bachelor",
+      "name": "Bolashak / Intergovernmental grant requirements - Bachelor",
+      "name_kz": null,
+      "country": "Kazakhstan",
+      "type": "full",
+      "amount_kzt": null,
+      "amount_usd": null,
+      "amount_label": null,
+      "level": "bachelor",
+      "fields": ["any"],
+      "eligible": ["school graduates", "college students", "top applicants"],
+      "gpa_min": 4.0,
+      "language_req": null,
+      "deadline_month": null,
+      "deadline_label": null,
+      "url": "https://bolashak.gov.kz/ru/usloviya-i-dokumenty",
+      "source": "bolashak.gov.kz",
+      "last_updated": "2026-04-26"
+    },
+    {
+      "id": "bolashak_master",
+      "name": "Bolashak / Intergovernmental grant requirements - Master",
+      "name_kz": null,
+      "country": "Kazakhstan",
+      "type": "full",
+      "amount_kzt": null,
+      "amount_usd": null,
+      "amount_label": null,
+      "level": "master",
+      "fields": ["any"],
+      "eligible": ["bachelor graduates", "final-year university students"],
+      "gpa_min": 3.0,
+      "language_req": null,
+      "deadline_month": null,
+      "deadline_label": null,
+      "url": "https://bolashak.gov.kz/ru/usloviya-i-dokumenty",
+      "source": "bolashak.gov.kz",
+      "last_updated": "2026-04-26"
+    },
+    {
+      "id": "bolashak_phd",
+      "name": "Bolashak / Intergovernmental grant requirements - PhD",
+      "name_kz": null,
+      "country": "Kazakhstan",
+      "type": "full",
+      "amount_kzt": null,
+      "amount_usd": null,
+      "amount_label": null,
+      "level": "phd",
+      "fields": ["any"],
+      "eligible": ["master graduates", "final-year master students"],
+      "gpa_min": 3.0,
+      "language_req": null,
+      "deadline_month": null,
+      "deadline_label": null,
+      "url": "https://bolashak.gov.kz/ru/usloviya-i-dokumenty",
+      "source": "bolashak.gov.kz",
+      "last_updated": "2026-04-26"
+    }
+  ]
+}
