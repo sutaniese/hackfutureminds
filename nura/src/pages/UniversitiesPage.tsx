@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   ALL_LANGUAGES,
   ALL_RANKING_CATEGORIES,
@@ -23,7 +24,6 @@ export function UniversitiesPage() {
   const [languages, setLanguages] = useState<UniLanguage[]>([])
   const [sort, setSort] = useState<Sort>('rank-asc')
   const [search, setSearch] = useState('')
-  const [active, setActive] = useState<University | null>(null)
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -214,14 +214,12 @@ export function UniversitiesPage() {
           ) : (
             <ul className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {filtered.map((u) => (
-                <UniCard key={u.id} u={u} ranking={ranking} onOpen={() => setActive(u)} />
+                <UniCard key={u.id} u={u} ranking={ranking} />
               ))}
             </ul>
           )}
         </div>
       </div>
-
-      {active && <UniModal u={active} onClose={() => setActive(null)} ranking={ranking} />}
     </>
   )
 }
@@ -312,154 +310,51 @@ function SegPills<T extends string>({
   )
 }
 
-function UniCard({ u, ranking, onOpen }: { u: University; ranking: UniRanking; onOpen: () => void }) {
+function UniCard({ u, ranking }: { u: University; ranking: UniRanking }) {
   return (
-    <li className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-pathwise-accent hover:shadow-md">
-      <div
-        className="relative h-40 w-full overflow-hidden bg-pathwise-accentSoft"
-        aria-hidden
+    <li>
+      <Link
+        to={`/vuzy/${u.id}`}
+        className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm no-underline transition-all hover:-translate-y-0.5 hover:border-pathwise-accent hover:shadow-md"
       >
-        <img
-          src={u.bannerUrl}
-          alt=""
-          loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-          onError={(e) => {
-            ;(e.currentTarget as HTMLImageElement).style.display = 'none'
-          }}
-        />
-        <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-pathwise-ink shadow-sm">
-          #{u.rank} {ranking}
-        </span>
-      </div>
-      <div className="flex flex-1 flex-col p-5">
-        <h3 className="text-base font-semibold leading-snug text-pathwise-ink">{u.name}</h3>
-        <p className="mt-1 text-xs text-pathwise-muted">{u.city}</p>
-        <p className="mt-3 line-clamp-3 flex-1 text-sm text-slate-600">{u.description}</p>
-        <div className="mt-4 flex flex-wrap gap-1.5">
-          {u.languages.map((l) => (
-            <span
-              key={l}
-              className="rounded-full bg-pathwise-accentSoft px-2 py-0.5 text-[10px] font-semibold text-pathwise-accentStrong"
-            >
-              {l}
-            </span>
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={onOpen}
-          className="mt-5 inline-flex items-center justify-center gap-1 self-start rounded-full border border-pathwise-accent px-4 py-1.5 text-xs font-semibold text-pathwise-accentStrong transition-colors hover:bg-pathwise-accent hover:text-white"
+        <div
+          className="relative h-40 w-full overflow-hidden bg-pathwise-accentSoft"
+          aria-hidden
         >
-          View →
-        </button>
-      </div>
-    </li>
-  )
-}
-
-function UniModal({
-  u,
-  ranking,
-  onClose,
-}: {
-  u: University
-  ranking: UniRanking
-  onClose: () => void
-}) {
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKey)
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = ''
-    }
-  }, [onClose])
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      onClick={onClose}
-    >
-      <div
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="relative h-48 w-full overflow-hidden bg-pathwise-accentSoft">
           <img
             src={u.bannerUrl}
             alt=""
-            className="h-full w-full object-cover"
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
             onError={(e) => {
               ;(e.currentTarget as HTMLImageElement).style.display = 'none'
             }}
           />
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Закрыть"
-            className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-pathwise-ink shadow-sm hover:bg-white"
-          >
-            ✕
-          </button>
+          <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-pathwise-ink shadow-sm">
+            #{u.rank} {ranking}
+          </span>
         </div>
-        <div className="space-y-4 p-6">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-pathwise-accent px-3 py-1 text-xs font-semibold text-white">
-              #{u.rank} {ranking}
-            </span>
-            <span className="text-xs uppercase tracking-wider text-pathwise-muted">{u.city}</span>
+        <div className="flex flex-1 flex-col p-5">
+          <h3 className="text-base font-semibold leading-snug text-pathwise-ink">
+            {u.nameEn}
+          </h3>
+          <p className="mt-1 text-xs text-pathwise-muted">{u.city}</p>
+          <p className="mt-3 line-clamp-3 flex-1 text-sm text-slate-600">{u.description}</p>
+          <div className="mt-4 flex flex-wrap gap-1.5">
+            {u.languages.map((l) => (
+              <span
+                key={l}
+                className="rounded-full bg-pathwise-accentSoft px-2 py-0.5 text-[10px] font-semibold text-pathwise-accentStrong"
+              >
+                {l}
+              </span>
+            ))}
           </div>
-          <h2 className="text-2xl font-bold text-pathwise-ink">{u.name}</h2>
-          <p className="text-sm leading-relaxed text-slate-700">{u.description}</p>
-
-          <dl className="grid gap-3 rounded-xl bg-pathwise-accentSoft/40 p-4 text-sm sm:grid-cols-2">
-            <Row label="Тип">{u.type === 'public' ? 'Публичный' : 'Частный'}</Row>
-            <Row label="Профиль">
-              {u.profile === 'medical' ? 'Медицинский' : 'Немедицинский'}
-            </Row>
-            <Row label="Статус">
-              {u.branchStatus === 'foreign-branch' ? 'Foreign branch' : 'Local'}
-            </Row>
-            <Row label="Языки">{u.languages.join(', ')}</Row>
-            <Row label="Направления">{u.rankingCategories.join(', ')}</Row>
-          </dl>
-
-          <div className="flex flex-wrap gap-2 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-pathwise-muted hover:bg-slate-50"
-            >
-              Закрыть
-            </button>
-            <a
-              href={`https://www.google.com/search?q=${encodeURIComponent(`${u.name} apply admissions`)}`}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="rounded-full bg-pathwise-accent px-5 py-2 text-sm font-semibold text-white no-underline shadow-sm hover:bg-pathwise-accentStrong"
-            >
-              Перейти к поступлению
-            </a>
-          </div>
+          <span className="mt-5 inline-flex items-center gap-1 self-start rounded-full border border-pathwise-accent px-4 py-1.5 text-xs font-semibold text-pathwise-accentStrong transition-colors group-hover:bg-pathwise-accent group-hover:text-white">
+            View →
+          </span>
         </div>
-      </div>
-    </div>
-  )
-}
-
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <dt className="text-[10px] font-semibold uppercase tracking-wider text-pathwise-muted">
-        {label}
-      </dt>
-      <dd className="mt-0.5 text-sm font-medium text-pathwise-ink">{children}</dd>
-    </div>
+      </Link>
+    </li>
   )
 }
