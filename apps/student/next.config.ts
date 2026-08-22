@@ -2,12 +2,13 @@ import type { NextConfig } from "next";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-// When the repo is a monorepo, this keeps `next build` + file tracing inside this app folder
-// (Vercel sets the working directory to Root Directory, e.g. `sutaniese/`).
+// Monorepo root (../../ from apps/student) so `next build` file tracing includes
+// `packages/shared` when deploying with Vercel Root Directory = `apps/student`.
 const appDir = path.dirname(fileURLToPath(import.meta.url));
+const monorepoRoot = path.join(appDir, "..", "..");
 
 const nextConfig: NextConfig = {
-  outputFileTracingRoot: appDir,
+  outputFileTracingRoot: monorepoRoot,
   transpilePackages: ["@pathwise/shared"],
   images: {
     remotePatterns: [
