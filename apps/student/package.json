@@ -8,12 +8,18 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "postinstall": "node scripts/ensure-optional-natives.cjs"
+    "postinstall": "node scripts/ensure-optional-natives.cjs",
+    "cap:sync": "node ../../node_modules/@capacitor/cli/bin/capacitor sync",
+    "cap:open:android": "node ../../node_modules/@capacitor/cli/bin/capacitor open android",
+    "android:assemble-debug": "node scripts/android-assemble-debug.cjs",
+    "android:apk-desktop": "node scripts/copy-debug-apk-to-desktop.cjs",
+    "android:build-apk-desktop": "npm run cap:sync && npm run android:assemble-debug && npm run android:apk-desktop"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
+    "@capacitor/core": "^6.2.0",
     "@pathwise/shared": "*",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.2",
@@ -24,6 +30,8 @@
     "recharts": "^2.15.4"
   },
   "devDependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/cli": "^6.2.0",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

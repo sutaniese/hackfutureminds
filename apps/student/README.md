@@ -101,6 +101,22 @@ Open **`/api/health`**. You should get JSON: `{"ok":true,"service":"sutaniese"}`
 - Re-check **Settings** → **General** → Root directory, **Save**, then **Redeploy**.
 - Or delete the Vercel project and **Import** the repo again, setting the root in the first wizard to the path from step 1.
 
+## Android APK (Capacitor)
+
+The student UI is a **Next.js site**; the APK is a **WebView** that loads your **deployed HTTPS URL** (not `localhost`).
+
+1. In `apps/student/.env.local` set `CAPACITOR_SERVER_URL=https://your-production-host` (same app you deploy to Vercel).
+2. From repo root: `npm install` (workspace). From `apps/student`: `npm run cap:sync`.
+3. Install **Android Studio** once (SDK). On Windows, `ANDROID_HOME` is usually `%LOCALAPPDATA%\Android\Sdk`; the npm script sets it if unset.
+4. Build a **debug** APK and copy it to your **Desktop** as `ten-pathwise-debug.apk`:
+
+```bash
+cd apps/student
+npm run android:build-apk-desktop
+```
+
+Release signing and Play Console are separate (not covered here). Paths under folders with non-ASCII names on Windows need `android.overridePathCheck=true` (already set in `android/gradle.properties`).
+
 ## Getting started
 
 ```bash
