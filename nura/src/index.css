@@ -3,14 +3,21 @@
 @tailwind utilities;
 
 :root {
-  --pw-ink: #1a2e40;
-  --pw-muted: #a2b9bc;
-  --pw-surface: #f5f5dc;
-  --pw-accent: #5f7adb;
-  --pw-accent-soft: #e8ecfd;
+  --pw-ink: #0f172a;
+  --pw-muted: #64748b;
+  --pw-surface: #f5f8ff;
+  --pw-accent: #7aa0e5;
+  --pw-accent-strong: #4f7fd1;
+  --pw-accent-soft: #eaf1fc;
+  --pw-bg: #ffffff;
 }
 
 @layer base {
+  html,
+  body {
+    background-color: var(--pw-bg);
+  }
+
   :focus-visible {
     outline: 2px solid var(--pw-accent);
     outline-offset: 2px;

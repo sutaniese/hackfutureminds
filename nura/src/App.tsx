@@ -5,6 +5,7 @@ import { EnterprisePage } from './pages/EnterprisePage'
 import { ParentsPage } from './pages/ParentsPage'
 import { StudentsPage } from './pages/StudentsPage'
 import { TeachersPage } from './pages/TeachersPage'
+import { UniversitiesPage } from './pages/UniversitiesPage'
 
 export default function App() {
   return (
@@ -12,6 +13,7 @@ export default function App() {
       <Route element={<AppLayout />}>
         <Route index element={<Navigate to="/agent" replace />} />
         <Route path="/agent" element={<AgentPage />} />
+        <Route path="/vuzy" element={<UniversitiesPage />} />
         <Route path="/uchenik" element={<StudentsPage />} />
         <Route path="/roditeli" element={<ParentsPage />} />
         <Route path="/uchitelya" element={<TeachersPage />} />

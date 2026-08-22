@@ -11,6 +11,7 @@ export type TenantBranding = {
     muted: string
     surface: string
     accent: string
+    accentStrong?: string
     accentSoft: string
   }
 }
@@ -20,15 +21,16 @@ export const DEFAULT_TENANT_ID = 'pathwise'
 export const TENANTS: Record<string, TenantBranding> = {
   pathwise: {
     id: 'pathwise',
-    displayName: 'ten',
+    displayName: 'teñ',
     logoUrl: '/logo.png',
-    logoMark: 'ten',
+    logoMark: 'teñ',
     colors: {
-      ink: '#1A2E40',
-      muted: '#A2B9BC',
-      surface: '#F5F5DC',
-      accent: '#5F7ADB',
-      accentSoft: '#E8ECFD',
+      ink: '#0F172A',
+      muted: '#64748B',
+      surface: '#F5F8FF',
+      accent: '#7AA0E5',
+      accentStrong: '#4F7FD1',
+      accentSoft: '#EAF1FC',
     },
   },
   'ent-iq-hub': {

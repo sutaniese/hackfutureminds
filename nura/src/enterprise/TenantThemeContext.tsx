@@ -17,6 +17,7 @@ function applyCssVars(t: TenantBranding) {
   r.style.setProperty('--pw-muted', t.colors.muted)
   r.style.setProperty('--pw-surface', t.colors.surface)
   r.style.setProperty('--pw-accent', t.colors.accent)
+  r.style.setProperty('--pw-accent-strong', t.colors.accentStrong ?? t.colors.accent)
   r.style.setProperty('--pw-accent-soft', t.colors.accentSoft)
 }
 
