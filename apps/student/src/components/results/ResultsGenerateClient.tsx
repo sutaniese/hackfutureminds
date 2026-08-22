@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { buildGenerateRequest } from "@/lib/build-generate-request";
 import { readLastGeneratePayload, writeLastGeneratePayload } from "@/lib/gamification";
 import { ResultsGamificationBar } from "@/components/results/ResultsGamificationBar";
+import { CrossAppPromo } from "@/components/results/CrossAppPromo";
 import { useI18n } from "@/i18n/I18nProvider";
 import type { OnboardingAnswers } from "@/types/onboarding";
 import type { GenerateResponse, MatchedGrantSummary } from "@/types/generate";
@@ -289,6 +290,8 @@ export function ResultsGenerateClient() {
               {data.portfolio_block}
             </div>
           </section>
+
+          <CrossAppPromo />
         </div>
       )}
     </div>

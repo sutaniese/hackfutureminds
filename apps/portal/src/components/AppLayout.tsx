@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { STUDENT_PATHS, studentHref } from '@pathwise/shared/links'
 import { useTenantTheme } from '../enterprise/TenantThemeContext'
 import { SITE_NAME } from '../site'
 
@@ -67,6 +68,19 @@ export function AppLayout() {
               </NavLink>
             ))}
           </nav>
+
+          <a
+            href={studentHref(
+              STUDENT_PATHS.onboarding,
+              import.meta.env.VITE_STUDENT_URL,
+            )}
+            className="inline-flex min-h-12 items-center justify-center rounded-full bg-pathwise-accent px-4 text-sm font-semibold text-white no-underline shadow-pathwise transition-colors hover:bg-[color:var(--pw-accent-strong)]"
+            aria-label="Открыть онбординг ученика в новой вкладке"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Онбординг ученика →
+          </a>
         </div>
       </header>
 

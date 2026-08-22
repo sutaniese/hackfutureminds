@@ -1,0 +1,17 @@
+{
+  "name": "@pathwise/shared",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Shared types and constants for PathWise apps (student onboarding contract, universities, grants).",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./generate": "./src/generate-contract.ts",
+    "./universities": "./src/universities.ts",
+    "./grants": "./src/grants.ts",
+    "./brand": "./src/brand.ts",
+    "./links": "./src/links.ts"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "pathwise",
+  "private": true,
+  "version": "0.1.0",
+  "description": "PathWise (teñ) — AI-навигатор для школьников Казахстана. Монорепо: apps/student (онбординг + AI-генератор), apps/portal (родители/учителя/enterprise/университеты), packages/shared (общие типы и данные).",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev:student": "npm run dev --workspace apps/student",
+    "dev:portal": "npm run dev --workspace apps/portal",
+    "build:student": "npm run build --workspace apps/student",
+    "build:portal": "npm run build --workspace apps/portal",
+    "build": "npm run build:student && npm run build:portal",
+    "lint:student": "npm run lint --workspace apps/student"
+  }
+}

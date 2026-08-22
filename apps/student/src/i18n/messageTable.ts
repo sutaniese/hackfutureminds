@@ -3,7 +3,6 @@ import type { Locale } from "./locales";
 /* Single source: Russian / English / Kazakh for the same app key. */
 const TR = (ru: string, en: string, kk: string) => ({ ru, en, kk });
 
-/* eslint-disable @cspell/spellcheck -- RU/KK */
 const T = {
   "skip": TR(
     "Перейти к основному содержанию",

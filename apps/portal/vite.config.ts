@@ -1,5 +1,7 @@
 import react from '@vitejs/plugin-react'
 import type { ServerResponse } from 'http'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import { agentMiddleware } from './plugins/agentMiddleware'
 import { careerCompareMiddleware } from './plugins/careerCompareMiddleware'
@@ -9,7 +11,26 @@ import { readBody } from './plugins/readBody'
 import { studentsApiMiddleware } from './plugins/studentsApiMiddleware'
 import { seedIfEmpty } from './plugins/vaultStore'
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const sharedSrc = path.resolve(__dirname, '../../packages/shared/src')
+
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@pathwise/shared/links': path.join(sharedSrc, 'links.ts'),
+      '@pathwise/shared/brand': path.join(sharedSrc, 'brand.ts'),
+      '@pathwise/shared/generate': path.join(sharedSrc, 'generate-contract.ts'),
+      '@pathwise/shared/universities': path.join(sharedSrc, 'universities.ts'),
+      '@pathwise/shared/grants': path.join(sharedSrc, 'grants.ts'),
+      '@pathwise/shared': sharedSrc,
+    },
+  },
+  server: {
+    port: 5174,
+    fs: {
+      allow: [path.resolve(__dirname, '../..'), path.resolve(__dirname)],
+    },
+  },
   plugins: [
     react(),
     {

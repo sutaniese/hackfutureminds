@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+**/dist/
+**/.next/
+**/out/
+
+# Env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Misc
+.DS_Store
+*.log
+.vercel/
+.turbo/
+
+# Editor
+.vscode/
+.idea/
+
+# Generated runtime data
+apps/portal/ten-vault/

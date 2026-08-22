@@ -13,13 +13,20 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "typeRoots": ["./node_modules/@types"],
     "plugins": [
       {
         "name": "next"
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@pathwise/shared": ["../../packages/shared/src/index.ts"],
+      "@pathwise/shared/links": ["../../packages/shared/src/links.ts"],
+      "@pathwise/shared/brand": ["../../packages/shared/src/brand.ts"],
+      "@pathwise/shared/generate": ["../../packages/shared/src/generate-contract.ts"],
+      "@pathwise/shared/universities": ["../../packages/shared/src/universities.ts"],
+      "@pathwise/shared/grants": ["../../packages/shared/src/grants.ts"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
