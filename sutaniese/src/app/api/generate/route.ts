@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { tryGenerateWithAnthropic } from "@/lib/generate/anthropic-optional";
+import { tryGenerateWithGroq } from "@/lib/generate/groq-optional";
 import { generateDeterministic } from "@/lib/generate/deterministic";
 import { parseGenerateRequest } from "@/lib/generate/parse-request";
 
@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 /**
  * `POST /api/generate` — `student_dev_EN.md` request/response shape.
- * Tries Anthropic if `ANTHROPIC_API_KEY` is set; always falls back to
+ * Tries Groq if `GROQ_API_KEY` is set; always falls back to
  * deterministic local logic (demo-safe, no key required).
  */
 export async function POST(request: Request) {
@@ -31,8 +31,8 @@ export async function POST(request: Request) {
     );
   }
 
-  if (process.env.ANTHROPIC_API_KEY) {
-    const ai = await tryGenerateWithAnthropic(payload);
+  if (process.env.GROQ_API_KEY) {
+    const ai = await tryGenerateWithGroq(payload);
     if (ai && isLikelyResponse(ai)) {
       return NextResponse.json(ai);
     }

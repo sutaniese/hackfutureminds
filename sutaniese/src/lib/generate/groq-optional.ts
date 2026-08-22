@@ -1,42 +1,45 @@
 import type { GenerateRequest, GenerateResponse } from "@/types/generate";
 
-const API = "https://api.anthropic.com/v1/messages";
-const ANTHROPIC_VERSION = "2023-06-01";
+/** Groq OpenAI-compatible base URL */
+const GROQ_CHAT = "https://api.groq.com/openai/v1/chat/completions";
 
 /**
- * If `ANTHROPIC_API_KEY` is set, try one structured JSON call; on any
+ * If `GROQ_API_KEY` is set, try one JSON-shaped chat completion; on any
  * failure, callers should fall back to the deterministic local engine.
  */
-export async function tryGenerateWithAnthropic(
+export async function tryGenerateWithGroq(
   request: GenerateRequest
 ): Promise<GenerateResponse | null> {
-  const key = process.env.ANTHROPIC_API_KEY;
+  const key = process.env.GROQ_API_KEY;
   if (!key) return null;
 
   const model =
-    process.env.ANTHROPIC_MODEL ?? "claude-3-5-sonnet-20241022";
-  const prompt = `You are a JSON API. Given this student input, output ONLY a JSON object (no markdown) with shape:
+    process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile";
+
+  const userContent = `You are a JSON API. Given this student input, output ONLY a valid JSON object (no markdown, no backticks) with this exact shape:
 {"career_map": [{"title": string, "salary_kzt": string, "description": string, "vacancies": [{"title": string, "company": string, "url": string}] }],
 "financial_route": {"monthly_cost": number, "grants": [{"name": string, "amount": number, "deadline": string, "match": "low"|"medium"|"high"}], "gap": number, "coverage_percent": number},
 "portfolio_block": string}
-Kazakhstan market context. 3 career paths, realistic KZT salary band strings, 1-2 hh.kz style vacancy URLs for Kazakhstan. Keep grants plausible.
+Use Kazakhstan market context. 3 career paths, realistic KZT salary band strings, 1-2 plausible vacancy search URLs (e.g. hh.kz). Keep grants plausible.
 
 Input JSON:
 ${JSON.stringify(request).slice(0, 12_000)}`;
 
   let res: Response;
   try {
-    res = await fetch(API, {
+    res = await fetch(GROQ_CHAT, {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-api-key": key,
-        "anthropic-version": ANTHROPIC_VERSION,
+        authorization: `Bearer ${key}`,
       },
       body: JSON.stringify({
         model,
         max_tokens: 4_096,
-        messages: [{ role: "user", content: prompt }],
+        temperature: 0.3,
+        messages: [
+          { role: "user", content: userContent },
+        ],
       }),
     });
   } catch {
@@ -44,16 +47,13 @@ ${JSON.stringify(request).slice(0, 12_000)}`;
   }
 
   if (!res.ok) return null;
+
   const data = (await res.json()) as {
-    content?: { type: string; text: string }[];
+    choices?: { message?: { content?: string } }[];
   };
-  const out =
-    data.content
-      ?.filter((b) => b.type === "text" && b.text)
-      .map((b) => b.text)
-      .join("\n")
-      .trim() ?? "";
+  const out = data.choices?.[0]?.message?.content?.trim() ?? "";
   if (!out) return null;
+
   const first = out.indexOf("{");
   const last = out.lastIndexOf("}");
   if (first < 0 || last <= first) return null;

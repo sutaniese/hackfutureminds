@@ -26,7 +26,7 @@ All primary UI is under the `(mobile)` route group with a `max-w-md` column, a *
 
 ## `POST /api/generate` (step 5)
 
-- **Handler:** `src/app/api/generate/route.ts` — `generateDeterministic` in `src/lib/generate/deterministic.ts` (careers, finance from `api/grants.json` matching, portfolio text). If **`ANTHROPIC_API_KEY`** is set, `src/lib/generate/anthropic-optional.ts` is tried first; on failure or if unset, the same deterministic output is used (demo always works). See `.env.example` for optional env vars. **Request parsing & validation:** `src/lib/generate/parse-request.ts`. Use `Content-Type: application/json` and the `GenerateRequest` shape in `src/types/generate.ts`.
+- **Handler:** `src/app/api/generate/route.ts` — `generateDeterministic` in `src/lib/generate/deterministic.ts` (careers, finance from `api/grants.json` matching, portfolio text). If **`GROQ_API_KEY`** is set, `src/lib/generate/groq-optional.ts` calls the Groq OpenAI-compatible chat API once; on failure or if unset, the same deterministic output is used (demo always works). See `.env.example` for optional env vars. **Request parsing & validation:** `src/lib/generate/parse-request.ts`. Use `Content-Type: application/json` and the `GenerateRequest` shape in `src/types/generate.ts`.
 
 ## Scripts
 
