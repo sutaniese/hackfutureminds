@@ -13,7 +13,7 @@ Next.js (App Router) frontend with Tailwind CSS. API-style generation is impleme
 
 ## Mobile shell (in-app)
 
-All primary UI is under the `(mobile)` route group with a `max-w-md` column, a **fixed bottom navigation** (min ~48px targets), a **top bar** (high contrast, voice preference, and link to help), a **skip link** to `#main`, and shared `pw-` design tokens in `src/app/globals.css` (placeholders: onboarding, results, grants, portfolio; full flows come in later steps).
+The `MobileAppShell` wrapper is in the root `src/app/layout.tsx` so every route has a `max-w-md` column, a **fixed bottom navigation** (min ~48px targets), a **top bar** (high contrast, voice preference, and link to help), a **skip link** to `#main`, and shared `pw-` design tokens in `src/app/globals.css`. Page files live at `src/app/<route>/page.tsx` (e.g. `onboarding`, `grants`, `results`, `portfolio`, `accessibility`) with `src/app/page.tsx` for `/`.
 
 ## Onboarding (step 3)
 
@@ -50,7 +50,9 @@ If `node_modules` was copied or installed on a slow Windows mount and packages l
 
 ## Deploy (Vercel)
 
-The student app lives in **`sutaniese`**, not at the monorepo root, so Vercel must build **that** folder. If the wrong directory is set, the deployment can show **`404: NOT_FOUND`**.
+Official Vercel guides (404 / `NOT_FOUND` / config): [Why a successful build can still 404](https://vercel.com/guides/why-is-my-deployed-project-giving-404), [How to debug 404 errors](https://vercel.com/kb/guide/how-to-debug-404-errors), [Build & output settings](https://vercel.com/docs/deployments/configure-a-build#build-and-development-settings). In the dashboard, the **Next.js** framework preset (not “Other”) must be selected; one [community report](https://community.vercel.com/t/404-error-on-vercel-deployment-despite-successful-build/5601) fixed a persistent 404 that way.
+
+The student app lives in **`sutaniese`**, not at the monorepo root, so Vercel must build **that** folder. A wrong **Root directory** or a wrong **output directory** can show **`404: NOT_FOUND`**, `DEPLOYMENT_NOT_FOUND` (bad URL or deleted deploy), or an empty file tree.
 
 ### 1) Pick the correct “Root directory” (most common fix)
 
