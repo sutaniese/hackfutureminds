@@ -106,3 +106,19 @@ body {
   transform: translateX(0);
   outline: none;
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes pw-step {
+    from {
+      opacity: 0;
+      transform: translateY(0.4rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .pw-step-enter {
+    animation: pw-step 0.2s ease-out;
+  }
+}
