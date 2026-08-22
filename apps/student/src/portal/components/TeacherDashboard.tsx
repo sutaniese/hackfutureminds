@@ -1,4 +1,5 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { readJsonResponse } from '@/lib/http-json'
 import { downloadClassAchievementsReport } from '../lib/exportClassAchievements'
 import { adaptClass } from '../lib/classAdapter'
 import { api, type ServerClass } from '../lib/api'
@@ -93,7 +94,11 @@ export function TeacherDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ language: letterLang, student: studentPayload }),
       })
-      const data = (await res.json()) as { letter?: string; source?: string; error?: string }
+      const data = (await readJsonResponse<{ letter?: string; source?: string }>(res)) as {
+        letter?: string
+        source?: string
+        error?: string
+      }
       if (!res.ok) throw new Error(data.error ?? res.statusText)
       setLetterText(data.letter ?? '')
       setLetterMeta(data.source === 'gemini' ? 'Gemini API' : 'Резервный текст (fallback)')

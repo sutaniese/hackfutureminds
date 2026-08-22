@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { readJsonResponse } from '@/lib/http-json'
 import { ENTERPRISE_COHORT } from '../data/enterpriseCohort'
 import { useTenantTheme } from '../enterprise/TenantThemeContext'
 import { TENANTS } from '../enterprise/tenantConfig'
@@ -21,7 +22,9 @@ export function EnterpriseHub() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tenant_id: tenantId, batch_size: ENTERPRISE_COHORT.length }),
       })
-      const data = (await res.json()) as Record<string, unknown>
+      const data = (await readJsonResponse<Record<string, unknown>>(res)) as Record<string, unknown> & {
+        error?: string
+      }
       if (!res.ok) throw new Error(String(data.error ?? res.statusText))
       setCrmResult(JSON.stringify(data, null, 2))
     } catch (e) {

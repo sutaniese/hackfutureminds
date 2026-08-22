@@ -6,6 +6,7 @@ import { readLastGeneratePayload, writeLastGeneratePayload } from "@/lib/gamific
 import { ResultsGamificationBar } from "@/components/results/ResultsGamificationBar";
 import { CrossAppPromo } from "@/components/results/CrossAppPromo";
 import { useI18n } from "@/i18n/I18nProvider";
+import { readJsonResponse } from "@/lib/http-json";
 import type { OnboardingAnswers } from "@/types/onboarding";
 import type { GenerateResponse, MatchedGrantSummary } from "@/types/generate";
 
@@ -75,7 +76,7 @@ export function ResultsGenerateClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const json = (await res.json()) as GenerateResponse | { error?: string } | unknown;
+      const json = await readJsonResponse<GenerateResponse>(res);
       if (!res.ok) {
         setError((json as { error?: string }).error || t("results.errApi", { e: String(res.status) }));
         return;

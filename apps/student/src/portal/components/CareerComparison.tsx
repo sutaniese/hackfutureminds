@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react'
+import { readJsonResponse } from '@/lib/http-json'
 import { SITE_NAME } from '../site'
 
 export type MarketSide = {
@@ -42,7 +43,7 @@ export function CareerComparison({ childProfession }: Props) {
           region: 'Казахстан',
         }),
       })
-      const data = (await res.json()) as CompareResult & { error?: string }
+      const data = (await readJsonResponse<CompareResult>(res)) as CompareResult & { error?: string }
       if (!res.ok) throw new Error(data.error ?? res.statusText)
       setResult(data)
     } catch (err) {
