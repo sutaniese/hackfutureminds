@@ -6,11 +6,11 @@ import { PORTAL_PATHS, portalHref } from "@pathwise/shared/links";
  * Bridge from the student core (Next.js app) to the B2B portal (Vite app).
  * Renders three CTA cards: parents dashboard, teachers room, universities catalog.
  *
- * Configure the portal URL with `NEXT_PUBLIC_PORTAL_URL`. Defaults to the dev
- * Vite port (5174) used by `apps/portal`.
+ * By default the portal is same-origin under `/hub` (see root README). Set
+ * `NEXT_PUBLIC_PORTAL_URL` to an absolute URL only for a split deployment.
  */
 export function CrossAppPromo() {
-  const portalBase = process.env.NEXT_PUBLIC_PORTAL_URL;
+  const portalBase = process.env.NEXT_PUBLIC_PORTAL_URL?.trim() || undefined;
   const items: Array<{ href: string; emoji: string; title: string; sub: string }> = [
     {
       href: portalHref(PORTAL_PATHS.parents, portalBase),

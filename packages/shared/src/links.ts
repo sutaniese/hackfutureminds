@@ -1,14 +1,21 @@
 /**
- * Cross-app links between the student core (`apps/student`, Next.js, default :3000)
- * and the B2B portal (`apps/portal`, Vite, default :5174).
+ * Cross-app links between the student core (`apps/student`, Next.js) and the
+ * B2B portal (`apps/portal`, Vite).
  *
- * In production each app is deployed to its own subdomain. In dev we use ports.
- * Override per-environment with `NEXT_PUBLIC_PORTAL_URL` (student → portal)
- * and `VITE_STUDENT_URL` (portal → student).
+ * **Unified site (default):** the portal is mounted under the same origin as
+ * the student app at `PORTAL_HUB_BASE` (e.g. `/hub`). Next.js proxies `/hub/*`
+ * and portal API routes to the Vite dev server in development.
+ *
+ * **Split deploy:** set `NEXT_PUBLIC_PORTAL_URL` to an absolute origin (e.g.
+ * `https://portal.example.com`) and `VITE_STUDENT_URL` for the student origin.
  */
 
-export const DEFAULT_PORTAL_URL = "http://localhost:5174";
-export const DEFAULT_STUDENT_URL = "http://localhost:3000";
+/** Path prefix where the Vite portal is served on the student origin. */
+export const PORTAL_HUB_BASE = "/hub";
+
+/** Legacy direct Vite URL (only when not using unified /hub). */
+export const DEFAULT_PORTAL_URL = "";
+export const DEFAULT_STUDENT_URL = "";
 
 export const PORTAL_PATHS = {
   agent: "/agent",
@@ -33,8 +40,13 @@ export function portalHref(
   path: string,
   envUrl: string | undefined = undefined,
 ): string {
-  const base = (envUrl ?? DEFAULT_PORTAL_URL).replace(/\/$/, "");
-  return `${base}${path.startsWith("/") ? path : `/${path}`}`;
+  const raw = (envUrl ?? DEFAULT_PORTAL_URL).trim();
+  const p = path.startsWith("/") ? path : `/${path}`;
+  if (raw) {
+    return `${raw.replace(/\/$/, "")}${p}`;
+  }
+  const hub = PORTAL_HUB_BASE.replace(/\/$/, "");
+  return `${hub}${p}`;
 }
 
 /** Build a student-app URL from the portal (uses `VITE_STUDENT_URL` if set). */
@@ -42,6 +54,10 @@ export function studentHref(
   path: string,
   envUrl: string | undefined = undefined,
 ): string {
-  const base = (envUrl ?? DEFAULT_STUDENT_URL).replace(/\/$/, "");
-  return `${base}${path.startsWith("/") ? path : `/${path}`}`;
+  const raw = (envUrl ?? DEFAULT_STUDENT_URL).trim();
+  const p = path.startsWith("/") ? path : `/${path}`;
+  if (raw) {
+    return `${raw.replace(/\/$/, "")}${p}`;
+  }
+  return p;
 }

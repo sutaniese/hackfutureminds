@@ -10,7 +10,11 @@
   "engines": {
     "node": ">=20"
   },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
   "scripts": {
+    "dev": "concurrently -k -n student,portal -c blue,magenta \"npm run dev:student\" \"npm run dev:portal\"",
     "dev:student": "npm run dev --workspace apps/student",
     "dev:portal": "npm run dev --workspace apps/portal",
     "build:student": "npm run build --workspace apps/student",

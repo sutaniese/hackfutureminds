@@ -15,6 +15,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const sharedSrc = path.resolve(__dirname, '../../packages/shared/src')
 
 export default defineConfig({
+  base: '/hub/',
   resolve: {
     alias: {
       '@pathwise/shared/links': path.join(sharedSrc, 'links.ts'),
@@ -27,6 +28,9 @@ export default defineConfig({
   },
   server: {
     port: 5174,
+    strictPort: true,
+    /** HMR connects directly to Vite; the page is loaded via :3000/hub/*. */
+    hmr: { protocol: 'ws', host: 'localhost', port: 5174 },
     fs: {
       allow: [path.resolve(__dirname, '../..'), path.resolve(__dirname)],
     },

@@ -10,7 +10,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <TenantThemeProvider>
       <StudentProvider>
-        <BrowserRouter>
+        <BrowserRouter basename="/hub">
           <App />
         </BrowserRouter>
       </StudentProvider>

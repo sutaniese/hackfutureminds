@@ -46,6 +46,11 @@ const T = {
     "15–18 жас: бағыт, қаражат, портфолио, алдымен мобилді — teñ стилі.",
   ),
   "home.cta": TR("Перейти к онбордингу", "Go to onboarding", "Онбордингке өту"),
+  "home.portal": TR(
+    "Портал: AI-наставник, вузы, родители и учителя",
+    "Portal: AI mentor, universities, parents & teachers",
+    "Портал: AI-наставник, ЖОО, ата-аналар мен мұғалімдер",
+  ),
   "home.card": TR(
     "Вверху — контраст, голос и справка. Снизу панель: главная, старт, план, гранты, портфолио.",
     "Top bar: contrast, voice, help. Bottom: home, onboarding, results, grants, portfolio.",

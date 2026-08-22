@@ -9,7 +9,7 @@ teachers, enterprise, universities catalog).
 | Module | Purpose |
 |--------|---------|
 | `./brand` | Product name, tagline, primary palette (`BRAND`) |
-| `./links` | Cross-app URLs: `portalHref`, `studentHref`, `PORTAL_PATHS`, `STUDENT_PATHS` |
+| `./links` | `PORTAL_HUB_BASE` (`/hub`), `portalHref` / `studentHref` (same-origin by default), `PORTAL_PATHS`, `STUDENT_PATHS` |
 | `./generate` | `POST /api/generate` types: `GenerateRequest`, `GenerateResponse` |
 | `./universities` | `University` and related catalog types |
 | `./grants` | `GrantRecord` shape used by results page and parent calculator |

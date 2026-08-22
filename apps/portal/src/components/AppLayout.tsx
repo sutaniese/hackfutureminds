@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { STUDENT_PATHS, studentHref } from '@pathwise/shared/links'
+import { withAssetBase } from '../lib/publicUrl'
 import { useTenantTheme } from '../enterprise/TenantThemeContext'
 import { SITE_NAME } from '../site'
 
@@ -44,7 +45,7 @@ export function AppLayout() {
           <NavLink to="/agent" className="flex min-h-12 min-w-12 items-center no-underline" aria-label={SITE_NAME}>
             {tenant.logoUrl ? (
               <img
-                src={tenant.logoUrl}
+                src={withAssetBase(tenant.logoUrl)}
                 alt={SITE_NAME}
                 className="h-9 w-9 rounded-xl border border-pathwise-line/80 object-contain"
                 width={36}
@@ -72,7 +73,7 @@ export function AppLayout() {
           <a
             href={studentHref(
               STUDENT_PATHS.onboarding,
-              import.meta.env.VITE_STUDENT_URL,
+              import.meta.env.VITE_STUDENT_URL ?? '',
             )}
             className="inline-flex min-h-12 items-center justify-center rounded-full bg-pathwise-accent px-4 text-sm font-semibold text-white no-underline shadow-pathwise transition-colors hover:bg-[color:var(--pw-accent-strong)]"
             aria-label="Открыть онбординг ученика в новой вкладке"
@@ -92,7 +93,7 @@ export function AppLayout() {
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-5 text-xs text-pathwise-muted md:px-5">
           {tenant.logoUrl ? (
             <img
-              src={tenant.logoUrl}
+              src={withAssetBase(tenant.logoUrl)}
               alt=""
               aria-hidden
               className="h-7 w-7 rounded-lg border border-pathwise-line/80 object-contain opacity-90"

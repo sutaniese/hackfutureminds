@@ -3,6 +3,7 @@ import { ENTERPRISE_COHORT } from '../data/enterpriseCohort'
 import { useTenantTheme } from '../enterprise/TenantThemeContext'
 import { TENANTS } from '../enterprise/tenantConfig'
 import { downloadBulkParentReportsZip } from '../lib/bulkParentReportsZip'
+import { withAssetBase } from '../lib/publicUrl'
 import { EnterpriseAnalytics } from './EnterpriseAnalytics'
 
 export function EnterpriseHub() {
@@ -66,7 +67,7 @@ export function EnterpriseHub() {
           <div className="flex items-center gap-3 rounded-xl bg-pathwise-surface px-4 py-2 ring-1 ring-pathwise-line">
             {tenant.logoUrl ? (
               <img
-                src={tenant.logoUrl}
+                src={withAssetBase(tenant.logoUrl)}
                 alt={tenant.displayName}
                 className="h-10 w-10 rounded-lg object-contain"
                 width={40}
