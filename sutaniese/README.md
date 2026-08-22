@@ -50,13 +50,34 @@ If `node_modules` was copied or installed on a slow Windows mount and packages l
 
 ## Deploy (Vercel)
 
-This app is **not** the Git root of `hacksteppe`: the student module lives in the **`sutaniese` folder** next to other packages (e.g. `nura/`), and there is **no** `package.json` at the repository root. If the Vercel import uses the default root, the build is wrong and you may get **`404: NOT_FOUND`** (no viable Next output).
+The student app lives in **`sutaniese`**, not at the monorepo root, so Vercel must build **that** folder. If the wrong directory is set, the deployment can show **`404: NOT_FOUND`**.
 
-1. Vercel → your project → **Settings** → **General** → **Root Directory** → set to **`sutaniese`**.
-2. Framework: **Next.js** (auto). Build: **`npm run build`**, install: **`npm install`** in that directory.
-3. **Redeploy** after changing the root. Open the new production URL (Deployments → latest). Use `vercel` CLI the same way: from `sutaniese`, or pass `--cwd sutaniese` as applicable.
+### 1) Pick the correct “Root directory” (most common fix)
 
-`next.config.ts` sets `outputFileTracingRoot` (and Turbopack root for local `next dev --turbopack`) to this app folder so Next does not pick a parent `package-lock.json` in a monorepo.
+In GitHub, look at the path to **`sutaniese/package.json`**.
+
+| You see in the repo | Set Vercel → Settings → **General** → **Root directory** to |
+|----------------------|----------------------------------------------------------------|
+| `sutaniese/package.json` at the top level of the default branch | **`sutaniese`** |
+| `hacksteppe/sutaniese/...` (or any extra folder in front) | the **full** path, e.g. **`hacksteppe/sutaniese`**, not `sutaniese` only |
+
+If you are unsure, open the repo in the browser: the Root directory must be the folder that **contains** the Next `package.json` and `vercel.json`.
+
+### 2) Vercel build settings (leave defaults for Next)
+
+- **Framework:** Next.js
+- Do **not** set a custom **output directory** for Next; leave the output empty and let Vercel’s Next.js integration handle it. A wrong “Output” (e.g. `out` or `dist` without `output: 'export'`) breaks routing and yields 404s.
+- **Production branch** (e.g. `main`) must be the one you push to. Redeploy after any root change.
+
+### 3) Verify the app that is live
+
+Open **`/api/health`**. You should get JSON: `{"ok":true,"service":"sutaniese"}`. If that 404s, this Next app is not what is running (wrong root, failed build, or old URL).
+
+### 4) If it still 404s
+
+- **Deployments** → latest → **Build** log must be **success**.
+- Re-check **Settings** → **General** → Root directory, **Save**, then **Redeploy**.
+- Or delete the Vercel project and **Import** the repo again, setting the root in the first wizard to the path from step 1.
 
 ## Getting started
 
