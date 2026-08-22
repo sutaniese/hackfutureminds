@@ -13,7 +13,7 @@ const T = {
   "nav.onboarding": TR("Старт", "Onboard", "Бастау"),
   "nav.learning": TR("Учёба", "Learn", "Оқу"),
   "nav.results": TR("План", "Results", "Нәтижелер"),
-  "nav.roadmap": TR("Дорожная карта", "Roadmap", "Жол картасы"),
+  "nav.roadmap": TR("Карта", "Roadmap", "Карта"),
   "nav.grants": TR("Гранты", "Grants", "Гранттар"),
   "nav.portfolio": TR("Портфолио", "Portfolio", "Портфолио"),
   "nav.aria": TR("Основные разделы", "Main sections", "Негізгі бөлімдер"),
