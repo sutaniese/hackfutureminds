@@ -8,10 +8,10 @@ export function XPBar() {
 
   return (
     <section
-      className="fixed left-0 right-0 top-[var(--pw-a11y-top)] z-20 border-b border-slate-200 bg-white/95"
+      className="relative z-20 border-b border-slate-200 bg-white/95"
       aria-label={`XP progress: ${progress.xp} XP, level ${progress.level} ${levelName}`}
     >
-      <div className="mx-auto flex min-h-12 w-full max-w-7xl items-center gap-3 px-4 py-2 sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-12 w-full max-w-7xl items-center gap-3 px-4 pb-2.5 pt-3.5 sm:px-6 lg:px-8">
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-center justify-between gap-3 text-[11px] font-black uppercase tracking-[0.12em]">
             <span className="truncate text-pathwise-ink">

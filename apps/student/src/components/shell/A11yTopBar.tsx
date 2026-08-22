@@ -61,7 +61,7 @@ export function A11yTopBar() {
 
   return (
     <header
-      className="pw-pt-safe sticky top-0 z-30 border-b border-pathwise-line/70 bg-white/95 "
+      className="pw-pt-safe relative z-30 border-b border-pathwise-line/70 bg-white/95"
       style={{ minHeight: "var(--pw-a11y-top)" }}
     >
       <div className={`${SHELL_PX} flex items-center gap-3 py-2.5`}>

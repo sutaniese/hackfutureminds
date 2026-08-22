@@ -20,9 +20,12 @@ export function MobileAppShell({ children }: { children: React.ReactNode }) {
         {t("skip")}
       </a>
       <ThemeInit />
-      <A11yTopBar />
-      <XPBar />
-      <div className="h-12 shrink-0" aria-hidden />
+      {/* Шапка и XP-полоса липнут одним блоком: высота считается версткой,
+          поэтому полоса не может уехать под шапку на устройствах с вырезом. */}
+      <div className="sticky top-0 z-30 shrink-0">
+        <A11yTopBar />
+        <XPBar />
+      </div>
       <main
         id="main"
         className={`pw-route-in pw-pb-nav ${SHELL_PX} flex-1 overflow-y-auto py-6 md:py-10`}

@@ -7,6 +7,7 @@
   --pw-radius-card: 1.5rem;
   --pw-radius-pill: 9999px;
   --pw-nav: 4.25rem;
+  /* Минимальная высота шапки; смещение XP-полосы считается версткой. */
   --pw-a11y-top: 3.75rem;
 
   --background: #ffffff;
