@@ -8,7 +8,7 @@ import { ResultsGamificationBar } from "@/components/results/ResultsGamification
 import { CrossAppPromo } from "@/components/results/CrossAppPromo";
 import { useUserProgress } from "@/components/gamification/UserProgressProvider";
 import { useI18n } from "@/i18n/I18nProvider";
-import { readJsonResponse } from "@/lib/http-json";
+import { looksLikeHttpHtmlFailureMessage, readJsonResponse } from "@/lib/http-json";
 import type { OnboardingAnswers } from "@/types/onboarding";
 import type {
   GenerateResponse,
@@ -116,7 +116,12 @@ export function ResultsGenerateClient() {
       });
       const json = await readJsonResponse<GenerateResponse>(res);
       if (!res.ok) {
-        setError((json as { error?: string }).error || t("results.errApi", { e: String(res.status) }));
+        const apiMsg = (json as { error?: string }).error || "";
+        setError(
+          looksLikeHttpHtmlFailureMessage(apiMsg)
+            ? t("results.errHtml")
+            : apiMsg || t("results.errApi", { e: String(res.status) }),
+        );
         return;
       }
       if (json && typeof json === "object" && "career_map" in (json as object)) {
@@ -159,7 +164,10 @@ export function ResultsGenerateClient() {
       }
       setError(t("results.unexpected"));
     } catch (e) {
-      setError(t("results.errApi", { e: e instanceof Error ? e.message : "network" }));
+      const msg = e instanceof Error ? e.message : "network";
+      setError(
+        looksLikeHttpHtmlFailureMessage(msg) ? t("results.errHtml") : t("results.errApi", { e: msg }),
+      );
     } finally { setLoading(false); }
   }, [awardXp, earnBadge, locale, setProfileCompletion, t]);
 

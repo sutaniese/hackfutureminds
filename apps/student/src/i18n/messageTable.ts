@@ -370,6 +370,11 @@ const T = {
   "results.m.low": TR("слабее", "low", "төмен"),
   "results.errOnboard": TR("Сначала завершите онбординг.", "Finish onboarding first.", "Алдымен онбордингті бітіріңіз."),
   "results.errApi": TR("{{e}}", "{{e}}", "{{e}}"),
+  "results.errHtml": TR(
+    "Сервер вернул страницу ошибки вместо данных. Попробуйте позже или обновите страницу.",
+    "The server returned an error page instead of data. Refresh or try again in a moment.",
+    "Сервер дерек орнына қате бетін қайтарды. Кейінірек қайталаңыз немесе бетті жаңартыңыз.",
+  ),
   "results.unexpected": TR("Неверный ответ API", "Unexpected response from API", "API жауабы сәйкес емес"),
 
   "gam.profileOk": TR("Профиль заполнен", "Profile complete", "Профиль толық"),

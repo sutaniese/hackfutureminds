@@ -263,57 +263,97 @@ function parseRecommendations(content: string, answers: OnboardingAnswers, caree
 }
 
 export async function POST(request: Request) {
-  let input: RecommendRequest;
+  let input: RecommendRequest | undefined;
   try {
-    input = (await request.json()) as RecommendRequest;
-  } catch {
-    return jsonError("Invalid JSON body.", 400);
-  }
+    try {
+      input = (await request.json()) as RecommendRequest;
+    } catch {
+      return jsonError("Invalid JSON body.", 400);
+    }
 
-  if (!input.onboarding) return jsonError("Missing onboarding answers.", 400);
+    if (!input.onboarding) return jsonError("Missing onboarding answers.", 400);
 
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey || apiKey.includes("replace-me")) {
-    return NextResponse.json({
-      recommendations: fallbackRecommendations(input.onboarding, input.careerTitles ?? []),
-      source: "local-fallback",
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey || apiKey.includes("replace-me")) {
+      return NextResponse.json({
+        recommendations: fallbackRecommendations(input.onboarding, input.careerTitles ?? []),
+        source: "local-fallback",
+      });
+    }
+
+    const response = await fetch(GROQ_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: process.env.GROQ_MODEL || DEFAULT_MODEL,
+        temperature: 0.2,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content:
+              "You recommend university programs from a fixed catalog. Return JSON only.",
+          },
+          { role: "user", content: promptFor(input.onboarding, input.language, input.careerTitles ?? []) },
+        ],
+      }),
     });
+
+    const raw = await response.text().catch(() => "");
+
+    if (!response.ok) {
+      return NextResponse.json({
+        recommendations: fallbackRecommendations(input.onboarding, input.careerTitles ?? []),
+        source: "local-fallback",
+        warning: `Groq: ${raw.slice(0, 240) || response.statusText}`,
+      });
+    }
+
+    const trimmed = raw.trim();
+    if (!trimmed || trimmed.startsWith("<")) {
+      return NextResponse.json({
+        recommendations: fallbackRecommendations(input.onboarding, input.careerTitles ?? []),
+        source: "local-fallback",
+        warning: "Groq returned non-JSON body.",
+      });
+    }
+
+    let data: { choices?: Array<{ message?: { content?: string } }> };
+    try {
+      data = JSON.parse(raw) as { choices?: Array<{ message?: { content?: string } }> };
+    } catch {
+      return NextResponse.json({
+        recommendations: fallbackRecommendations(input.onboarding, input.careerTitles ?? []),
+        source: "local-fallback",
+        warning: "Groq JSON parse failed.",
+      });
+    }
+
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) {
+      return NextResponse.json({
+        recommendations: fallbackRecommendations(input.onboarding, input.careerTitles ?? []),
+        source: "local-fallback",
+        warning: "Groq returned empty recommendations.",
+      });
+    }
+
+    return NextResponse.json({
+      recommendations: parseRecommendations(content, input.onboarding, input.careerTitles ?? []),
+      source: "groq",
+    });
+  } catch (e) {
+    console.error("[recommend-programs]", e);
+    if (input?.onboarding) {
+      return NextResponse.json({
+        recommendations: fallbackRecommendations(input.onboarding, input.careerTitles ?? []),
+        source: "local-fallback",
+        warning: "Unexpected error; using catalog fallback.",
+      });
+    }
+    return jsonError("Program recommendations failed.", 500);
   }
-
-  const response = await fetch(GROQ_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: process.env.GROQ_MODEL || DEFAULT_MODEL,
-      temperature: 0.2,
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-          content:
-            "You recommend university programs from a fixed catalog. Return JSON only.",
-        },
-        { role: "user", content: promptFor(input.onboarding, input.language, input.careerTitles ?? []) },
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    return jsonError(`Groq program recommendation failed: ${text || response.statusText}`, response.status);
-  }
-
-  const data = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) return jsonError("Groq returned empty recommendations.", 502);
-
-  return NextResponse.json({
-    recommendations: parseRecommendations(content, input.onboarding, input.careerTitles ?? []),
-    source: "groq",
-  });
 }

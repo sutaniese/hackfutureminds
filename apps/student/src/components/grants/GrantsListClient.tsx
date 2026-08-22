@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import fallbackLiveGrants from "@/data/live-grants.json";
 import { formatGrantAmountLine } from "@/lib/format-grant";
-import { readJsonResponse } from "@/lib/http-json";
+import { looksLikeHttpHtmlFailureMessage, readJsonResponse } from "@/lib/http-json";
 import { useI18n } from "@/i18n/I18nProvider";
 import type { GrantRecord, GrantType } from "@/types/grants";
 import type { OnboardingAnswers } from "@/types/onboarding";
@@ -254,7 +254,10 @@ export function GrantsListClient() {
           setSource("fallback");
           const raw = err instanceof Error ? err.message : "";
           const looksLikeHtmlJson =
-            /unexpected token/i.test(raw) || /<!doctype/i.test(raw) || /not valid json/i.test(raw);
+            looksLikeHttpHtmlFailureMessage(raw) ||
+            /unexpected token/i.test(raw) ||
+            /<!doctype/i.test(raw) ||
+            /not valid json/i.test(raw);
           setError(looksLikeHtmlJson ? t("grants.fetchErr") : raw || t("grants.fetchErr"));
         }
       }

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useI18n } from "@/i18n/I18nProvider";
-import { readJsonResponse } from "@/lib/http-json";
+import { looksLikeHttpHtmlFailureMessage, readJsonResponse } from "@/lib/http-json";
 import { LS_VOICE } from "@/lib/pw-storage";
 
 type VoiceIntent =
@@ -49,16 +49,10 @@ function apiUrl(path: string) {
 
 /** Turn transport/parser errors into short, localized UI copy (no raw HTML snippets). */
 function mapVoiceTransportError(raw: string, t: (key: string) => string): string {
-  const u = raw.toLowerCase();
-  if (
-    u.includes("<!doctype") ||
-    u.includes("html error page") ||
-    u.includes("html page instead") ||
-    u.includes("error page instead of json") ||
-    (u.includes("request failed") && u.includes("500"))
-  ) {
+  if (looksLikeHttpHtmlFailureMessage(raw)) {
     return t("a11y.voiceServerHtml");
   }
+  const u = raw.toLowerCase();
   if (u.includes("groq_api_key") || u.includes("groq_api") || u.includes("not configured on the server")) {
     return t("a11y.voiceNoGroq");
   }
@@ -144,7 +138,7 @@ export function VoiceAssistant() {
       setBusy(true);
       setMessage(t("a11y.voiceThinking"));
       try {
-        const response = await fetch("/api/voice-command", {
+        const response = await fetch(apiUrl("/api/voice-command"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ command: clean, pathname, locale }),

@@ -59,7 +59,15 @@ async function loadRelevantGrants(request: Request, payload: GenerateRequest) {
 
   const response = await fetch(url, { cache: "no-store" });
   if (!response.ok) return [];
-  const json = (await response.json()) as { data?: LiveGrant[] };
+  const raw = await response.text().catch(() => "");
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed.startsWith("<")) return [];
+  let json: { data?: LiveGrant[] };
+  try {
+    json = JSON.parse(raw) as { data?: LiveGrant[] };
+  } catch {
+    return [];
+  }
   const grants = Array.isArray(json.data) ? json.data : [];
   return grants.filter((grant) => {
     const fieldMatch = grant.fields.includes("any") || grant.fields.includes(field);
