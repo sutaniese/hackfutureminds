@@ -48,6 +48,16 @@ All primary UI is under the `(mobile)` route group with a `max-w-md` column, a *
 
 If `node_modules` was copied or installed on a slow Windows mount and packages look incomplete (missing `next`, missing Tailwind’s native `oxide` module, or `tsc` not found), delete `node_modules`, keep `package-lock.json`, and run `npm install` again from a shell on a fast disk when possible. Commit the lockfile so `npm ci` is reproducible.
 
+## Deploy (Vercel)
+
+This app is **not** the Git root of `hacksteppe`: the student module lives in the **`sutaniese` folder** next to other packages (e.g. `nura/`), and there is **no** `package.json` at the repository root. If the Vercel import uses the default root, the build is wrong and you may get **`404: NOT_FOUND`** (no viable Next output).
+
+1. Vercel → your project → **Settings** → **General** → **Root Directory** → set to **`sutaniese`**.
+2. Framework: **Next.js** (auto). Build: **`npm run build`**, install: **`npm install`** in that directory.
+3. **Redeploy** after changing the root. Open the new production URL (Deployments → latest). Use `vercel` CLI the same way: from `sutaniese`, or pass `--cwd sutaniese` as applicable.
+
+`next.config.ts` sets `outputFileTracingRoot` (and Turbopack root for local `next dev --turbopack`) to this app folder so Next does not pick a parent `package-lock.json` in a monorepo.
+
 ## Getting started
 
 ```bash
