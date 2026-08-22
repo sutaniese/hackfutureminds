@@ -62,8 +62,8 @@ export function StudentsPage() {
                   }}
                   className={`flex-1 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
                     s.id === activeStudentId
-                      ? 'bg-pathwise-accentSoft font-semibold text-pathwise-ink ring-1 ring-pathwise-accent'
-                      : 'hover:bg-pathwise-accentSoft/50'
+                      ? 'bg-pathwise-accent-soft font-semibold text-pathwise-ink ring-1 ring-pathwise-accent'
+                      : 'hover:bg-[#f1efff]'
                   }`}
                 >
                   <div className="font-medium text-pathwise-ink">{s.displayName}</div>
@@ -74,7 +74,7 @@ export function StudentsPage() {
                 <button
                   type="button"
                   onClick={() => handleDelete(s.id)}
-                  className="rounded-lg border border-rose-200 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50"
+                  className="rounded-lg border border-rose-200 px-2 py-1 text-xs font-medium text-red-100 hover:bg-[#FF6B6B]/10"
                   aria-label={`Удалить ${s.displayName}`}
                 >
                   ✕
@@ -82,7 +82,7 @@ export function StudentsPage() {
               </li>
             ))}
             {students.length === 0 && !loading && (
-              <li className="rounded-xl bg-pathwise-surface px-3 py-4 text-sm text-pathwise-muted">
+              <li className="rounded-xl bg-white px-3 py-4 text-sm text-pathwise-muted">
                 Учеников пока нет. Создайте первого.
               </li>
             )}

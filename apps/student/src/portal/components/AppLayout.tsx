@@ -27,10 +27,10 @@ const TITLE_BY_PATH: Record<string, string> = {
 }
 
 function navClass(active: boolean) {
-  return `inline-flex min-h-11 shrink-0 items-center justify-center rounded-full px-3.5 py-2 text-sm font-semibold transition-colors no-underline ${
+  return `inline-flex min-h-11 shrink-0 items-center justify-center rounded-full px-3.5 py-2 text-sm font-semibold transition-all no-underline ${
     active
-      ? 'bg-pathwise-accent text-white shadow-pathwise'
-      : 'bg-pathwise-surface/80 text-foreground ring-1 ring-pathwise-line hover:bg-pathwise-accentSoft/60'
+      ? 'bg-[#6C63FF] text-white shadow-sm'
+      : 'border border-slate-200 bg-white text-pathwise-muted hover:bg-white hover:text-slate-900'
   }`
 }
 
@@ -48,8 +48,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-pathwise-page text-foreground">
-      <header className="sticky top-0 z-30 border-b-2 border-pathwise-line bg-pathwise-surface/90 shadow-pathwise backdrop-blur">
-        <div className="mx-auto max-w-6xl px-4 py-3 md:px-5">
+      <header className="sticky top-0 z-30 border-b border-pathwise-line bg-white/95 shadow-pathwise ">
+        <div className="mx-auto max-w-7xl px-4 py-3 md:px-6">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
             <Link
               href={`${HUB}/agent`}
@@ -60,13 +60,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <img
                   src={withAssetBase(tenant.logoUrl)}
                   alt={SITE_NAME}
-                  className="h-9 w-9 rounded-xl border border-pathwise-line/80 object-contain"
+                  className="h-9 w-9 rounded-xl border border-slate-200 object-contain"
                   width={36}
                   height={36}
                 />
               ) : (
                 <span
-                  className="flex h-9 min-w-[2.25rem] items-center justify-center rounded-xl px-1 text-[12px] font-bold text-white"
+                  className="flex h-9 min-w-[2.25rem] items-center justify-center rounded-xl px-1 text-[12px] font-bold text-white shadow-sm"
                   style={{ backgroundColor: 'var(--pw-primary, var(--pw-accent))' }}
                   aria-hidden
                 >
@@ -76,7 +76,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </Link>
 
             <div className="min-w-0 flex-1">
-              <p className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-pathwise-accentStrong">
+              <p className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-pathwise-accent-strong">
                 {role ? `Роль: ${ROLE_LABELS[role]}` : 'Вход по роли'}
               </p>
               <p className="truncate text-sm font-semibold text-pathwise-ink">
@@ -93,7 +93,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <Link
                   href="/"
                   onClick={clearRole}
-                  className="inline-flex min-h-12 items-center justify-center rounded-full border border-pathwise-line bg-white/80 px-4 text-sm font-semibold text-pathwise-muted no-underline transition hover:bg-pathwise-accentSoft/70"
+                  className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-pathwise-muted no-underline transition hover:bg-white hover:text-slate-900"
                   aria-label="Сменить роль"
                 >
                   Сменить роль
@@ -103,7 +103,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <button
                   type="button"
                   onClick={logout}
-                  className="inline-flex min-h-12 items-center justify-center rounded-full bg-pathwise-accent px-4 text-sm font-semibold text-white shadow-pathwise transition-colors hover:bg-[color:var(--pw-accent-strong)]"
+                  className="pw-btn-primary inline-flex min-h-12 items-center justify-center px-4 text-sm"
                 >
                   Выйти
                 </button>
@@ -111,13 +111,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <>
                   <Link
                     href="/login"
-                    className="inline-flex min-h-12 items-center justify-center rounded-full border border-pathwise-line bg-white/80 px-4 text-sm font-semibold text-foreground no-underline transition hover:bg-pathwise-accentSoft/70"
+                    className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-foreground no-underline transition hover:bg-white"
                   >
                     Войти
                   </Link>
                   <Link
                     href="/register"
-                    className="inline-flex min-h-12 items-center justify-center rounded-full bg-pathwise-accent px-4 text-sm font-semibold text-white no-underline shadow-pathwise transition-colors hover:bg-[color:var(--pw-accent-strong)]"
+                    className="pw-btn-primary inline-flex min-h-12 items-center justify-center px-4 text-sm no-underline"
                   >
                     Регистрация
                   </Link>
@@ -126,7 +126,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          <div className="mt-3 rounded-[1.6rem] border border-pathwise-line/80 bg-gradient-to-r from-pathwise-accentSoft via-pathwise-surface to-pathwise-surface p-3">
+          <div className="pw-glass mt-3 rounded-[1.6rem] p-3">
             <div className="flex flex-col gap-2">
               {ready && sections.length === 0 ? (
                 <div className="flex flex-wrap items-center gap-2">
@@ -136,12 +136,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 </div>
               ) : null}
               {sections.map((section) => (
-                <div key={section.title} className="flex min-w-0 items-center gap-2">
-                  <span className="hidden w-16 shrink-0 text-xs font-bold uppercase tracking-[0.12em] text-pathwise-muted sm:block">
+                <div key={section.title} className="flex min-w-0 items-center gap-3">
+                  <span className="hidden shrink-0 whitespace-nowrap rounded-full bg-slate-50 px-3 py-2 text-[0.68rem] font-black uppercase tracking-[0.12em] text-pathwise-muted ring-1 ring-slate-200 sm:inline-flex">
                     {section.title}
                   </span>
                   <nav
-                    className="-mx-1 flex min-w-0 flex-1 gap-1 overflow-x-auto px-1 pb-1"
+                    className="-mx-1 flex min-w-0 flex-1 gap-2 overflow-x-auto px-1 pb-1"
                     aria-label={section.title}
                   >
                     {section.links.map((link) => (
@@ -162,12 +162,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 md:px-5 md:py-8">
+      <main className="pw-route-in mx-auto w-full max-w-7xl space-y-6 px-4 py-6 md:px-6 md:py-8">
         <RoleRouteGuard>{children}</RoleRouteGuard>
       </main>
 
-      <footer className="mt-10 border-t-2 border-pathwise-line bg-pathwise-surface">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-5 text-xs text-pathwise-muted md:px-5">
+      <footer className="mt-10 border-t border-pathwise-line bg-white">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-5 text-xs text-pathwise-muted md:px-6">
           {tenant.logoUrl ? (
             <img
               src={withAssetBase(tenant.logoUrl)}

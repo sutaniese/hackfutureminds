@@ -1,4 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { listPublicUsers, subscribeAuth } from '@/lib/auth'
+import { readStudentProfiles, type StudentProfileSnapshot } from '@/lib/student-profile-store'
 import { api, type ServerStudent } from '../lib/api'
 
 type Ctx = {
@@ -15,6 +17,115 @@ type Ctx = {
 
 const StudentContext = createContext<Ctx | null>(null)
 const STORAGE_KEY = 'ten:activeStudentId'
+
+function splitAchievements(value?: string): string[] {
+  return (value ?? '')
+    .split(/[\n,;]+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function mapLocalProfileToStudent(profile: StudentProfileSnapshot, fallbackName?: string): ServerStudent {
+  const onboarding = profile.onboarding
+  const generated = profile.generated
+  const careerMap = generated?.career_map ?? []
+  const financialRoute = generated?.financial_route
+
+  return {
+    id: profile.email,
+    displayName: profile.name || fallbackName || profile.email,
+    age: 16,
+    city: onboarding?.city || '—',
+    interests: onboarding?.subjectIds.length ? onboarding.subjectIds : ['анкета не заполнена'],
+    achievements: splitAchievements(onboarding?.achievements),
+    target_university: onboarding?.studyLocation === 'abroad' ? 'Зарубежные программы' : 'Казахстанские вузы',
+    language: 'ru',
+    primaryCareerTitle: careerMap[0]?.title ?? 'План ещё не создан',
+    career_map: careerMap.length
+      ? careerMap.map((item) => ({
+          title: item.title,
+          salary: item.salary_kzt,
+          path: item.description,
+          vacancies: item.vacancies?.map((vacancy) => `${vacancy.title} · ${vacancy.company}`) ?? [],
+        }))
+      : [
+          {
+            title: 'План ещё не создан',
+            salary: '—',
+            path: 'Попросите ученика открыть страницу “План” и нажать “Создать”.',
+            vacancies: [],
+          },
+        ],
+    financial_route: financialRoute
+      ? {
+          monthly_cost: financialRoute.monthly_cost,
+          gap: financialRoute.gap,
+          coverage_percent: financialRoute.coverage_percent,
+          grants: financialRoute.grants.map((grant) => ({
+            name: grant.name,
+            amount: grant.amount,
+            amountLabel: `${grant.amount.toLocaleString('ru-RU')} ₸`,
+            deadline: grant.deadline,
+            currency: 'KZT',
+            amountMonthlyKzt: grant.amount,
+          })),
+        }
+      : {
+          monthly_cost: 0,
+          gap: 0,
+          coverage_percent: 0,
+          grants: [],
+        },
+    portfolio_block: generated?.portfolio_block || 'Портфолио-блок появится после генерации плана учеником.',
+    onboardingComplete: Boolean(onboarding),
+    needsFinancialHelp: Boolean(onboarding?.budgetConstraints.trim()),
+    createdAt: new Date(profile.updatedAt).toISOString(),
+    updatedAt: new Date(profile.updatedAt).toISOString(),
+  }
+}
+
+function localStudentProfiles(): ServerStudent[] {
+  const profiles = readStudentProfiles()
+  const users = listPublicUsers('student')
+  const sessionFallback = users.length === 1 ? readSessionProfileFallback(users[0].email, users[0].name) : null
+
+  return users.map((user) => {
+    const snapshot = profiles[user.email] ?? sessionFallback ?? {
+      email: user.email,
+      name: user.name,
+      accessibilitySupport: user.accessibilitySupport,
+      updatedAt: user.createdAt,
+    }
+    return mapLocalProfileToStudent(snapshot, user.name)
+  })
+}
+
+function readSessionProfileFallback(email: string, name?: string): StudentProfileSnapshot | null {
+  try {
+    const onboardingRaw = sessionStorage.getItem('pathwise-onboarding-answers')
+    const generatedRaw = sessionStorage.getItem('pathwise-last-generate')
+    const onboarding = onboardingRaw ? JSON.parse(onboardingRaw) : undefined
+    const generatedPayload = generatedRaw ? JSON.parse(generatedRaw) : undefined
+    const generated = generatedPayload?.data
+    if (!onboarding && !generated) return null
+    return {
+      email,
+      name,
+      onboarding,
+      generated,
+      updatedAt: Date.now(),
+    }
+  } catch {
+    return null
+  }
+}
+
+function mergeStudents(serverStudents: ServerStudent[], localStudents: ServerStudent[]) {
+  const byId = new Map<string, ServerStudent>()
+  for (const student of serverStudents) byId.set(student.id, student)
+  for (const student of localStudents) byId.set(student.id, student)
+  return [...byId.values()]
+}
 
 export function StudentProvider({ children }: { children: ReactNode }) {
   const [students, setStudents] = useState<ServerStudent[]>([])
@@ -41,15 +152,21 @@ export function StudentProvider({ children }: { children: ReactNode }) {
   const reload = useCallback(async () => {
     setLoading(true)
     setError(null)
+    const localList = localStudentProfiles()
     try {
-      const list = await api.listStudents()
+      const list = mergeStudents(await api.listStudents(), localList)
       setStudents(list)
       if (!activeStudentId && list[0]) setActiveStudentId(list[0].id)
       else if (activeStudentId && !list.find((s) => s.id === activeStudentId) && list[0]) {
         setActiveStudentId(list[0].id)
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ошибка загрузки')
+      setStudents(localList)
+      if (!activeStudentId && localList[0]) setActiveStudentId(localList[0].id)
+      else if (activeStudentId && !localList.find((s) => s.id === activeStudentId) && localList[0]) {
+        setActiveStudentId(localList[0].id)
+      }
+      if (localList.length === 0) setError(e instanceof Error ? e.message : 'Ошибка загрузки')
     } finally {
       setLoading(false)
     }
@@ -57,6 +174,14 @@ export function StudentProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void reload()
+    const unsubscribe = subscribeAuth(() => void reload())
+    window.addEventListener('storage', reload)
+    window.addEventListener('focus', reload)
+    return () => {
+      unsubscribe()
+      window.removeEventListener('storage', reload)
+      window.removeEventListener('focus', reload)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

@@ -33,8 +33,10 @@ export const ROLE_NAV_SECTIONS: Record<UserRole, SiteNavSection[]> = {
         { href: "/", label: "Вход", end: true },
         { href: "/onboarding", label: "Старт" },
         { href: "/results", label: "План" },
+        { href: "/roadmap", label: "Roadmap" },
         { href: "/grants", label: "Гранты" },
         { href: "/portfolio", label: "Портфолио" },
+        { href: "/support", label: "Поддержка" },
       ],
     },
   ],
@@ -78,10 +80,14 @@ export function roleForPath(pathname: string): UserRole | null {
     pathname.startsWith("/onboarding/") ||
     pathname === "/results" ||
     pathname.startsWith("/results/") ||
+    pathname === "/roadmap" ||
+    pathname.startsWith("/roadmap/") ||
     pathname === "/grants" ||
     pathname.startsWith("/grants/") ||
     pathname === "/portfolio" ||
-    pathname.startsWith("/portfolio/")
+    pathname.startsWith("/portfolio/") ||
+    pathname === "/support" ||
+    pathname.startsWith("/support/")
   ) {
     return "student";
   }

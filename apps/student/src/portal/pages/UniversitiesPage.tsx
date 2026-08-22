@@ -72,8 +72,8 @@ export function UniversitiesPage() {
   return (
     <>
       <section className="pw-soft-panel relative overflow-hidden rounded-[2rem] p-6 md:rounded-[2.5rem] md:p-8">
-        <div className="pointer-events-none absolute -right-12 -top-16 h-52 w-52 rounded-full bg-pathwise-accent/10 blur-3xl" />
-        <p className="relative inline-flex rounded-full bg-white/70 px-3 py-1 text-[0.68rem] font-bold uppercase leading-none tracking-[0.16em] text-pathwise-accentStrong ring-1 ring-pathwise-line/70">
+        <div className="pointer-events-none absolute -right-12 -top-16 h-52 w-52 rounded-full bg-pathwise-accent/10 " />
+        <p className="relative inline-flex rounded-full bg-white/70 px-3 py-1 text-[0.68rem] font-bold uppercase leading-none tracking-[0.16em] text-pathwise-accent-strong ring-1 ring-pathwise-line/70">
           Каталог
         </p>
         <h1 className="relative mt-4 max-w-4xl text-3xl font-black leading-[1.05] tracking-tight text-pathwise-ink md:text-5xl">
@@ -112,7 +112,7 @@ export function UniversitiesPage() {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="space-y-5 rounded-2xl border border-pathwise-line bg-pathwise-surface p-5 shadow-sm">
+        <aside className="space-y-5 rounded-2xl border border-pathwise-line bg-white p-5 shadow-sm">
           <FilterGroup label="Ranking">
             <RadioPills
               value={ranking}
@@ -184,8 +184,8 @@ export function UniversitiesPage() {
                     aria-pressed={active}
                     className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
                       active
-                        ? 'border-pathwise-accent bg-pathwise-accentSoft text-pathwise-ink'
-                        : 'border-pathwise-line bg-pathwise-surface text-pathwise-muted hover:bg-pathwise-accentSoft/50'
+                        ? 'border-pathwise-accent bg-pathwise-accent-soft text-pathwise-ink'
+                        : 'border-pathwise-line bg-white text-pathwise-muted hover:bg-[#f1efff]'
                     }`}
                   >
                     {lang}
@@ -198,7 +198,7 @@ export function UniversitiesPage() {
           <button
             type="button"
             onClick={reset}
-            className="w-full rounded-xl border border-pathwise-line px-3 py-2 text-sm font-medium text-pathwise-muted hover:bg-pathwise-accentSoft/50"
+            className="w-full rounded-xl border border-pathwise-line px-3 py-2 text-sm font-medium text-pathwise-muted hover:bg-[#f1efff]"
           >
             Сбросить фильтры
           </button>
@@ -214,7 +214,7 @@ export function UniversitiesPage() {
               <select
                 value={sort}
                 onChange={(e) => setSort(e.target.value as Sort)}
-                className="rounded-lg border border-pathwise-line bg-pathwise-surface px-2 py-1 text-xs"
+                className="rounded-lg border border-pathwise-line bg-white px-2 py-1 text-xs"
               >
                 <option value="rank-asc">Rankings (high to low) · {ranking}</option>
                 <option value="name-asc">Alphabetical (A–Z)</option>
@@ -224,7 +224,7 @@ export function UniversitiesPage() {
           </div>
 
           {filtered.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-pathwise-line bg-pathwise-surface p-10 text-center">
+            <div className="rounded-2xl border border-dashed border-pathwise-line bg-white p-10 text-center">
               <p className="text-sm font-medium text-pathwise-ink">Ничего не найдено</p>
               <p className="mt-1 text-xs text-pathwise-muted">Попробуйте сбросить фильтры.</p>
             </div>
@@ -283,7 +283,7 @@ function RadioPills<T extends string>({
             className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
               active
                 ? 'border-pathwise-accent bg-pathwise-accent text-white'
-                : 'border-pathwise-line bg-pathwise-surface text-pathwise-ink hover:bg-pathwise-accentSoft'
+                : 'border-pathwise-line bg-white text-pathwise-ink hover:bg-[#f1efff]'
             }`}
           >
             {o.label}
@@ -315,8 +315,8 @@ function SegPills<T extends string>({
             aria-pressed={active}
             className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
               active
-                ? 'border-pathwise-accent bg-pathwise-accentSoft text-pathwise-ink'
-                : 'border-pathwise-line bg-pathwise-surface text-pathwise-muted hover:bg-pathwise-accentSoft/50'
+                ? 'border-pathwise-accent bg-pathwise-accent-soft text-pathwise-ink'
+                : 'border-pathwise-line bg-white text-pathwise-muted hover:bg-[#f1efff]'
             }`}
           >
             {o.label}
@@ -332,10 +332,10 @@ function UniCard({ u, ranking }: { u: University; ranking: UniRanking }) {
     <li>
       <Link
         href={`/hub/vuzy/${u.id}`}
-        className="group flex h-full flex-col overflow-hidden rounded-2xl border border-pathwise-line bg-pathwise-surface shadow-sm no-underline transition-all hover:-translate-y-0.5 hover:border-pathwise-accent hover:shadow-md"
+        className="group flex h-full flex-col overflow-hidden rounded-2xl border border-pathwise-line bg-white shadow-sm no-underline transition-all hover:-translate-y-0.5 hover:border-pathwise-accent hover:shadow-md"
       >
         <div
-          className="relative h-40 w-full overflow-hidden bg-pathwise-accentSoft"
+          className="relative h-40 w-full overflow-hidden bg-pathwise-accent-soft"
           aria-hidden
         >
           <img
@@ -347,7 +347,7 @@ function UniCard({ u, ranking }: { u: University; ranking: UniRanking }) {
               ;(e.currentTarget as HTMLImageElement).style.display = 'none'
             }}
           />
-          <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-pathwise-surface/90 px-2.5 py-1 text-xs font-semibold text-pathwise-ink shadow-sm">
+          <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-pathwise-ink shadow-sm">
             #{u.rank} {ranking}
           </span>
         </div>
@@ -361,13 +361,13 @@ function UniCard({ u, ranking }: { u: University; ranking: UniRanking }) {
             {u.languages.map((l) => (
               <span
                 key={l}
-                className="rounded-full bg-pathwise-accentSoft px-2 py-0.5 text-[10px] font-semibold text-pathwise-accentStrong"
+                className="rounded-full bg-pathwise-accent-soft px-2 py-0.5 text-[10px] font-semibold text-pathwise-accent-strong"
               >
                 {l}
               </span>
             ))}
           </div>
-          <span className="mt-5 inline-flex items-center gap-1 self-start rounded-full border border-pathwise-accent px-4 py-1.5 text-xs font-semibold text-pathwise-accentStrong transition-colors group-hover:bg-pathwise-accent group-hover:text-white">
+          <span className="mt-5 inline-flex items-center gap-1 self-start rounded-full border border-pathwise-accent px-4 py-1.5 text-xs font-semibold text-pathwise-accent-strong transition-colors group-hover:bg-pathwise-accent group-hover:text-slate-900">
             View →
           </span>
         </div>

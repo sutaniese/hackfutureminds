@@ -15,7 +15,7 @@ function navClass(active: boolean) {
   return `inline-flex min-h-11 shrink-0 items-center justify-center rounded-full px-3.5 py-2 text-sm font-semibold no-underline transition-colors ${
     active
       ? "bg-pathwise-accent text-white shadow-pathwise"
-      : "bg-pathwise-surface/80 text-foreground ring-1 ring-pathwise-line hover:bg-pathwise-accent-soft/70"
+      : "bg-white text-foreground ring-1 ring-pathwise-line hover:bg-[#f1efff]"
   }`;
 }
 
@@ -28,9 +28,9 @@ export function UnifiedSiteNav() {
   const accountLabel = user?.name?.trim() || user?.email || "";
 
   return (
-    <section className="border-b-2 border-pathwise-line bg-pathwise-surface/90 shadow-pathwise backdrop-blur">
+    <section className="border-b-2 border-pathwise-line bg-white shadow-pathwise ">
       <div className={`${SHELL_PX} mx-auto max-w-6xl py-3`}>
-        <div className="rounded-[1.6rem] border border-pathwise-line/80 bg-gradient-to-r from-pathwise-accent-soft via-pathwise-surface to-pathwise-surface p-3">
+        <div className="rounded-[1.6rem] border border-pathwise-line/80 bg-white p-3">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="min-w-0 lg:w-56">
               <p className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-pathwise-accent-strong">
@@ -82,7 +82,7 @@ export function UnifiedSiteNav() {
                 <Link
                   href="/"
                   onClick={clearRole}
-                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-pathwise-line bg-white/80 px-3.5 py-2 text-sm font-semibold text-pathwise-muted no-underline transition hover:bg-pathwise-accent-soft/70"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-pathwise-line bg-white/80 px-3.5 py-2 text-sm font-semibold text-pathwise-muted no-underline transition hover:bg-[#f1efff]"
                 >
                   Сменить роль
                 </Link>
@@ -99,7 +99,7 @@ export function UnifiedSiteNav() {
                 <>
                   <Link
                     href="/login"
-                    className="inline-flex min-h-11 items-center justify-center rounded-full border border-pathwise-line bg-white/80 px-3.5 py-2 text-sm font-semibold text-foreground no-underline transition hover:bg-pathwise-accent-soft/70"
+                    className="inline-flex min-h-11 items-center justify-center rounded-full border border-pathwise-line bg-white/80 px-3.5 py-2 text-sm font-semibold text-foreground no-underline transition hover:bg-[#f1efff]"
                   >
                     Войти
                   </Link>

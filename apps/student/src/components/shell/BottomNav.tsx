@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 
 type NavItem = {
   href: string;
-  labelKey: "nav.home" | "nav.onboarding" | "nav.results" | "nav.grants" | "nav.portfolio";
+  labelKey: "nav.home" | "nav.onboarding" | "nav.results" | "nav.roadmap" | "nav.grants" | "nav.portfolio";
   isActive: (path: string) => boolean;
   icon: (active: boolean) => ReactNode;
 };
@@ -52,6 +52,20 @@ const items: NavItem[] = [
     ),
   },
   {
+    href: "/roadmap",
+    labelKey: "nav.roadmap",
+    isActive: (p) => p.startsWith("/roadmap"),
+    icon: (active) => (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <circle cx="5" cy="18" r="2.5" />
+        <circle cx="12" cy="6" r="2.5" />
+        <circle cx="19" cy="15" r="2.5" />
+        <path d="M7 16l3.5-7.5" />
+        <path d="M14 7.5l3.2 5.3" />
+      </svg>
+    ),
+  },
+  {
     href: "/grants",
     labelKey: "nav.grants",
     isActive: (p) => p.startsWith("/grants"),
@@ -81,16 +95,16 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40"
+      className="pointer-events-none fixed bottom-0 left-0 right-0 z-40"
       style={{
-        paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.4rem)",
+        paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.75rem)",
       }}
       role="navigation"
       aria-label={t("nav.aria")}
     >
       <div className={`${SHELL_PX} pb-2`}>
         <div
-          className="mx-auto grid max-w-lg grid-cols-5 gap-1 rounded-2xl border border-white/60 bg-white/75 p-1.5 shadow-lg backdrop-blur-xl"
+          className="pointer-events-auto mx-auto grid max-w-xl grid-cols-6 gap-1 rounded-full border border-slate-200 bg-white p-1.5 shadow-[0_14px_35px_rgb(15_23_42_/_0.12)] "
           style={{ minHeight: "var(--pw-nav)" }}
         >
           {items.map((item) => {
@@ -100,10 +114,10 @@ export function BottomNav() {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-2 text-[10px] font-semibold leading-tight no-underline transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pw-primary sm:text-xs ${
+                className={`flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-1 py-2 text-[10px] font-semibold leading-tight no-underline transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pw-primary sm:text-xs ${
                   active
-                    ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/25"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                    ? "bg-[#6C63FF] text-white shadow-sm"
+                    : "text-pathwise-muted hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
                 <span aria-hidden className="shrink-0">

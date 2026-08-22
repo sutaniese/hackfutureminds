@@ -9,6 +9,7 @@ export function StudentNotesPanel({ studentId }: Props) {
   const [notes, setNotes] = useState<StudentNote[]>([])
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [fileName, setFileName] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -25,8 +26,48 @@ export function StudentNotesPanel({ studentId }: Props) {
     setNotes([])
     setTitle('')
     setContent('')
+    setFileName('')
     if (studentId) void reload()
   }, [studentId, reload])
+
+  async function onFileSelected(file: File | undefined) {
+    if (!file) return
+    setError(null)
+    setFileName(file.name)
+    setTitle((current) => current || file.name.replace(/\.[^.]+$/, ''))
+
+    try {
+      const textLike =
+        file.type.startsWith('text/') ||
+        file.name.endsWith('.md') ||
+        file.name.endsWith('.txt') ||
+        file.name.endsWith('.csv')
+
+      if (textLike) {
+        setContent(await file.text())
+        return
+      }
+
+      const dataUrl = await readFileAsDataUrl(file)
+      setContent(
+        [
+          `# ${file.name}`,
+          '',
+          `Attached file for student profile.`,
+          '',
+          `- Original name: ${file.name}`,
+          `- Type: ${file.type || 'unknown'}`,
+          `- Size: ${(file.size / 1024).toFixed(1)} KB`,
+          '',
+          `Data URL preview:`,
+          dataUrl,
+        ].join('\n'),
+      )
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось прочитать файл')
+      setFileName('')
+    }
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -36,6 +77,7 @@ export function StudentNotesPanel({ studentId }: Props) {
       await api.saveNote(studentId, { title: title.trim(), content: content.trim() })
       setTitle('')
       setContent('')
+      setFileName('')
       await reload()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось сохранить')
@@ -58,7 +100,7 @@ export function StudentNotesPanel({ studentId }: Props) {
 
   return (
     <section
-      className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm"
+      className="rounded-2xl border border-pathwise-line bg-white p-6 shadow-sm"
       aria-labelledby="notes-panel-title"
     >
       <header className="border-b border-pathwise-line pb-4">
@@ -66,12 +108,30 @@ export function StudentNotesPanel({ studentId }: Props) {
           Obsidian-заметки ученика
         </h3>
         <p className="text-xs text-pathwise-muted">
-          Файлы сохраняются в <code className="rounded bg-pathwise-accentSoft px-1">ten-vault/students/{studentId}/notes/</code>.
+          Файлы сохраняются в <code className="rounded bg-pathwise-accent-soft px-1">ten-vault/students/{studentId}/notes/</code>.
           Их видит и AI-агент.
         </p>
       </header>
 
       <form onSubmit={onSubmit} className="mt-4 grid gap-3">
+        <label className="rounded-2xl border border-dashed border-[#d7d3ff] bg-[#f7f6ff] p-4">
+          <span className="block text-sm font-semibold text-pathwise-ink">
+            Прикрепить файл ученика
+          </span>
+          <span className="mt-1 block text-xs leading-5 text-pathwise-muted">
+            Можно выбрать .md/.txt как текст или любой небольшой PDF/изображение/документ как вложение заметки.
+          </span>
+          <input
+            type="file"
+            onChange={(event) => onFileSelected(event.target.files?.[0])}
+            className="mt-3 block w-full rounded-xl border border-pathwise-line bg-white px-3 py-2 text-sm file:mr-3 file:rounded-full file:border-0 file:bg-[#6C63FF] file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white"
+          />
+          {fileName ? (
+            <span className="mt-2 block text-xs font-semibold text-[#554dd6]">
+              Выбран файл: {fileName}
+            </span>
+          ) : null}
+        </label>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -97,7 +157,7 @@ export function StudentNotesPanel({ studentId }: Props) {
             type="button"
             onClick={reload}
             disabled={busy}
-            className="min-h-[40px] rounded-xl border border-pathwise-line px-4 py-2 text-sm font-medium text-pathwise-muted hover:bg-pathwise-accentSoft/50"
+            className="min-h-[40px] rounded-xl border border-pathwise-line px-4 py-2 text-sm font-medium text-pathwise-muted hover:bg-[#f1efff]"
           >
             Обновить список
           </button>
@@ -114,14 +174,14 @@ export function StudentNotesPanel({ studentId }: Props) {
               <div className="min-w-[200px] flex-1">
                 <p className="font-semibold text-pathwise-ink">{n.title}</p>
                 <p className="font-mono text-xs text-pathwise-muted">{n.fileName}</p>
-                <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap rounded-lg bg-pathwise-accentSoft/30 p-2 text-xs">
+                <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap rounded-lg bg-pathwise-accent-soft/30 p-2 text-xs">
                   {n.content}
                 </pre>
               </div>
               <button
                 type="button"
                 onClick={() => onDelete(n.fileName)}
-                className="min-h-[36px] rounded-xl border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                className="min-h-[36px] rounded-xl border border-rose-200 px-3 py-1.5 text-xs font-semibold text-red-100 hover:bg-[#FF6B6B]/10"
               >
                 Удалить
               </button>
@@ -131,4 +191,16 @@ export function StudentNotesPanel({ studentId }: Props) {
       </ul>
     </section>
   )
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onerror = () => reject(new Error('Не удалось прочитать файл.'))
+    reader.onload = () => {
+      if (typeof reader.result === 'string') resolve(reader.result)
+      else reject(new Error('Файл пустой или повреждён.'))
+    }
+    reader.readAsDataURL(file)
+  })
 }

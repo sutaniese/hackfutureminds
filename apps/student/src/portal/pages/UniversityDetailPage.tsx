@@ -23,11 +23,11 @@ export function UniversityDetailPage() {
 
   if (!u || !data) {
     return (
-      <div className="rounded-2xl border border-dashed border-pathwise-line bg-pathwise-surface p-10 text-center">
+      <div className="rounded-2xl border border-dashed border-pathwise-line bg-white p-10 text-center">
         <p className="text-sm font-medium text-pathwise-ink">Университет не найден</p>
         <Link
           href="/hub/vuzy"
-          className="mt-3 inline-block text-xs font-semibold text-pathwise-accentStrong"
+          className="mt-3 inline-block text-xs font-semibold text-pathwise-accent-strong"
         >
           ← Назад к каталогу
         </Link>
@@ -45,7 +45,7 @@ export function UniversityDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-xs text-pathwise-muted">
-        <Link href="/hub/vuzy" className="hover:text-pathwise-accentStrong">
+        <Link href="/hub/vuzy" className="hover:text-pathwise-accent-strong">
           ← Назад к университетам
         </Link>
         <span>·</span>
@@ -63,7 +63,7 @@ export function UniversityDetailPage() {
                 href={data.website}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="mt-4 inline-flex items-center gap-1 rounded-full border border-pathwise-accent px-4 py-1.5 text-xs font-semibold text-pathwise-accentStrong no-underline transition-colors hover:bg-pathwise-accent hover:text-white"
+                className="mt-4 inline-flex items-center gap-1 rounded-full border border-pathwise-accent px-4 py-1.5 text-xs font-semibold text-pathwise-accent-strong no-underline transition-colors hover:bg-pathwise-accent hover:text-slate-900"
               >
                 Official Website ↗
               </a>
@@ -86,7 +86,7 @@ export function UniversityDetailPage() {
                   <button
                     type="button"
                     onClick={() => setShowAllPrograms((v) => !v)}
-                    className="mt-4 inline-flex items-center gap-1 rounded-full border border-pathwise-line px-4 py-1.5 text-xs font-semibold text-pathwise-ink hover:bg-pathwise-accentSoft"
+                    className="mt-4 inline-flex items-center gap-1 rounded-full border border-pathwise-line px-4 py-1.5 text-xs font-semibold text-pathwise-ink hover:bg-[#f1efff]"
                   >
                     {showAllPrograms ? 'Show Less' : `Show More (${moreCount} more)`}
                   </button>
@@ -121,7 +121,7 @@ export function UniversityDetailPage() {
               ))}
             </ul>
             {data.requirements.note && (
-              <p className="mt-4 rounded-lg bg-pathwise-accentSoft/40 p-3 text-xs text-pathwise-muted">
+              <p className="mt-4 rounded-lg bg-pathwise-accent-soft/40 p-3 text-xs text-pathwise-muted">
                 Ескерту: {data.requirements.note}
               </p>
             )}
@@ -153,7 +153,7 @@ export function UniversityDetailPage() {
                     href={data.website}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="text-pathwise-accentStrong"
+                    className="text-pathwise-accent-strong"
                   >
                     {data.website.replace(/^https?:\/\//, '')}
                   </a>
@@ -177,7 +177,7 @@ function Hero({
 }) {
   return (
     <section className="pw-card overflow-hidden">
-      <div className="relative h-56 w-full overflow-hidden bg-pathwise-accentSoft">
+      <div className="relative h-56 w-full overflow-hidden bg-pathwise-accent-soft">
         <img
           src={u.bannerUrl}
           alt=""
@@ -187,8 +187,8 @@ function Hero({
             ;(e.currentTarget as HTMLImageElement).style.display = 'none'
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-pathwise-surface/80 via-pathwise-surface/10 to-transparent" />
-        <span className="absolute left-4 top-4 inline-flex items-center rounded-full bg-pathwise-surface/90 px-3 py-1 text-xs font-semibold text-pathwise-ink shadow-sm">
+        <div className="absolute inset-0 bg-transparent" />
+        <span className="absolute left-4 top-4 inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-semibold text-pathwise-ink shadow-sm">
           #{u.rank} Overall
         </span>
       </div>
@@ -214,11 +214,11 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function ProgramRow({ p }: { p: StudyProgram }) {
   return (
-    <li className="rounded-xl border border-pathwise-line bg-pathwise-accentSoft/30 p-4">
+    <li className="rounded-xl border border-pathwise-line bg-pathwise-accent-soft/30 p-4">
       <p className="text-sm font-semibold text-pathwise-ink">{p.titleEn}</p>
       <p className="mt-0.5 text-xs text-pathwise-muted">{p.titleRu}</p>
       <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold">
-        <span className="rounded-full bg-pathwise-surface px-2 py-0.5 text-pathwise-ink shadow-sm">
+        <span className="rounded-full bg-white px-2 py-0.5 text-pathwise-ink shadow-sm">
           {p.durationYears} {p.durationYears === 1 ? 'year' : 'years'}
         </span>
         <span className="rounded-full bg-pathwise-accent px-2 py-0.5 text-white shadow-sm">
@@ -235,7 +235,7 @@ function IntakeRow({ it }: { it: Intake }) {
     ? it.deadline
     : `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
   return (
-    <li className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-pathwise-line bg-pathwise-accentSoft/30 p-4">
+    <li className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-pathwise-line bg-pathwise-accent-soft/30 p-4">
       <div>
         <p className="text-sm font-semibold text-pathwise-ink">
           {it.season} • {it.type}
@@ -246,7 +246,7 @@ function IntakeRow({ it }: { it: Intake }) {
         <p className="text-[10px] font-semibold uppercase tracking-wider text-pathwise-muted">
           Application deadline
         </p>
-        <p className="text-sm font-semibold text-pathwise-accentStrong">{formatted}</p>
+        <p className="text-sm font-semibold text-pathwise-accent-strong">{formatted}</p>
       </div>
     </li>
   )
@@ -254,7 +254,7 @@ function IntakeRow({ it }: { it: Intake }) {
 
 function ScholarshipRow({ s }: { s: Scholarship }) {
   return (
-    <li className="rounded-xl border border-pathwise-line bg-pathwise-accentSoft/30 p-4">
+    <li className="rounded-xl border border-pathwise-line bg-pathwise-accent-soft/30 p-4">
       <p className="text-sm font-semibold text-pathwise-ink">{s.title}</p>
       <p className="mt-1 text-xs text-pathwise-muted">{s.description}</p>
       {s.note && <p className="mt-1 text-[11px] text-pathwise-muted">{s.note}</p>}
@@ -264,7 +264,7 @@ function ScholarshipRow({ s }: { s: Scholarship }) {
 
 function DocRow({ d }: { d: RequiredDoc }) {
   return (
-    <li className="rounded-xl border border-pathwise-line bg-pathwise-accentSoft/30 p-4">
+    <li className="rounded-xl border border-pathwise-line bg-pathwise-accent-soft/30 p-4">
       <div className="flex flex-wrap items-center gap-2">
         <p className="text-sm font-semibold text-pathwise-ink">{d.titleKz}</p>
         {d.required && (
@@ -289,7 +289,7 @@ function YourFitCard({
   requiredDocs: RequiredDoc[]
 }) {
   return (
-    <div className="rounded-2xl border border-pathwise-accent bg-gradient-to-br from-pathwise-accentSoft via-pathwise-surface to-pathwise-surface p-5 shadow-sm">
+    <div className="rounded-2xl border border-pathwise-accent bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-pathwise-ink">Your Fit</h3>
       <p className="mt-1 text-xs text-pathwise-muted">Sign in to see your eligibility</p>
       <dl className="mt-4 space-y-2 text-sm">
@@ -326,7 +326,7 @@ function YourFitCard({
       </dl>
       <button
         type="button"
-        className="mt-4 w-full rounded-full bg-pathwise-accent px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-pathwise-accentStrong"
+        className="mt-4 w-full rounded-full bg-pathwise-accent px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-pathwise-accent-strong"
       >
         Get Started
       </button>
@@ -342,7 +342,7 @@ function SidebarCard({
   children: React.ReactNode
 }) {
   return (
-    <div className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-5 shadow-sm">
+    <div className="rounded-2xl border border-pathwise-line bg-white p-5 shadow-sm">
       <h3 className="mb-3 text-sm font-semibold text-pathwise-ink">{title}</h3>
       <dl className="space-y-2.5 text-sm">{children}</dl>
     </div>

@@ -111,7 +111,7 @@ export function TeacherDashboard() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm" aria-labelledby="teacher-dash-title">
+      <section className="rounded-2xl border border-pathwise-line bg-white p-6 shadow-sm" aria-labelledby="teacher-dash-title">
         <h2 id="teacher-dash-title" className="text-lg font-semibold text-pathwise-ink">
           Учительский дашборд
         </h2>
@@ -130,8 +130,8 @@ export function TeacherDashboard() {
               onClick={() => setActiveId(c.id)}
               className={`min-h-[44px] rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
                 c.id === activeServerClass?.id
-                  ? 'bg-pathwise-accent text-white shadow'
-                  : 'bg-pathwise-surface text-pathwise-ink ring-1 ring-pathwise-line hover:bg-pathwise-accentSoft/60'
+                  ? 'bg-[#6C63FF] text-white shadow-sm'
+                  : 'bg-white text-pathwise-ink ring-1 ring-pathwise-line hover:bg-white'
               }`}
             >
               {c.name}
@@ -144,7 +144,7 @@ export function TeacherDashboard() {
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
             <form
               onSubmit={onCreateClass}
-              className="rounded-xl border border-dashed border-pathwise-line bg-pathwise-surface/60 p-4"
+              className="rounded-2xl border border-dashed border-pathwise-line bg-white p-4"
               aria-label="Создать новый класс"
             >
               <h3 className="text-sm font-semibold text-pathwise-ink">Новый класс</h3>
@@ -155,11 +155,11 @@ export function TeacherDashboard() {
                 id="new-class-name"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-pathwise-line px-3 py-2 text-sm focus:border-pathwise-accent"
+                className="pw-input mt-1 w-full px-3 py-2 text-sm"
               />
               <button
                 type="submit"
-                className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-pathwise-ink px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+                className="pw-btn-primary mt-4 inline-flex min-h-[48px] items-center justify-center px-4 py-2 text-sm"
               >
                 Создать класс и сгенерировать код
               </button>
@@ -168,7 +168,7 @@ export function TeacherDashboard() {
               </p>
             </form>
 
-            <div className="rounded-xl border border-pathwise-accent/30 bg-pathwise-accentSoft/40 p-4">
+            <div className="rounded-2xl border border-[#6C63FF]/30 bg-[#6C63FF]/10 p-4">
               <h3 className="text-sm font-semibold text-pathwise-ink">Текущий класс</h3>
               <p className="mt-2 text-sm text-pathwise-muted">Название</p>
               <p className="text-base font-semibold text-pathwise-ink">{activeServerClass.name}</p>
@@ -192,7 +192,7 @@ export function TeacherDashboard() {
                 <button
                   type="button"
                   onClick={() => onDeleteClass(activeServerClass.id)}
-                  className="rounded-lg border border-rose-200 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50"
+                  className="rounded-lg border border-[#FF6B6B]/30 px-2 py-1 text-xs font-medium text-red-100 hover:bg-[#FF6B6B]/10"
                 >
                   Удалить класс
                 </button>
@@ -204,7 +204,7 @@ export function TeacherDashboard() {
 
       {activeLegacy && (
         <section
-          className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm"
+          className="pw-card p-6"
           aria-labelledby="class-table-title"
         >
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -219,15 +219,15 @@ export function TeacherDashboard() {
             <button
               type="button"
               onClick={handleExport}
-              className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-pathwise-accent bg-pathwise-surface px-4 py-2 text-sm font-semibold text-pathwise-accent hover:bg-pathwise-accentSoft"
+              className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[#d7d3ff] bg-[#f1efff] px-4 py-2 text-sm font-semibold text-white hover:bg-[#ebe9ff]"
             >
               Экспорт достижений класса (CSV)
             </button>
           </div>
 
-          <div className="mt-4 overflow-x-auto rounded-xl ring-1 ring-pathwise-line">
+          <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50 ring-1 ring-pathwise-line">
             <table className="min-w-full divide-y divide-pathwise-line text-left text-sm">
-              <thead className="bg-pathwise-surface text-xs font-semibold uppercase text-pathwise-muted">
+              <thead className="bg-white text-xs font-semibold uppercase text-pathwise-muted">
                 <tr>
                   <th scope="col" className="px-4 py-3">
                     Ученик
@@ -243,7 +243,7 @@ export function TeacherDashboard() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-pathwise-line bg-pathwise-surface">
+              <tbody className="divide-y divide-pathwise-line bg-transparent">
                 {activeLegacy.students.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-4 py-8 text-center text-pathwise-muted">
@@ -262,7 +262,7 @@ export function TeacherDashboard() {
 
       {activeLegacy && (
         <section
-          className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm"
+          className="pw-card p-6"
           aria-labelledby="rec-letter-title"
         >
           <h2 id="rec-letter-title" className="text-lg font-semibold text-pathwise-ink">
@@ -270,7 +270,7 @@ export function TeacherDashboard() {
           </h2>
           <p className="mt-1 text-sm text-pathwise-muted">
             JSON-профиль выбранного ученика отправляется на{' '}
-            <code className="rounded bg-pathwise-accentSoft px-1">/api/recommendation-letter</code> (Gemini, Next API route).
+            <code className="rounded bg-pathwise-accent-soft px-1">/api/recommendation-letter</code> (Gemini, Next API route).
           </p>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -282,7 +282,7 @@ export function TeacherDashboard() {
                 id="letter-student"
                 value={letterStudentId}
                 onChange={(e) => setLetterStudentId(e.target.value)}
-                className="mt-2 w-full rounded-xl border border-pathwise-line px-3 py-3 text-sm focus:border-pathwise-accent"
+                className="pw-input mt-2 w-full px-3 py-3 text-sm"
               >
                 <option value="">— выберите —</option>
                 {activeLegacy.students.map((s) => (
@@ -304,7 +304,7 @@ export function TeacherDashboard() {
                 ).map(([code, label]) => (
                   <label
                     key={code}
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-pathwise-line px-3 py-2 text-sm has-[:checked]:border-pathwise-accent has-[:checked]:bg-pathwise-accentSoft"
+                    className="inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-full border border-pathwise-line px-4 py-2 text-sm has-[:checked]:border-[#6C63FF] has-[:checked]:bg-[#6C63FF]/20"
                   >
                     <input
                       type="radio"
@@ -324,14 +324,14 @@ export function TeacherDashboard() {
             type="button"
             onClick={handleLetter}
             disabled={letterLoading || !letterStudentId}
-            className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-pathwise-accent px-5 py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+            className="pw-btn-primary mt-4 inline-flex min-h-[48px] items-center justify-center px-5 py-3 text-sm disabled:opacity-50"
           >
             {letterLoading ? 'Генерация…' : 'Сгенерировать письмо'}
           </button>
           {letterMeta && <p className="mt-2 text-xs text-pathwise-muted">{letterMeta}</p>}
           {letterText && (
             <pre
-              className="mt-4 max-h-96 overflow-auto whitespace-pre-wrap rounded-xl bg-slate-900 p-4 text-sm text-slate-100"
+              className="mt-4 max-h-96 overflow-auto whitespace-pre-wrap rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-100"
               tabIndex={0}
             >
               {letterText}
@@ -345,7 +345,7 @@ export function TeacherDashboard() {
 
 function StudentTableRow({ row }: { row: ClassStudentRow }) {
   return (
-    <tr className="hover:bg-pathwise-surface/80">
+    <tr className="hover:bg-white">
       <td className="px-4 py-3 font-medium text-pathwise-ink">{row.profile.displayName}</td>
       <td className="px-4 py-3">
         <span

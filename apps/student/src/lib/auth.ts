@@ -32,13 +32,54 @@ export type StoredUser = {
   email: string; // lowercased, trimmed
   name?: string;
   role: UserRole;
+  accessibilitySupport?: StudentAccessibilitySupport;
   saltB64: string;
   hashB64: string;
   iterations: number;
   createdAt: number;
 };
 
-export type PublicUser = Pick<StoredUser, "email" | "name" | "role" | "createdAt">;
+export type DisabilitySupportType =
+  | "visual"
+  | "hearing"
+  | "mobility"
+  | "learning"
+  | "neurodivergent"
+  | "chronic"
+  | "speech"
+  | "mental-health"
+  | "other";
+
+export type DisabilityDocumentMeta = {
+  name: string;
+  type: string;
+  size: number;
+  uploadedAt: number;
+  evaluation?: DisabilityDocumentEvaluation;
+};
+
+export type DisabilityDocumentEvaluation = {
+  status: "reviewed" | "needs_human_review";
+  documentType: string;
+  summary: string;
+  confidence: number;
+  detectedSupportTypes: DisabilitySupportType[];
+  recommendedAccommodations: string[];
+  caveats: string[];
+  evaluatedAt: number;
+};
+
+export type StudentAccessibilitySupport = {
+  enabled: boolean;
+  supportTypes: DisabilitySupportType[];
+  notes?: string;
+  document?: DisabilityDocumentMeta;
+};
+
+export type PublicUser = Pick<
+  StoredUser,
+  "email" | "name" | "role" | "accessibilitySupport" | "createdAt"
+>;
 
 export type AuthError =
   | "invalid-email"
@@ -120,6 +161,48 @@ function isStoredUser(value: unknown): value is StoredUser {
   );
 }
 
+const DISABILITY_SUPPORT_TYPES: ReadonlySet<DisabilitySupportType> = new Set([
+  "visual",
+  "hearing",
+  "mobility",
+  "learning",
+  "neurodivergent",
+  "chronic",
+  "speech",
+  "mental-health",
+  "other",
+]);
+
+function isDisabilitySupportType(value: unknown): value is DisabilitySupportType {
+  return typeof value === "string" && DISABILITY_SUPPORT_TYPES.has(value as DisabilitySupportType);
+}
+
+function sanitizeAccessibilitySupport(
+  role: UserRole,
+  support: StudentAccessibilitySupport | undefined,
+): StudentAccessibilitySupport | undefined {
+  if (role !== "student" || !support?.enabled) return undefined;
+
+  const supportTypes = support.supportTypes.filter(isDisabilitySupportType);
+  const notes = support.notes?.trim();
+  const document = support.document
+    ? {
+        name: support.document.name,
+        type: support.document.type,
+        size: support.document.size,
+        uploadedAt: support.document.uploadedAt,
+        evaluation: support.document.evaluation,
+      }
+    : undefined;
+
+  return {
+    enabled: true,
+    supportTypes,
+    notes: notes || undefined,
+    document,
+  };
+}
+
 function readUsers(): Record<string, StoredUser> {
   if (!hasWindow()) return {};
   try {
@@ -188,6 +271,7 @@ function toPublic(user: StoredUser): PublicUser {
     email: user.email,
     name: user.name,
     role: user.role,
+    accessibilitySupport: user.accessibilitySupport,
     createdAt: user.createdAt,
   };
 }
@@ -215,11 +299,17 @@ export function getCurrentUser(): PublicUser | null {
   return toPublic(user);
 }
 
+export function listPublicUsers(role?: UserRole): PublicUser[] {
+  const users = Object.values(readUsers()).map(toPublic);
+  return role ? users.filter((user) => user.role === role) : users;
+}
+
 export type RegisterInput = {
   email: string;
   password: string;
   role: UserRole;
   name?: string;
+  accessibilitySupport?: StudentAccessibilitySupport;
 };
 
 export async function registerUser(input: RegisterInput): Promise<PublicUser> {
@@ -242,6 +332,10 @@ export async function registerUser(input: RegisterInput): Promise<PublicUser> {
     email,
     name: input.name?.trim() || undefined,
     role: input.role,
+    accessibilitySupport: sanitizeAccessibilitySupport(
+      input.role,
+      input.accessibilitySupport,
+    ),
     saltB64: bytesToB64(salt),
     hashB64,
     iterations: PBKDF2_ITERATIONS,

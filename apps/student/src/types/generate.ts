@@ -48,6 +48,29 @@ export type FinancialRoute = {
   coverage_percent: number;
 };
 
+export type UniversityProgramRecommendation = {
+  universityId: string;
+  universityName: string;
+  city: string;
+  programTitle: string;
+  language: string;
+  durationYears: number;
+  fitScore: number;
+  website?: string;
+  rank?: number;
+  universityType?: "public" | "private";
+  categories?: string[];
+  description?: string;
+  admissionDeadline?: string;
+  languageRequirement?: string;
+  scholarships?: string[];
+  documents?: string[];
+  matchSummary?: string;
+  professionTrack?: string;
+  reasons: string[];
+  nextSteps: string[];
+};
+
 export type GenerateResponse = {
   career_map: CareerMapItem[];
   financial_route: FinancialRoute;

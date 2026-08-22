@@ -3,7 +3,7 @@ import type { GrantRecord } from "@/types/grants";
 /** One line for cards (list + results). */
 export function formatGrantAmountLine(g: GrantRecord): string {
   if (g.monthlyKzt != null && g.monthlyKzt > 0) {
-    return `~${g.monthlyKzt.toLocaleString()} KZT / month (demo est.)`;
+    return `~${g.monthlyKzt.toLocaleString()} KZT / month`;
   }
   if (g.amountEur) {
     return `~${g.amountEur.toLocaleString()} EUR (see programme for terms)`;

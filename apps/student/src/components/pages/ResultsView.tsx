@@ -13,7 +13,7 @@ export function ResultsView() {
           {["карьера", "финансы", "гранты", "резюме"].map((item) => (
             <span
               key={item}
-              className="rounded-full bg-white/75 px-3 py-1.5 text-xs font-bold text-pathwise-ink ring-1 ring-pathwise-line/80"
+              className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-pathwise-ink ring-1 ring-pathwise-line/80"
             >
               {item}
             </span>

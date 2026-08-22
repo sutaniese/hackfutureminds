@@ -14,7 +14,7 @@ export function ParentDashboard({ student, reportSection = true }: Props) {
   if (!student) {
     return (
       <section
-        className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm"
+        className="rounded-2xl border border-pathwise-line bg-white p-6 shadow-sm"
         aria-labelledby="parent-dash-empty"
       >
         <h2 id="parent-dash-empty" className="text-lg font-semibold text-pathwise-ink">
@@ -29,7 +29,7 @@ export function ParentDashboard({ student, reportSection = true }: Props) {
 
   return (
     <section
-      className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm"
+      className="rounded-2xl border border-pathwise-line bg-white p-6 shadow-sm"
       aria-labelledby={labelId}
       {...(reportSection ? { 'data-report-section': 'dashboard' } : {})}
     >
@@ -46,7 +46,7 @@ export function ParentDashboard({ student, reportSection = true }: Props) {
       </header>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl bg-pathwise-surface p-4" role="group" aria-label="Карточка ученика">
+        <div className="rounded-xl bg-white p-4" role="group" aria-label="Карточка ученика">
           <h3 className="text-sm font-semibold text-pathwise-ink">Личные данные</h3>
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between gap-4">
@@ -76,7 +76,7 @@ export function ParentDashboard({ student, reportSection = true }: Props) {
               {student.interests.map((i) => (
                 <li
                   key={i}
-                  className="rounded-full bg-pathwise-surface px-3 py-1 text-xs font-medium text-pathwise-ink ring-1 ring-pathwise-line"
+                  className="rounded-full bg-white px-3 py-1 text-xs font-medium text-pathwise-ink ring-1 ring-pathwise-line"
                 >
                   {i}
                 </li>
@@ -94,7 +94,7 @@ export function ParentDashboard({ student, reportSection = true }: Props) {
         </div>
 
         <div
-          className="rounded-xl border border-pathwise-accentSoft bg-teal-50/40 p-4"
+          className="rounded-xl border border-pathwise-accent-soft bg-[#f1efff] p-4"
           role="group"
           aria-label="Упаковка достижений"
         >
@@ -118,7 +118,7 @@ export function ParentDashboard({ student, reportSection = true }: Props) {
           {student.career_map.map((c) => (
             <li
               key={c.title}
-              className="flex flex-col rounded-xl border border-pathwise-line bg-pathwise-surface p-4"
+              className="flex flex-col rounded-xl border border-pathwise-line bg-white p-4"
             >
               <span className="text-sm font-semibold text-pathwise-ink">{c.title}</span>
               <span className="mt-2 text-xs text-pathwise-accent">{c.salary}</span>
@@ -142,19 +142,19 @@ export function ParentDashboard({ student, reportSection = true }: Props) {
 
       <div className="mt-8" role="region" aria-label="Финансовый маршрут" data-report-section="finance">
         <h3 className="text-lg font-semibold text-pathwise-ink">Финансовый маршрут (оценка)</h3>
-        <div className="mt-3 flex flex-wrap items-end gap-6 rounded-xl bg-slate-900 px-4 py-4 text-white">
+        <div className="mt-3 flex flex-wrap items-end gap-6 rounded-xl bg-slate-50 px-4 py-4 text-white">
           <div>
-            <p className="text-xs text-slate-400">Месячная стоимость (ориентир)</p>
+            <p className="text-xs text-pathwise-muted">Месячная стоимость (ориентир)</p>
             <p className="text-2xl font-bold tabular-nums">
               {student.financial_route.monthly_cost.toLocaleString('ru-RU')} ₸
             </p>
           </div>
           <div>
-            <p className="text-xs text-slate-400">Покрытие грантами (план)</p>
+            <p className="text-xs text-pathwise-muted">Покрытие грантами (план)</p>
             <p className="text-2xl font-bold tabular-nums">{student.financial_route.coverage_percent}%</p>
           </div>
           <div>
-            <p className="text-xs text-slate-400">Разрыв до полного покрытия</p>
+            <p className="text-xs text-pathwise-muted">Разрыв до полного покрытия</p>
             <p className="text-2xl font-bold tabular-nums text-amber-300">
               {student.financial_route.gap.toLocaleString('ru-RU')} ₸
             </p>
@@ -166,7 +166,7 @@ export function ParentDashboard({ student, reportSection = true }: Props) {
             <li key={g.name} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
               <span className="font-medium text-pathwise-ink">{g.name}</span>
               <span className="text-pathwise-muted">{g.amountLabel}</span>
-              <span className="rounded-full bg-pathwise-accentSoft px-2 py-0.5 text-xs text-pathwise-muted">
+              <span className="rounded-full bg-pathwise-accent-soft px-2 py-0.5 text-xs text-pathwise-muted">
                 дедлайн: {g.deadline}
               </span>
               <span className="text-xs text-pathwise-muted">

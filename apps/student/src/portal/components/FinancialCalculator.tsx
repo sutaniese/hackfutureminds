@@ -44,7 +44,7 @@ export function FinancialCalculator({ monthlyNeedKzt, grants, studentName }: Pro
 
   return (
     <section
-      className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm"
+      className="rounded-2xl border border-pathwise-line bg-white p-6 shadow-sm"
       aria-labelledby="financial-calc-title"
       data-report-section="calculator"
     >
@@ -78,7 +78,7 @@ export function FinancialCalculator({ monthlyNeedKzt, grants, studentName }: Pro
         </div>
 
         <div
-          className="flex flex-col justify-center rounded-xl bg-pathwise-surface p-4 ring-1 ring-pathwise-line"
+          className="flex flex-col justify-center rounded-xl bg-white p-4 ring-1 ring-pathwise-line"
           role="status"
           aria-live="polite"
         >
@@ -105,8 +105,8 @@ export function FinancialCalculator({ monthlyNeedKzt, grants, studentName }: Pro
               key={g.name}
               className={`rounded-xl border px-4 py-3 transition-colors ${
                 active
-                  ? 'border-pathwise-accent bg-pathwise-accentSoft ring-2 ring-pathwise-accent/30'
-                  : 'border-pathwise-line bg-pathwise-surface'
+                  ? 'border-pathwise-accent bg-pathwise-accent-soft ring-2 ring-pathwise-accent/30'
+                  : 'border-pathwise-line bg-white'
               }`}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">

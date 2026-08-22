@@ -19,7 +19,7 @@ export function OnboardingView() {
             ["15–18", "возраст ученика"],
             ["AI", "план после анкеты"],
           ].map(([value, label]) => (
-            <div key={label} className="rounded-2xl border border-pathwise-line/80 bg-white/70 p-4 shadow-sm">
+            <div key={label} className="rounded-2xl border border-pathwise-line/80 bg-white p-4 shadow-sm">
               <p className="text-2xl font-black text-pathwise-ink">{value}</p>
               <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-pathwise-muted">
                 {label}

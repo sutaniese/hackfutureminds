@@ -55,7 +55,7 @@ export function CareerComparison({ childProfession }: Props) {
 
   return (
     <section
-      className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm"
+      className="pw-card p-6"
       aria-labelledby="career-compare-title"
       data-report-section="career-compare"
     >
@@ -80,38 +80,39 @@ export function CareerComparison({ childProfession }: Props) {
             value={parentProfession}
             onChange={(e) => setParentProfession(e.target.value)}
             placeholder="Например: государственный служащий / бухгалтер / юрист"
-            className="mt-2 w-full rounded-xl border border-pathwise-line px-4 py-3 text-sm focus:border-pathwise-accent"
+            className="pw-input mt-2 w-full px-4 py-3 text-sm"
             aria-describedby="parent-profession-hint"
           />
           <p id="parent-profession-hint" className="mt-1 text-xs text-pathwise-muted">
-            Для демо нужен ключ <code className="rounded bg-pathwise-accentSoft px-1">GEMINI_API_KEY</code> в{' '}
-            <code className="rounded bg-pathwise-accentSoft px-1">.env</code> (только dev-сервер, не в браузер).
+            Для демо нужен ключ <code className="rounded bg-pathwise-accent-soft px-1">GEMINI_API_KEY</code> в{' '}
+            <code className="rounded bg-pathwise-accent-soft px-1">.env</code> (только dev-сервер, не в браузер).
           </p>
         </div>
         <button
           type="submit"
           disabled={loading || !childProfession.trim()}
-          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl bg-pathwise-accent px-5 py-3 text-sm font-semibold text-white shadow-pathwise hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          className="pw-btn-primary inline-flex min-h-[48px] min-w-[48px] items-center justify-center px-5 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? 'Запрос к Gemini…' : 'Сравнить с данными рынка'}
         </button>
       </form>
 
       {error && (
-        <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
+        <p className="mt-4 rounded-2xl border border-[#FF6B6B]/30 bg-[#FF6B6B]/10 px-3 py-2 text-sm text-red-100" role="alert">
           {error}
         </p>
       )}
 
       {result && (
-        <div className="mt-6 grid gap-4 md:grid-cols-2" role="region" aria-label="Результат сравнения">
-          <div className="rounded-xl border border-pathwise-line p-4">
+        <div className="relative mt-6 grid gap-4 md:grid-cols-[1fr_auto_1fr]" role="region" aria-label="Результат сравнения">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
             <h3 className="text-sm font-semibold text-pathwise-ink">Ваш вариант</h3>
             <p className="mt-1 text-xs text-pathwise-muted">{parentProfession}</p>
             <dl className="mt-3 space-y-2 text-sm">
               <div>
                 <dt className="text-pathwise-muted">Зарплата (ориентир)</dt>
                 <dd className="font-medium">{result.parentMarket.salaryRangeKzt}</dd>
+                <div className="mt-2 h-2 rounded-full bg-white"><div className="pw-slide-up h-full w-2/3 rounded-full bg-[#FF6B6B]" /></div>
               </div>
               <div>
                 <dt className="text-pathwise-muted">Спрос</dt>
@@ -123,13 +124,17 @@ export function CareerComparison({ childProfession }: Props) {
               </div>
             </dl>
           </div>
-          <div className="rounded-xl border border-pathwise-accent/40 bg-pathwise-accentSoft/50 p-4">
+          <div className="flex items-center justify-center">
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-black text-pathwise-accent-strong">VS</span>
+          </div>
+          <div className="rounded-2xl border border-[#6C63FF]/40 bg-[#6C63FF]/10 p-4">
             <h3 className="text-sm font-semibold text-pathwise-ink">Выбор ребёнка</h3>
             <p className="mt-1 text-xs text-pathwise-muted">{childProfession}</p>
             <dl className="mt-3 space-y-2 text-sm">
               <div>
                 <dt className="text-pathwise-muted">Зарплата (ориентир)</dt>
                 <dd className="font-medium">{result.childMarket.salaryRangeKzt}</dd>
+                <div className="mt-2 h-2 rounded-full bg-white"><div className="pw-slide-up h-full w-4/5 rounded-full bg-[#6C63FF]" /></div>
               </div>
               <div>
                 <dt className="text-pathwise-muted">Спрос</dt>
@@ -141,10 +146,10 @@ export function CareerComparison({ childProfession }: Props) {
               </div>
             </dl>
           </div>
-          <div className="md:col-span-2 rounded-xl bg-slate-900 p-4 text-sm text-slate-100">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-100 md:col-span-3">
             <p className="font-semibold text-white">Итог для семьи</p>
             <p className="mt-2 leading-relaxed">{result.summary}</p>
-            <p className="mt-2 text-xs text-slate-400">
+            <p className="mt-2 text-xs text-pathwise-muted">
               Источник данных: {result.source === 'gemini' ? 'Gemini API' : 'резервный текст (fallback)'}
             </p>
           </div>

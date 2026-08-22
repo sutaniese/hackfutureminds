@@ -62,15 +62,15 @@ export function AgentChat() {
   }
 
   return (
-    <section className="pw-card p-5 md:p-6" aria-labelledby="agent-title">
+    <section className="pw-card flex min-h-[70dvh] flex-col p-5 md:p-6" aria-labelledby="agent-title">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-pathwise-line pb-4">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-pathwise-accent">AI-наставник</p>
-          <h2 id="agent-title" className="mt-1 text-lg font-semibold text-pathwise-ink">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-pathwise-accent-strong">AI-наставник</p>
+          <h2 id="agent-title" className="mt-1 text-2xl font-bold text-pathwise-ink">
             Чат с агентом по Obsidian-vault
           </h2>
           <p className="text-xs text-pathwise-muted">
-            Память агента — папка <code className="rounded bg-pathwise-accentSoft px-1">ten-vault/students/&lt;id&gt;</code>.
+            Память агента — папка <code className="rounded bg-pathwise-accent-soft px-1">ten-vault/students/&lt;id&gt;</code>.
             Файлы можно открыть в Obsidian.
           </p>
         </div>
@@ -82,7 +82,7 @@ export function AgentChat() {
             id="agent-student"
             value={activeStudentId ?? ''}
             onChange={(e) => setActiveStudentId(e.target.value || null)}
-            className="rounded-xl border border-pathwise-line bg-white/80 px-3 py-2 text-sm shadow-sm focus:border-pathwise-accent"
+            className="pw-input px-3 py-2 text-sm"
           >
             <option value="">— ученик не выбран —</option>
             {students.map((s) => (
@@ -95,7 +95,7 @@ export function AgentChat() {
             type="button"
             onClick={handleClear}
             disabled={!activeStudentId || messages.length === 0}
-            className="min-h-[40px] rounded-xl border border-pathwise-line bg-white/80 px-3 py-2 text-xs font-semibold text-pathwise-muted hover:bg-pathwise-accentSoft/50 disabled:opacity-50"
+            className="min-h-[40px] rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-pathwise-muted hover:bg-white hover:text-slate-900 disabled:opacity-50"
           >
             Очистить чат
           </button>
@@ -110,7 +110,7 @@ export function AgentChat() {
         <>
           <div
             ref={listRef}
-            className="mt-4 flex h-[420px] flex-col gap-3 overflow-y-auto rounded-[1.4rem] border border-pathwise-line/80 bg-gradient-to-b from-white/75 to-pathwise-accentSoft/25 p-4"
+            className="mt-4 flex min-h-[440px] flex-1 flex-col gap-3 overflow-y-auto rounded-[1.6rem] border border-slate-200 bg-slate-50 p-4"
             role="log"
             aria-live="polite"
           >
@@ -123,8 +123,8 @@ export function AgentChat() {
               <Bubble key={i} msg={m} />
             ))}
             {busy && (
-              <div className="self-start rounded-2xl bg-pathwise-surface px-4 py-2 text-sm text-pathwise-muted ring-1 ring-pathwise-line">
-                агент думает…
+              <div className="self-start rounded-2xl bg-white px-4 py-2 text-sm text-pathwise-muted ring-1 ring-pathwise-line">
+                <span className="pw-shimmer rounded-full px-2">агент думает…</span>
               </div>
             )}
           </div>
@@ -134,7 +134,7 @@ export function AgentChat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Спросите: «расскажи про мой план», «сохрани заметку: …»"
-              className="min-h-[44px] flex-1 rounded-xl border border-pathwise-line bg-white/90 px-3 py-2 text-sm shadow-sm focus:border-pathwise-accent"
+              className="pw-input min-h-[48px] flex-1 px-4 py-2 text-sm"
               disabled={busy}
               aria-label="Сообщение агенту"
             />
@@ -168,10 +168,10 @@ function Bubble({ msg }: { msg: ChatMessage }) {
   const mine = msg.role === 'user'
   return (
     <div
-      className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2 text-sm leading-relaxed shadow-sm ${
+      className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
         mine
-          ? 'self-end bg-pathwise-accent text-white'
-          : 'self-start bg-pathwise-surface text-pathwise-ink ring-1 ring-pathwise-line'
+          ? 'self-end rounded-br-md bg-[#6C63FF] text-white shadow-sm'
+          : 'self-start rounded-bl-md bg-white text-pathwise-ink ring-1 ring-pathwise-line '
       }`}
     >
       {msg.text}

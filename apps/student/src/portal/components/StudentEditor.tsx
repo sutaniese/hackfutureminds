@@ -120,7 +120,7 @@ export function StudentEditor({ studentId, onSaved }: Props) {
   return (
     <form
       onSubmit={onSubmit}
-      className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm"
+      className="rounded-2xl border border-pathwise-line bg-white p-6 shadow-sm"
       aria-label={initial ? 'Редактирование ученика' : 'Онбординг нового ученика'}
     >
       <h2 className="text-lg font-semibold text-pathwise-ink">

@@ -88,7 +88,6 @@ export async function studentsApiMiddleware(
     const notesListMatch = path.match(/^\/api\/students\/([^/]+)\/notes$/)
     if (notesListMatch) {
       const id = decodeURIComponent(notesListMatch[1])
-      if (!getStudent(id)) return notFound(res)
       if (method === 'GET') {
         sendJson(res, 200, { notes: listStudentNotes(id) })
         return true
@@ -106,7 +105,6 @@ export async function studentsApiMiddleware(
     if (noteFileMatch) {
       const id = decodeURIComponent(noteFileMatch[1])
       const fileName = decodeURIComponent(noteFileMatch[2])
-      if (!getStudent(id)) return notFound(res)
       if (method === 'GET') {
         const content = readStudentNote(id, fileName)
         if (content === null) return notFound(res)

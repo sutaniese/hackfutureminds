@@ -8,6 +8,7 @@ import {
   WORK_OPTIONS,
 } from "@/lib/onboarding-constants";
 import { useUserProgress } from "@/components/gamification/UserProgressProvider";
+import { syncCurrentStudentProfile } from "@/lib/student-profile-store";
 import type { OnboardingAnswers, WorkPreference } from "@/types/onboarding";
 import { TOTAL_ONBOARDING_STEPS, createEmptyAnswers } from "@/types/onboarding";
 import { OnboardingProgress } from "./OnboardingProgress";
@@ -81,6 +82,7 @@ export function OnboardingChat() {
   useEffect(() => {
     if (complete) {
       try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(answers)); } catch { /* */ }
+      syncCurrentStudentProfile({ onboarding: answers });
     }
   }, [complete, answers]);
 

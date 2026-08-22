@@ -12,6 +12,7 @@ const T = {
   "nav.home": TR("Главная", "Home", "Басты"),
   "nav.onboarding": TR("Старт", "Onboard", "Бастау"),
   "nav.results": TR("План", "Results", "Нәтижелер"),
+  "nav.roadmap": TR("Roadmap", "Roadmap", "Roadmap"),
   "nav.grants": TR("Гранты", "Grants", "Гранттар"),
   "nav.portfolio": TR("Портфолио", "Portfolio", "Портфолио"),
   "nav.aria": TR("Основные разделы", "Main sections", "Негізгі бөлімдер"),
@@ -20,9 +21,9 @@ const T = {
   "a11y.voice": TR("Голос", "Voice", "Дауыс"),
   "a11y.help": TR("Справка", "Help", "Анықтама"),
   "a11y.voiceTitle": TR(
-    "Предпочтение голоса (позже)",
-    "Voice preference; full flow later",
-    "Дауыс (кейінірек)",
+    "Голосовой ассистент",
+    "Voice assistant",
+    "Дауыс ассистенті",
   ),
   "a11y.helpLabel": TR("Справка и доступность", "Accessibility help", "Анықтама"),
   "lang.ru": TR("РУ", "RU", "РУ"),
@@ -271,9 +272,9 @@ const T = {
   "grants.kicker": TR("КАТАЛОГ", "CATALOG", "КАТАЛОҒ"),
   "grants.title": TR("Стипендии и гранты", "Scholarships and grants", "Стипендия мен гранттар"),
   "grants.body": TR(
-    "Сравнивайте программы, фильтруйте по типу, как в teñ. Данные: локальный json; порядок с учётом онбординга, если пройдён.",
-    "Compare programs and filter; data from a local list; order uses onboarding if completed.",
-    "teñ-стилі, json, онбордингпен сұрыптау.",
+    "Сравнивайте реальные записи, собранные через Vesper из официальных источников. Если Supabase не настроен, сайт показывает Vesper fallback.",
+    "Compare real records collected with Vesper from official sources. If Supabase is not configured, the site shows the Vesper fallback.",
+    "Vesper арқылы ресми дереккөздерден алынған нақты жазбалар. Supabase жоқ болса, Vesper fallback көрсетіледі.",
   ),
   "grants.search": TR(
     "Поиск по названию, тегу или региону",

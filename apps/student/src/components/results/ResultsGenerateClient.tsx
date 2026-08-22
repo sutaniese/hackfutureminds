@@ -3,13 +3,18 @@
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { buildGenerateRequest } from "@/lib/build-generate-request";
 import { readLastGeneratePayload, writeLastGeneratePayload } from "@/lib/gamification";
+import { syncCurrentStudentProfile } from "@/lib/student-profile-store";
 import { ResultsGamificationBar } from "@/components/results/ResultsGamificationBar";
 import { CrossAppPromo } from "@/components/results/CrossAppPromo";
 import { useUserProgress } from "@/components/gamification/UserProgressProvider";
 import { useI18n } from "@/i18n/I18nProvider";
 import { readJsonResponse } from "@/lib/http-json";
 import type { OnboardingAnswers } from "@/types/onboarding";
-import type { GenerateResponse, MatchedGrantSummary } from "@/types/generate";
+import type {
+  GenerateResponse,
+  MatchedGrantSummary,
+  UniversityProgramRecommendation,
+} from "@/types/generate";
 
 const STORAGE = "pathwise-onboarding-answers";
 
@@ -40,12 +45,33 @@ function matchLabel(t: (k: string) => string, m: MatchedGrantSummary["match"]) {
   return t("results.m.low");
 }
 
+async function fetchProgramRecommendations(
+  onboarding: OnboardingAnswers,
+  language: "en" | "kk" | "ru",
+  careerTitles: string[] = [],
+): Promise<UniversityProgramRecommendation[]> {
+  const res = await fetch("/api/recommend-programs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ onboarding, language, careerTitles }),
+  });
+  const json = await readJsonResponse<{
+    recommendations?: UniversityProgramRecommendation[];
+  }>(res);
+  if (!res.ok) return [];
+  if (!json || !("recommendations" in json)) return [];
+  return Array.isArray(json.recommendations) ? json.recommendations : [];
+}
+
 export function ResultsGenerateClient() {
   const { t, locale } = useI18n();
   const { awardXp, earnBadge, setProfileCompletion } = useUserProgress();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<GenerateResponse | null>(null);
+  const [programRecommendations, setProgramRecommendations] = useState<
+    UniversityProgramRecommendation[]
+  >([]);
   const [onboarding, setOnboarding] = useState<OnboardingAnswers | null>(null);
   const [restored, setRestored] = useState(false);
 
@@ -54,9 +80,18 @@ export function ResultsGenerateClient() {
     setOnboarding(o);
     if (o) {
       const r = readLastGeneratePayload(o);
-      if (r) { setData(r); setRestored(true); }
+      if (r) {
+        setData(r);
+        setRestored(true);
+        syncCurrentStudentProfile({ onboarding: o, generated: r });
+      }
+      void fetchProgramRecommendations(
+        o,
+        locale,
+        r?.career_map.map((item) => item.title) ?? [],
+      ).then(setProgramRecommendations);
     }
-  }, []);
+  }, [locale]);
 
   const hasOnboarding = !!onboarding;
 
@@ -67,6 +102,7 @@ export function ResultsGenerateClient() {
     setLoading(true);
     setError(null);
     setData(null);
+    setProgramRecommendations([]);
     setRestored(false);
     const body = buildGenerateRequest(o, {
       language: locale,
@@ -87,6 +123,13 @@ export function ResultsGenerateClient() {
         const out = json as GenerateResponse;
         setData(out);
         writeLastGeneratePayload(o, out);
+        syncCurrentStudentProfile({ onboarding: o, generated: out });
+        const recommendations = await fetchProgramRecommendations(
+          o,
+          locale,
+          out.career_map.map((item) => item.title),
+        );
+        setProgramRecommendations(recommendations);
         if (out.career_map.length > 0) {
           earnBadge("career_found");
           setProfileCompletion(55);
@@ -161,6 +204,115 @@ export function ResultsGenerateClient() {
 
       {data && (
         <div className="grid gap-5 xl:grid-cols-3" aria-label={t("results.ariaAll")}>
+          {programRecommendations.length > 0 ? (
+            <section className="pw-slide-up pw-card overflow-hidden border-t-4 border-t-[#6C63FF] xl:col-span-3">
+              <div className="px-5 py-4">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-pathwise-accent-strong">
+                  Groq university fit
+                </p>
+                <h2 className="mt-2 text-xl font-black tracking-tight text-pathwise-ink">
+                  Recommended universities and programs
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-pathwise-muted">
+                  Real Kazakhstan university data matched to your generated profession path,
+                  interests, city, budget context and admission signals.
+                </p>
+              </div>
+              <div className="grid gap-4 p-5 pt-0 md:grid-cols-2 xl:grid-cols-3">
+                {programRecommendations.map((item) => (
+                  <article
+                    key={`${item.universityId}-${item.programTitle}`}
+                    className="flex min-h-[24rem] flex-col rounded-3xl border border-slate-200 bg-white p-4 shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-black text-pathwise-ink">
+                          {item.programTitle}
+                        </p>
+                        <p className="mt-1 text-xs font-semibold text-pathwise-muted">
+                          {item.universityName} · {item.city}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-[#f1efff] px-2.5 py-1 text-xs font-black text-[#554dd6]">
+                        {Math.round(item.fitScore)}%
+                      </span>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-bold text-slate-600">
+                      {typeof item.rank === "number" ? (
+                        <span className="rounded-full bg-[#6C63FF]/10 px-2.5 py-1 text-[#554dd6]">
+                          Rank #{item.rank}
+                        </span>
+                      ) : null}
+                      <span className="rounded-full bg-slate-100 px-2.5 py-1">
+                        {item.language}
+                      </span>
+                      <span className="rounded-full bg-slate-100 px-2.5 py-1">
+                        {item.durationYears} years
+                      </span>
+                      {item.universityType ? (
+                        <span className="rounded-full bg-slate-100 px-2.5 py-1">
+                          {item.universityType}
+                        </span>
+                      ) : null}
+                    </div>
+                    {item.matchSummary ? (
+                      <div className="mt-3 rounded-2xl border border-[#6C63FF]/15 bg-[#6C63FF]/5 p-3">
+                        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-pathwise-accent-strong">
+                          Profession fit
+                        </p>
+                        <p className="mt-1 text-xs leading-5 text-slate-700">{item.matchSummary}</p>
+                      </div>
+                    ) : null}
+                    <p className="mt-3 line-clamp-3 text-xs leading-5 text-pathwise-muted">
+                      {item.description}
+                    </p>
+                    <div className="mt-3 grid gap-2 text-[11px] leading-5 text-slate-600">
+                      {item.admissionDeadline ? (
+                        <p>
+                          <span className="font-black text-pathwise-ink">Deadline:</span> {item.admissionDeadline}
+                        </p>
+                      ) : null}
+                      {item.languageRequirement ? (
+                        <p>
+                          <span className="font-black text-pathwise-ink">Language:</span> {item.languageRequirement}
+                        </p>
+                      ) : null}
+                      {item.scholarships?.length ? (
+                        <p>
+                          <span className="font-black text-pathwise-ink">Scholarships:</span> {item.scholarships.slice(0, 2).join(", ")}
+                        </p>
+                      ) : null}
+                    </div>
+                    <ul className="mt-3 space-y-2 text-xs leading-5 text-slate-600">
+                      {item.reasons.slice(0, 3).map((reason) => (
+                        <li key={reason}>• {reason}</li>
+                      ))}
+                    </ul>
+                    <ol className="mt-3 space-y-2 text-xs leading-5 text-pathwise-muted">
+                      {item.nextSteps.slice(0, 3).map((step, index) => (
+                        <li key={step}>
+                          {index + 1}. {step}
+                        </li>
+                      ))}
+                    </ol>
+                    <div className="mt-auto pt-4">
+                      {item.website ? (
+                        <a
+                          href={item.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[#6C63FF] px-4 text-xs font-black text-white no-underline shadow-sm transition hover:bg-[#5B54D8]"
+                        >
+                          Official university site
+                        </a>
+                      ) : null}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
           {/* Career Map */}
           <section className="pw-slide-up pw-card overflow-hidden border-t-4 border-t-[#6C63FF]" style={{ animationDelay: "0ms" }}>
             <div className="px-5 py-4 text-white">

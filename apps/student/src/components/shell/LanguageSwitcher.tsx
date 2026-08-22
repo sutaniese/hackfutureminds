@@ -10,7 +10,7 @@ export function LanguageSwitcher() {
 
   const pillCls = (on: boolean) =>
     on
-      ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-sm shadow-indigo-500/20"
+      ? "bg-[#6C63FF] text-white shadow-sm shadow-indigo-500/20"
       : "text-slate-500 hover:text-slate-800 hover:bg-slate-50";
 
   return (
