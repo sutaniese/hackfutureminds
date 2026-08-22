@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getRankedGrantsForOnboarding } from "@/lib/generate/deterministic";
 import { formatGrantAmountLine } from "@/lib/format-grant";
+import { useI18n } from "@/i18n/I18nProvider";
 import type { GrantRecord, GrantType } from "@/types/grants";
 import type { OnboardingAnswers } from "@/types/onboarding";
 
@@ -27,8 +28,8 @@ type MatchPill = "all" | "high" | "medium" | "low";
 type SortKey = "match" | "name" | "deadline" | "amount";
 
 function grantRegion(g: GrantRecord): RegionKey {
-  const t = g.eligibilityTags.map((s) => s.toLowerCase());
-  const tj = t.join(" ");
+  const tagList = g.eligibilityTags.map((s) => s.toLowerCase());
+  const tj = tagList.join(" ");
   if (
     g.id === "bolashak" ||
     g.id === "nao_kz" ||
@@ -61,30 +62,53 @@ function grantRegion(g: GrantRecord): RegionKey {
   return "other";
 }
 
-const REGION_OPTIONS: { key: RegionKey; label: string }[] = [
-  { key: "all", label: "Все" },
-  { key: "kz", label: "Казахстан" },
-  { key: "eu", label: "Европа" },
-  { key: "uk", label: "Великобритания" },
-  { key: "americas", label: "США" },
-  { key: "asia", label: "Азия" },
-  { key: "other", label: "Другое" },
+const REGION_KEYS: RegionKey[] = [
+  "all",
+  "kz",
+  "eu",
+  "uk",
+  "americas",
+  "asia",
+  "other",
 ];
 
-const TYPE_PILLS: { key: GrantType | "all"; label: string }[] = [
-  { key: "all", label: "Все" },
-  { key: "monthly", label: "Ежемесячно" },
-  { key: "full", label: "Полный или частичный" },
-  { key: "lump", label: "Единовр." },
-  { key: "one_time", label: "Однокр." },
+function regionMsgKey(k: RegionKey) {
+  const m: Record<RegionKey, "grants.r.all" | "grants.r.kz" | "grants.r.eu" | "grants.r.uk" | "grants.r.am" | "grants.r.asia" | "grants.r.oth"> = {
+    all: "grants.r.all",
+    kz: "grants.r.kz",
+    eu: "grants.r.eu",
+    uk: "grants.r.uk",
+    americas: "grants.r.am",
+    asia: "grants.r.asia",
+    other: "grants.r.oth",
+  };
+  return m[k];
+}
+
+const TYPE_KEYS: (GrantType | "all")[] = [
+  "all",
+  "monthly",
+  "full",
+  "lump",
+  "one_time",
 ];
 
-const MATCH_PILLS: { key: MatchPill; label: string }[] = [
-  { key: "all", label: "Все" },
-  { key: "high", label: "Сильное" },
-  { key: "medium", label: "Средне" },
-  { key: "low", label: "Мягко" },
-];
+function typeMsgKey(t: GrantType | "all") {
+  if (t === "all") return "grants.typeAll";
+  if (t === "monthly") return "grants.type.monthly";
+  if (t === "full") return "grants.type.full";
+  if (t === "lump") return "grants.type.lump";
+  return "grants.type.onetime";
+}
+
+const MATCH_KEYS: MatchPill[] = ["all", "high", "medium", "low"];
+
+function matchMsgKey(m: MatchPill) {
+  if (m === "all") return "grants.f.mAll";
+  if (m === "high") return "grants.f.strong";
+  if (m === "medium") return "grants.f.mid";
+  return "grants.f.light";
+}
 
 function monthOrder(deadline: string): number {
   const s = deadline.toLowerCase();
@@ -115,6 +139,7 @@ const filterPill = (on: boolean) =>
     : "border border-pathwise-line/90 bg-pathwise-surface text-foreground hover:bg-pathwise-accent-soft/50";
 
 export function GrantsListClient() {
+  const { t } = useI18n();
   const [onboarding, setOnboarding] = useState<OnboardingAnswers | null>(null);
   const [ready, setReady] = useState(false);
   const [q, setQ] = useState("");
@@ -211,44 +236,41 @@ export function GrantsListClient() {
         aria-labelledby="grants-hero-title"
       >
         <p className="text-[0.7rem] font-bold uppercase leading-none tracking-[0.16em] text-sky-600/90">
-          КАТАЛОГ
+          {t("grants.kicker")}
         </p>
         <h1
           id="grants-hero-title"
           className="mt-3 text-2xl font-bold leading-tight tracking-tight text-pathwise-ink md:text-3xl"
         >
-          Стипендии и гранты
+          {t("grants.title")}
         </h1>
         <p className="mt-3 max-w-2xl text-balance text-sm text-pathwise-muted md:text-base">
-          Сравнивайте программы для учёбы в Казахстане и за границей, фильтруйте
-          по типу — как в витрине teñ. Данные из локального каталога, порядок
-          учитывает онбординг, если вы его прошли.
+          {t("grants.body")}
         </p>
         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           <label className="relative min-w-0 flex-1">
-            <span className="sr-only">Поиск</span>
+            <span className="sr-only">{t("grants.searchLabel")}</span>
             <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-pathwise-muted">
               <SearchIcon className="h-5 w-5" />
             </span>
             <input
               className="w-full rounded-2xl border-2 border-pathwise-line/40 bg-pathwise-surface py-2.5 pl-11 pr-3 text-sm text-foreground shadow-sm ring-0 placeholder:text-pathwise-muted/80 focus:border-pathwise-accent focus:outline-none"
-              placeholder="Поиск по названию, городу или описанию"
+              placeholder={t("grants.search")}
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
           </label>
           <p className="shrink-0 text-sm text-pathwise-muted" aria-live="polite">
-            Найдено: {sorted.length}
+            {t("grants.found", { n: sorted.length })}
           </p>
         </div>
         {!onboarding && (
           <p className="mt-3 rounded-xl border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-sm text-amber-950">
-            <strong>Идея.</strong> Пройдите{" "}
+            {t("grants.tip")}{" "}
             <a className="font-semibold underline" href="/onboarding">
-              онбординг
-            </a>
-            : подбор совпадений сильнее, фильтры &laquo;Сильное&raquo; начнут
-            иметь смысл.
+              {t("grants.tipOnboard")}
+            </a>{" "}
+            {t("grants.tip2")}
           </p>
         )}
       </section>
@@ -256,23 +278,23 @@ export function GrantsListClient() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <aside
           className="lg:col-span-3"
-          aria-label="Фильтры каталога"
+          aria-label={t("grants.filterAria")}
         >
           <div className="sticky top-28 space-y-6">
             <fieldset>
               <legend className="mb-2 text-[0.7rem] font-bold uppercase leading-none tracking-[0.1em] text-pathwise-muted">
-                РЕЙТИНГ
+                {t("grants.f.rank")}
               </legend>
               <div className="flex flex-wrap gap-1.5">
-                {MATCH_PILLS.map((p) => (
+                {MATCH_KEYS.map((k) => (
                   <button
-                    key={p.key}
+                    key={k}
                     type="button"
-                    onClick={() => setMatchP(p.key)}
-                    className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${filterPill(matchP === p.key)} ${!onboarding && p.key !== "all" ? "opacity-60" : ""}`}
-                    title={!onboarding && p.key !== "all" ? "Полезнее после онбординга" : undefined}
+                    onClick={() => setMatchP(k)}
+                    className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${filterPill(matchP === k)} ${!onboarding && k !== "all" ? "opacity-60" : ""}`}
+                    title={!onboarding && k !== "all" ? t("grants.f.tipR") : undefined}
                   >
-                    {p.label}
+                    {t(matchMsgKey(k))}
                   </button>
                 ))}
               </div>
@@ -280,7 +302,7 @@ export function GrantsListClient() {
 
             <div>
               <p className="mb-2 text-[0.7rem] font-bold uppercase leading-none tracking-[0.1em] text-pathwise-muted">
-                РЕГИОН
+                {t("grants.f.region")}
               </p>
               <div className="relative">
                 <select
@@ -290,9 +312,9 @@ export function GrantsListClient() {
                     setRegion(e.target.value as RegionKey)
                   }
                 >
-                  {REGION_OPTIONS.map((o) => (
-                    <option key={o.key} value={o.key}>
-                      {o.label}
+                  {REGION_KEYS.map((k) => (
+                    <option key={k} value={k}>
+                      {t(regionMsgKey(k))}
                     </option>
                   ))}
                 </select>
@@ -304,17 +326,17 @@ export function GrantsListClient() {
 
             <fieldset>
               <legend className="mb-2 text-[0.7rem] font-bold uppercase leading-none tracking-[0.1em] text-pathwise-muted">
-                ТИП
+                {t("grants.f.type")}
               </legend>
               <div className="flex flex-wrap gap-1.5">
-                {TYPE_PILLS.map((p) => (
+                {TYPE_KEYS.map((k) => (
                   <button
-                    key={String(p.key)}
+                    key={String(k)}
                     type="button"
-                    onClick={() => setType(p.key)}
-                    className={`rounded-full px-2.5 py-1.5 text-xs font-medium sm:text-sm ${filterPill(type === p.key)}`}
+                    onClick={() => setType(k)}
+                    className={`rounded-full px-2.5 py-1.5 text-xs font-medium sm:text-sm ${filterPill(type === k)}`}
                   >
-                    {p.label}
+                    {t(typeMsgKey(k))}
                   </button>
                 ))}
               </div>
@@ -325,7 +347,7 @@ export function GrantsListClient() {
               onClick={reset}
               className="w-full text-left text-sm font-semibold text-pw-primary underline decoration-pathwise-line underline-offset-4"
             >
-              Сбросить фильтры
+              {t("grants.reset")}
             </button>
           </div>
         </aside>
@@ -333,20 +355,20 @@ export function GrantsListClient() {
         <div className="min-w-0 space-y-4 lg:col-span-9">
           <div className="flex flex-col items-stretch justify-between gap-2 sm:flex-row sm:items-end">
             <p className="text-sm text-pathwise-muted" aria-live="polite">
-              Показано {sorted.length} из {baseRows.length}
+              {t("grants.shown", { a: sorted.length, b: baseRows.length })}
             </p>
             <div className="flex items-center justify-end gap-2">
-              <span className="whitespace-nowrap text-sm text-pathwise-muted">Сортировка</span>
+              <span className="whitespace-nowrap text-sm text-pathwise-muted">{t("grants.sort")}</span>
               <div className="relative">
                 <select
                   className="min-w-[12rem] cursor-pointer appearance-none rounded-lg border-2 border-pathwise-line/40 bg-pathwise-surface py-2 pl-2.5 pr-8 text-sm"
                   value={sort}
                   onChange={(e) => setSort(e.target.value as SortKey)}
                 >
-                  <option value="match">По совпадению</option>
-                  <option value="name">A–Z</option>
-                  <option value="deadline">По сроку</option>
-                  <option value="amount">По поддержке (KZT/мес)</option>
+                  <option value="match">{t("grants.sortMatch")}</option>
+                  <option value="name">{t("grants.sortName")}</option>
+                  <option value="deadline">{t("grants.sortDeadline")}</option>
+                  <option value="amount">{t("grants.sortKzt")}</option>
                 </select>
                 <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-pathwise-muted">
                   <Chevron className="h-4 w-4" />
@@ -357,7 +379,7 @@ export function GrantsListClient() {
 
           {sorted.length === 0 ? (
             <p className="pw-card p-6 text-sm text-pathwise-muted">
-              Ни одной позиции не соответствует. Сбросьте фильтры.
+              {t("grants.empty")}
             </p>
           ) : (
             <ul className="grid list-none grid-cols-1 gap-5 p-0 sm:grid-cols-2 lg:grid-cols-3">
@@ -387,16 +409,17 @@ function CatalogGrantCard({
   index: number;
   hasOnboarding: boolean;
 }) {
+  const { t } = useI18n();
   const { g, match } = row;
   const badge = !hasOnboarding
-    ? "—"
+    ? t("grants.badge0")
     : index < 3 && hasOnboarding
-      ? `#${index + 1} Overall`
+      ? t("grants.badgeIndex", { n: index + 1 })
       : match === "high"
-        ? "Сильно"
+        ? t("grants.badge2")
         : match === "medium"
-          ? "Средне"
-          : "Мягко";
+          ? t("grants.badge3")
+          : t("grants.badge4");
   return (
     <article className="group flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-pathwise-line/60 bg-pathwise-surface shadow-[0_2px_12px_rgb(15_23_42/0.06)] transition hover:shadow-md">
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-sky-50/80">
@@ -425,14 +448,14 @@ function CatalogGrantCard({
         {g.eligibilityTags.length > 0 && (
           <div
             className="mt-3 flex flex-wrap gap-1.5"
-            aria-label="Теги"
+            aria-label={t("grants.tagsAria")}
           >
-            {g.eligibilityTags.slice(0, 3).map((t) => (
+            {g.eligibilityTags.slice(0, 3).map((tag) => (
               <span
-                key={t}
+                key={tag}
                 className="rounded-lg bg-sky-100/80 px-2.5 py-0.5 text-xs font-medium text-sky-900/90"
               >
-                {t.replaceAll("_", " ")}
+                {tag.replaceAll("_", " ")}
               </span>
             ))}
             {g.eligibilityTags.length > 3 && (
@@ -448,7 +471,7 @@ function CatalogGrantCard({
           rel="noopener noreferrer"
           className="mt-4 flex min-h-11 w-full items-center justify-center self-stretch rounded-2xl border-2 border-pathwise-line/70 bg-pathwise-surface px-3 text-sm font-semibold text-pw-primary no-underline transition hover:bg-pathwise-accent-soft/40"
         >
-          View &rarr;
+          {t("grants.view")}
         </a>
       </div>
     </article>

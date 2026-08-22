@@ -8,6 +8,7 @@ import {
   useState,
   type ChangeEvent,
 } from "react";
+import { useI18n } from "@/i18n/I18nProvider";
 
 const NOTES_KEY = "pathwise-portfolio-notes";
 const UPLOADS_KEY = "pathwise-portfolio-files";
@@ -81,6 +82,7 @@ function randomId() {
 }
 
 export function PortfolioUploadClient() {
+  const { t } = useI18n();
   const [notes, setNotes] = useState("");
   const [files, setFiles] = useState<StoredFileItem[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -107,7 +109,10 @@ export function PortfolioUploadClient() {
   const addFile = (file: File) => {
     if (file.size > MAX_BYTES) {
       setError(
-        `“${file.name}” is too large for a demo in-browser keep (max ${byteLabel(MAX_BYTES)}). Try a shorter PDF or smaller images.`
+        t("portfolio.errFileBig", {
+          name: file.name,
+          max: byteLabel(MAX_BYTES),
+        }),
       );
       return;
     }
@@ -116,27 +121,27 @@ export function PortfolioUploadClient() {
     const r = new FileReader();
     r.onerror = () => {
       setBusy(false);
-      setError("Could not read that file. Try again.");
+      setError(t("portfolio.errRead"));
     };
     r.onload = () => {
       setBusy(false);
       const dataUrl = typeof r.result === "string" ? r.result : "";
       if (!dataUrl) {
-        setError("Empty file — pick another one.");
+        setError(t("portfolio.errEmpty"));
         return;
       }
       if (dataUrl.length > 2_500_000) {
-        setError("That file is still too big after reading. Use a smaller export.");
+        setError(t("portfolio.errStillBig"));
         return;
       }
       setFiles((prev) => {
         if (prev.length >= MAX_FILES) {
-          setError(`You can add up to ${MAX_FILES} files. Remove one first.`);
+          setError(t("portfolio.errMany", { n: MAX_FILES }));
           return prev;
         }
         const nextSize = totalSize(prev, dataUrl.length);
         if (nextSize > 4_500_000) {
-          setError("Session storage is almost full. Remove a file or shorten notes.");
+          setError(t("portfolio.errQuota"));
           return prev;
         }
         const item: StoredFileItem = {
@@ -185,25 +190,20 @@ export function PortfolioUploadClient() {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-[var(--pw-muted)]">
-        Add a short free-text summary and files you already have (CV, project PDFs, certificates, screenshots). Everything stays in this
-        tab&apos;s <strong>session</strong> — cleared when the browser session ends, not sent to a server in this demo.
-      </p>
-
       <div className="space-y-2">
         <label
           className="block text-sm font-semibold text-foreground"
           htmlFor="portfolio-notes"
         >
-          About your portfolio
+          {t("portfolio.about")}
         </label>
         <textarea
           id="portfolio-notes"
-          className="min-h-32 w-full rounded-2xl border-2 border-[var(--pw-border)] bg-[var(--pw-surface)] px-3 py-3 text-sm text-foreground"
+          className="min-h-32 w-full rounded-2xl border-2 border-pathwise-line bg-pathwise-surface px-3 py-3 text-sm text-foreground"
           value={notes}
           onChange={(e) => onNotes(e.target.value)}
           rows={4}
-          placeholder="Projects, competition wins, volunteering, language levels…"
+          placeholder={t("portfolio.phNotes")}
         />
       </div>
 
@@ -212,7 +212,7 @@ export function PortfolioUploadClient() {
           className="block text-sm font-semibold text-foreground"
           htmlFor={inputId}
         >
-          Upload files
+          {t("portfolio.uploads")}
         </label>
         <input
           id={inputId}
@@ -228,12 +228,12 @@ export function PortfolioUploadClient() {
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={busy}
-            className="pw-tap min-h-12 w-full min-w-0 rounded-full bg-[var(--pw-primary)] px-4 text-sm font-semibold text-white disabled:opacity-50 sm:max-w-xs"
+            className="pw-tap min-h-12 w-full min-w-0 rounded-full bg-pw-primary px-4 text-sm font-semibold text-pw-primary-foreground disabled:opacity-50 sm:max-w-xs"
           >
-            {busy ? "Loading…" : "Choose files"}
+            {busy ? t("portfolio.load") : t("portfolio.choose")}
           </button>
-          <span className="text-xs text-[var(--pw-muted)]">
-            PDF, images, Word. Max {byteLabel(MAX_BYTES)} each, up to {MAX_FILES} files.
+          <span className="text-xs text-pathwise-muted">
+            {t("portfolio.limits", { b: byteLabel(MAX_BYTES), n: MAX_FILES })}
           </span>
         </div>
       </div>
@@ -247,36 +247,36 @@ export function PortfolioUploadClient() {
       {files.length > 0 && (
         <div>
           <div className="mb-2 flex items-center justify-between gap-2">
-            <h2 className="text-sm font-bold">Added files</h2>
+            <h2 className="text-sm font-bold">{t("portfolio.added")}</h2>
             <button
               type="button"
               onClick={clearAll}
-              className="min-h-12 min-w-[3rem] rounded-lg px-2 text-sm font-semibold text-[var(--pw-muted)] underline"
+              className="min-h-12 min-w-[3rem] rounded-lg px-2 text-sm font-semibold text-pathwise-muted underline"
             >
-              Remove all
+              {t("portfolio.removeAll")}
             </button>
           </div>
-          <ul className="flex list-none flex-col gap-2 p-0" aria-label="Uploaded files">
+          <ul className="flex list-none flex-col gap-2 p-0" aria-label={t("portfolio.added")}>
             {files.map((f) => {
               const isImage = f.mime.startsWith("image/");
               return (
                 <li
                   key={f.id}
-                  className="flex flex-col gap-2 rounded-2xl border-2 border-[var(--pw-border)] bg-[var(--pw-surface)] p-3"
+                  className="flex flex-col gap-2 rounded-2xl border-2 border-pathwise-line bg-pathwise-surface p-3"
                 >
                   <div className="flex min-h-12 items-center justify-between gap-2">
                     <span className="min-w-0 break-words font-medium text-foreground">
                       {f.name}
                     </span>
                     <div className="flex shrink-0 items-center gap-1">
-                      <span className="text-xs text-[var(--pw-muted)]">
+                      <span className="text-xs text-pathwise-muted">
                         {byteLabel(f.size)}
                       </span>
                       <button
                         type="button"
                         className="pw-tap min-h-12 min-w-12 rounded-full border-2 border-red-200 px-2 text-sm font-bold text-red-800"
                         onClick={() => remove(f.id)}
-                        aria-label={`Remove ${f.name}`}
+                        aria-label={t("portfolio.removeFile", { n: f.name })}
                       >
                         ×
                       </button>
@@ -286,16 +286,16 @@ export function PortfolioUploadClient() {
                     <img
                       src={f.dataUrl}
                       alt=""
-                      className="max-h-48 w-full max-w-sm rounded-lg border border-[var(--pw-border)] object-contain"
+                      className="max-h-48 w-full max-w-sm rounded-lg border border-pathwise-line object-contain"
                     />
                   )}
                   {!isImage && (
                     <a
-                      className="flex min-h-12 w-fit min-w-12 max-w-full items-center self-start rounded-lg border-2 border-[var(--pw-primary)] px-3 text-sm font-semibold text-[var(--pw-primary)]"
+                      className="flex min-h-12 w-fit min-w-12 max-w-full items-center self-start rounded-lg border-2 border-pw-primary px-3 text-sm font-semibold text-pw-primary"
                       href={f.dataUrl}
                       download={f.name}
                     >
-                      Download / open copy
+                      {t("portfolio.dl")}
                     </a>
                   )}
                 </li>

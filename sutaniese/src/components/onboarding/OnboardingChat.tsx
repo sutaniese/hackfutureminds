@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { useI18n } from "@/i18n/I18nProvider";
 import {
-  ONBOARDING_COPY,
-  ONBOARDING_QUESTION_KEYS,
   ONBOARDING_SUBJECT_OPTIONS,
   WORK_OPTIONS,
 } from "@/lib/onboarding-constants";
@@ -42,16 +41,28 @@ function toggleSubjectId(prev: string[], id: string): string[] {
   return [...prev, id];
 }
 
+function qKey(step: number) {
+  return `onboard.q${step + 1}` as
+    | "onboard.q1"
+    | "onboard.q2"
+    | "onboard.q3"
+    | "onboard.q4"
+    | "onboard.q5"
+    | "onboard.q6"
+    | "onboard.q7";
+}
+
 export function OnboardingChat() {
+  const { t } = useI18n();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<OnboardingAnswers>(() =>
-    createEmptyAnswers()
+    createEmptyAnswers(),
   );
   const [complete, setComplete] = useState(false);
 
   const canNext = isStepSatisfied(step, answers);
   const isLast = step === TOTAL_ONBOARDING_STEPS - 1;
-  const question = ONBOARDING_COPY[ONBOARDING_QUESTION_KEYS[step]];
+  const question = t(qKey(step));
 
   const goBack = useCallback(() => {
     if (step > 0) setStep((s) => s - 1);
@@ -87,25 +98,23 @@ export function OnboardingChat() {
     return (
       <div className="space-y-4">
         <div className="pw-card p-4 pw-step-enter" key="done">
-          <h2 className="text-lg font-bold text-foreground">All set</h2>
-          <p className="text-sm text-[var(--pw-muted)]">
-            Your answers are kept in this browser for this visit (and in session
-            storage) so the next step can use them in the demo, even before the
-            live API.
-          </p>
+          <h2 className="text-lg font-bold text-foreground">
+            {t("onboard.allSet")}
+          </h2>
+          <p className="text-sm text-pathwise-muted">{t("onboard.allSetBody")}</p>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/results"
-              className="inline-flex min-h-12 flex-1 items-center justify-center rounded-full bg-[var(--pw-primary)] px-4 text-sm font-semibold text-white no-underline transition active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+              className="inline-flex min-h-12 flex-1 items-center justify-center rounded-full bg-pw-primary px-4 text-sm font-semibold text-pw-primary-foreground no-underline transition active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
             >
-              View results
+              {t("onboard.toResults")}
             </Link>
             <button
               type="button"
               onClick={reset}
-              className="min-h-12 flex-1 rounded-full border-2 border-[var(--pw-border)] bg-[var(--pw-surface)] px-4 text-sm font-semibold text-foreground"
+              className="min-h-12 flex-1 rounded-full border-2 border-pathwise-line bg-pathwise-surface px-4 text-sm font-semibold text-foreground"
             >
-              Start over
+              {t("onboard.startOver")}
             </button>
           </div>
         </div>
@@ -122,7 +131,11 @@ export function OnboardingChat() {
       />
 
       <p className="sr-only" aria-live="polite" aria-atomic>
-        {`Step ${step + 1} of ${TOTAL_ONBOARDING_STEPS}. ${question}`}
+        {t("onboard.ariaStep", {
+          a: step + 1,
+          b: TOTAL_ONBOARDING_STEPS,
+          c: question,
+        })}
       </p>
 
       <div
@@ -133,7 +146,7 @@ export function OnboardingChat() {
         {step === 0 && (
           <fieldset className="space-y-3 border-0 p-0">
             <legend className="w-full text-base font-semibold leading-snug text-foreground">
-              {ONBOARDING_COPY.q1}
+              {t("onboard.q1")}
             </legend>
             <div className="flex flex-wrap gap-2">
               {ONBOARDING_SUBJECT_OPTIONS.map((o) => {
@@ -152,17 +165,17 @@ export function OnboardingChat() {
                     className={
                       "min-h-12 rounded-full border-2 px-4 text-sm font-medium transition " +
                       (on
-                        ? "border-[var(--pw-primary)] bg-[var(--pw-primary)] text-white"
-                        : "border-[var(--pw-border)] bg-[var(--pw-surface)] text-foreground")
+                        ? "border-pw-primary bg-pw-primary text-pw-primary-foreground"
+                        : "border-pathwise-line bg-pathwise-surface text-foreground")
                     }
                   >
-                    {o.label}
+                    {t(`onboard.subjects.${o.id}` as "onboard.subjects.math")}
                   </button>
                 );
               })}
             </div>
-            <p className="text-xs text-[var(--pw-muted)]">
-              Pick all that apply — at least one.
+            <p className="text-xs text-pathwise-muted">
+              {t("onboard.pickSubjects")}
             </p>
           </fieldset>
         )}
@@ -173,11 +186,11 @@ export function OnboardingChat() {
               className="mb-2 block text-base font-semibold text-foreground"
               htmlFor="q-free"
             >
-              {ONBOARDING_COPY.q2}
+              {t("onboard.q2")}
             </label>
             <textarea
               id="q-free"
-              className="pw-tap w-full min-h-[7rem] resize-y rounded-2xl border-2 border-[var(--pw-border)] bg-[var(--pw-surface)] px-3 py-3 text-base text-foreground shadow-sm focus:outline focus:outline-2 focus:outline-offset-2"
+              className="pw-tap w-full min-h-[7rem] resize-y rounded-2xl border-2 border-pathwise-line bg-pathwise-surface px-3 py-3 text-base text-foreground shadow-sm focus:outline focus:outline-2 focus:outline-offset-2"
               value={answers.freeTime}
               onChange={(e) =>
                 setAnswers((a) => ({ ...a, freeTime: e.target.value }))
@@ -193,11 +206,11 @@ export function OnboardingChat() {
               className="mb-2 block text-base font-semibold text-foreground"
               htmlFor="q-ach"
             >
-              {ONBOARDING_COPY.q3}
+              {t("onboard.q3")}
             </label>
             <textarea
               id="q-ach"
-              className="pw-tap w-full min-h-[7rem] resize-y rounded-2xl border-2 border-[var(--pw-border)] bg-[var(--pw-surface)] px-3 py-3 text-base text-foreground focus:outline focus:outline-2 focus:outline-offset-2"
+              className="pw-tap w-full min-h-[7rem] resize-y rounded-2xl border-2 border-pathwise-line bg-pathwise-surface px-3 py-3 text-base text-foreground focus:outline focus:outline-2 focus:outline-offset-2"
               value={answers.achievements}
               onChange={(e) =>
                 setAnswers((a) => ({ ...a, achievements: e.target.value }))
@@ -208,9 +221,9 @@ export function OnboardingChat() {
         )}
 
         {step === 3 && (
-          <div className="space-y-3" role="group" aria-label={ONBOARDING_COPY.q4}>
+          <div className="space-y-3" role="group" aria-label={t("onboard.q4")}>
             <p className="text-base font-semibold text-foreground">
-              {ONBOARDING_COPY.q4}
+              {t("onboard.q4")}
             </p>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {WORK_OPTIONS.map((o) => {
@@ -229,17 +242,20 @@ export function OnboardingChat() {
                     className={
                       "flex min-h-14 flex-col items-stretch justify-center rounded-2xl border-2 p-3 text-left transition " +
                       (on
-                        ? "border-[var(--pw-primary)] bg-[var(--pw-primary)] text-white"
-                        : "border-[var(--pw-border)] bg-[var(--pw-surface)] text-foreground")
+                        ? "border-pw-primary bg-pw-primary text-pw-primary-foreground"
+                        : "border-pathwise-line bg-pathwise-surface text-foreground")
                     }
                   >
-                    <span className="text-sm font-bold">{o.label}</span>
+                    <span className="text-sm font-bold">
+                      {t(`onboard.work.${o.id}.label` as "onboard.work.people.label")}
+                    </span>
                     <span
                       className={
-                        "text-xs " + (on ? "text-white/90" : "text-[var(--pw-muted)]")
+                        "text-xs " +
+                        (on ? "text-pw-primary-foreground/90" : "text-pathwise-muted")
                       }
                     >
-                      {o.hint}
+                      {t(`onboard.work.${o.id}.hint` as "onboard.work.people.hint")}
                     </span>
                   </button>
                 );
@@ -249,9 +265,9 @@ export function OnboardingChat() {
         )}
 
         {step === 4 && (
-          <div className="space-y-3" role="group" aria-label={ONBOARDING_COPY.q5}>
+          <div className="space-y-3" role="group" aria-label={t("onboard.q5")}>
             <p className="text-base font-semibold text-foreground">
-              {ONBOARDING_COPY.q5}
+              {t("onboard.q5")}
             </p>
             <div className="flex flex-col gap-2">
               <button
@@ -266,11 +282,11 @@ export function OnboardingChat() {
                 className={
                   "min-h-14 w-full rounded-2xl border-2 px-4 text-left text-sm font-bold transition " +
                   (answers.studyLocation === "kazakhstan"
-                    ? "border-[var(--pw-primary)] bg-[var(--pw-primary)] text-white"
-                    : "border-[var(--pw-border)] bg-[var(--pw-surface)] text-foreground")
+                    ? "border-pw-primary bg-pw-primary text-pw-primary-foreground"
+                    : "border-pathwise-line bg-pathwise-surface text-foreground")
                 }
               >
-                Study in Kazakhstan
+                {t("onboard.studyKz")}
               </button>
               <button
                 type="button"
@@ -284,11 +300,11 @@ export function OnboardingChat() {
                 className={
                   "min-h-14 w-full rounded-2xl border-2 px-4 text-left text-sm font-bold transition " +
                   (answers.studyLocation === "abroad"
-                    ? "border-[var(--pw-primary)] bg-[var(--pw-primary)] text-white"
-                    : "border-[var(--pw-border)] bg-[var(--pw-surface)] text-foreground")
+                    ? "border-pw-primary bg-pw-primary text-pw-primary-foreground"
+                    : "border-pathwise-line bg-pathwise-surface text-foreground")
                 }
               >
-                Study abroad
+                {t("onboard.studyAb")}
               </button>
             </div>
           </div>
@@ -300,17 +316,17 @@ export function OnboardingChat() {
               className="mb-2 block text-base font-semibold text-foreground"
               htmlFor="q-city"
             >
-              {ONBOARDING_COPY.q6}
+              {t("onboard.q6")}
             </label>
             <input
               id="q-city"
-              className="pw-tap w-full min-h-12 rounded-2xl border-2 border-[var(--pw-border)] bg-[var(--pw-surface)] px-3 py-2 text-base text-foreground"
+              className="pw-tap w-full min-h-12 rounded-2xl border-2 border-pathwise-line bg-pathwise-surface px-3 py-2 text-base text-foreground"
               value={answers.city}
               onChange={(e) =>
                 setAnswers((a) => ({ ...a, city: e.target.value }))
               }
               maxLength={120}
-              placeholder="E.g. Almaty, Astana"
+              placeholder={t("onboard.phCity")}
             />
           </div>
         )}
@@ -321,11 +337,11 @@ export function OnboardingChat() {
               className="mb-2 block text-base font-semibold text-foreground"
               htmlFor="q-bud"
             >
-              {ONBOARDING_COPY.q7}
+              {t("onboard.q7")}
             </label>
             <textarea
               id="q-bud"
-              className="w-full min-h-[5rem] resize-y rounded-2xl border-2 border-[var(--pw-border)] bg-[var(--pw-surface)] px-3 py-3 text-base text-foreground"
+              className="w-full min-h-[5rem] resize-y rounded-2xl border-2 border-pathwise-line bg-pathwise-surface px-3 py-3 text-base text-foreground"
               value={answers.budgetConstraints}
               onChange={(e) =>
                 setAnswers((a) => ({
@@ -334,9 +350,11 @@ export function OnboardingChat() {
                 }))
               }
               maxLength={2000}
-              placeholder="E.g. limited, need a grant — or: none"
+              placeholder={t("onboard.phBudget")}
             />
-            <p className="mt-1 text-xs text-[var(--pw-muted)]">Optional to fill in.</p>
+            <p className="mt-1 text-xs text-pathwise-muted">
+              {t("onboard.optional")}
+            </p>
           </div>
         )}
       </div>
@@ -346,18 +364,18 @@ export function OnboardingChat() {
           <button
             type="button"
             onClick={goBack}
-            className="min-h-12 min-w-24 flex-1 rounded-full border-2 border-[var(--pw-border)] bg-[var(--pw-surface)] text-sm font-semibold text-foreground"
+            className="min-h-12 min-w-24 flex-1 rounded-full border-2 border-pathwise-line bg-pathwise-surface text-sm font-semibold text-foreground"
           >
-            Back
+            {t("onboard.back")}
           </button>
         )}
         <button
           type="button"
           onClick={goNext}
           disabled={!canNext}
-          className="min-h-12 flex-1 rounded-full bg-[var(--pw-primary)] text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+          className="min-h-12 flex-1 rounded-full bg-pw-primary text-sm font-semibold text-pw-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {isLast ? "Finish" : "Continue"}
+          {isLast ? t("onboard.finish") : t("onboard.continue")}
         </button>
       </div>
     </div>

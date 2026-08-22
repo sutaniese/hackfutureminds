@@ -1,0 +1,372 @@
+import type { Locale } from "./locales";
+
+/* Single source: Russian / English / Kazakh for the same app key. */
+const TR = (ru: string, en: string, kk: string) => ({ ru, en, kk });
+
+/* eslint-disable @cspell/spellcheck -- RU/KK */
+const T = {
+  "skip": TR(
+    "Перейти к основному содержанию",
+    "Skip to main content",
+    "Негізгі мазмұнға өту",
+  ),
+  "nav.home": TR("Главная", "Home", "Басты"),
+  "nav.onboarding": TR("Старт", "Onboard", "Бастау"),
+  "nav.results": TR("План", "Results", "Нәтижелер"),
+  "nav.grants": TR("Гранты", "Grants", "Гранттар"),
+  "nav.portfolio": TR("Портфолио", "Portfolio", "Портфолио"),
+  "nav.aria": TR("Основные разделы", "Main sections", "Негізгі бөлімдер"),
+  "a11y.group": TR("Параметры доступности", "Accessibility options", "Өтімділік опциялары"),
+  "a11y.contrast": TR("Контраст", "Contrast", "Контраст"),
+  "a11y.voice": TR("Голос", "Voice", "Дауыс"),
+  "a11y.help": TR("Справка", "Help", "Анықтама"),
+  "a11y.voiceTitle": TR(
+    "Предпочтение голоса (позже)",
+    "Voice preference; full flow later",
+    "Дауыс (кейінірек)",
+  ),
+  "a11y.helpLabel": TR("Справка и доступность", "Accessibility help", "Анықтама"),
+  "lang.ru": TR("РУ", "RU", "РУ"),
+  "lang.kk": TR("ҚА", "KK", "ҚА"),
+  "lang.en": TR("EN", "EN", "EN"),
+  "lang.aria": TR("Язык интерфейса", "Interface language", "Тіл"),
+  "footer.line": TR(
+    "карьерная навигация для старшеклассников Казахстана · демо",
+    "career navigation for high schoolers in Kazakhstan · demo",
+    "Қазақстандағы оқушыларға арналған бағыт-бағдарлау · демо",
+  ),
+  "home.kicker": TR("СТУДЕНТ", "STUDENT", "СТУДЕНТ"),
+  "home.title": TR(
+    "Карьерный путь в одном приложении",
+    "One app for your career path",
+    "Карьераңыз — бір қосымшада",
+  ),
+  "home.body": TR(
+    "Карта направлений, финансы и портфолио — 15–18 лет, в первую очередь с телефона, оформление в стиле teñ.",
+    "Map, money plan, and portfolio for ages 15–18, mobile first — teñ-style layout.",
+    "15–18 жас: бағыт, қаражат, портфолио, алдымен мобилді — teñ стилі.",
+  ),
+  "home.cta": TR("Перейти к онбордингу", "Go to onboarding", "Онбордингке өту"),
+  "home.card": TR(
+    "Вверху — контраст, голос и справка. Снизу панель: главная, старт, план, гранты, портфолио.",
+    "Top bar: contrast, voice, help. Bottom: home, onboarding, results, grants, portfolio.",
+    "Жолақ: контраст, дауыстық, анықтама. Төмен: басты, онбординг, нәтиже, гранттар, портфолио.",
+  ),
+  "onboard.kicker": TR("СТАРТ", "START", "БАСТАУ"),
+  "onboard.pageTitle": TR("Онбординг", "Onboarding", "Онбординг"),
+  "onboard.pageSubtitle": TR(
+    "Семь коротких вопросов, по одному шагу — дальше ответы используются в плане и API.",
+    "Seven short questions, one step at a time — your answers power the next steps and API.",
+    "Қысқа 7 сұрақ — біртіндеп; жауаптар планда және API-да.",
+  ),
+  "onboard.q1": TR(
+    "Какие предметы вам ближе всего? (можно выбрать несколько)",
+    "Which subjects do you enjoy? (multi-select)",
+    "Қандай пәндер жақынырақ? (бірнеше)",
+  ),
+  "onboard.pickSubjects": TR(
+    "Можно несколько вариантов, нужен минимум один",
+    "Pick at least one",
+    "Кемінде біреуін таңдаңыз",
+  ),
+  "onboard.subjects.math": TR("Математика", "Mathematics", "Математика"),
+  "onboard.subjects.physics": TR("Физика", "Physics", "Физика"),
+  "onboard.subjects.chemistry": TR("Химия", "Chemistry", "Химия"),
+  "onboard.subjects.biology": TR("Биология", "Biology", "Биология"),
+  "onboard.subjects.history": TR("История", "History", "Тарих"),
+  "onboard.subjects.english": TR("Английский", "English", "Ағылшын"),
+  "onboard.subjects.kazakh": TR("Казахский", "Kazakh", "Қазақ тілі"),
+  "onboard.subjects.russian": TR("Русский", "Russian", "Орыс тілі"),
+  "onboard.subjects.cs": TR("Информатика", "Computer science", "Информатика"),
+  "onboard.subjects.literature": TR("Литература", "Literature", "Әдебиет"),
+  "onboard.subjects.geography": TR("География", "Geography", "География"),
+  "onboard.q2": TR(
+    "Чем вы занимаетесь в свободное время?",
+    "What do you do in your free time?",
+    "Бос уақытыңызда не істейсіз?",
+  ),
+  "onboard.q3": TR(
+    "Ваши главные достижения? (олимпиады, проекты, волонтёрство)",
+    "Top achievements? (olympiads, projects, volunteering)",
+    "Үлкен жетістіктер? (олимпиадалар, жобалар)",
+  ),
+  "onboard.q4": TR(
+    "Как вам ближе работа — с людьми, данными, «руками» или с идеями?",
+    "Do you lean toward people, data, hands, or ideas?",
+    "Сізге несі жақын — адамдар, деректер, нақты іс әлде идеялар?",
+  ),
+  "onboard.q5": TR(
+    "Где планируете учиться — в Казахстане или за рубежом?",
+    "Where do you want to study — in Kazakhstan or abroad?",
+    "Қайда оқығыңыз келеді — Қазақстаңда шетелде ба?",
+  ),
+  "onboard.studyKz": TR("Учёба в Казахстане", "Study in Kazakhstan", "Қазақстанда оқу"),
+  "onboard.studyAb": TR("Учёба за рубежом", "Study abroad", "Шетелде оқу"),
+  "onboard.q6": TR("Какой город рассматриваете?", "Which city are you considering?", "Қандай қала?"),
+  "onboard.q7": TR("Есть ли бюджетные ограничения у семьи?", "Any family budget constraints?", "Отыбасының бюджеттік шектеуі бар ма?"),
+  "onboard.phCity": TR("напр. Алматы, Астана", "e.g. Almaty, Astana", "мыс. Алматы, Астана"),
+  "onboard.phBudget": TR("например, нужен грант, или: не ограничен", "e.g. need a grant, or: none", "мысалы, грант керек"),
+  "onboard.optional": TR("по желанию", "optional", "міндетті емес"),
+  "onboard.back": TR("Назад", "Back", "Артқа"),
+  "onboard.continue": TR("Далее", "Continue", "Әрі қарай"),
+  "onboard.finish": TR("Готово", "Finish", "Аяқтау"),
+  "onboard.ariaStep": TR("Шаг {{a}} из {{b}}. {{c}}", "Step {{a}} of {{b}}. {{c}}", "{{a}} / {{b}} қадам. {{c}}"),
+  "onboard.srOnlyStep": TR(
+    "Прогресс онбординга",
+    "Onboarding progress",
+    "Онбординг барысы",
+  ),
+  "onboard.prog": TR("Шаг", "Step", "Қадам"),
+  "onboard.progOf": TR("из", "of", " / "),
+  "onboard.progLine": TR("Шаг {{a}} из {{b}}", "Step {{a}} of {{b}}", "{{a}} / {{b}} қадам"),
+  "onboard.allSet": TR("Всё готово", "All set", "Дайын"),
+  "onboard.allSetBody": TR(
+    "Ответы хранятся в этом сеансе браузера, чтобы план и демо работали сразу.",
+    "Your answers are kept in this browser for this visit so the demo and plan can run right away.",
+    "Жауаптар осы сессияда; демо бірден жүреді.",
+  ),
+  "onboard.toResults": TR("Смотреть план", "View results", "Нәтижелер"),
+  "onboard.startOver": TR("Сначала", "Start over", "Алғашынан"),
+  "onboard.work.people.label": TR("Люди", "People", "Адамдар"),
+  "onboard.work.people.hint": TR("команды, пользователи, забота", "teams, care", "топ, күтім"),
+  "onboard.work.data.label": TR("Данные", "Data", "Деректер"),
+  "onboard.work.data.hint": TR("анализ, исследования", "analysis, research", "таным, зерттеу"),
+  "onboard.work.hands.label": TR("Практика", "Hands", "Қол"),
+  "onboard.work.hands.hint": TR("собирать, лаборатория", "build, lab", "дала, зертхана"),
+  "onboard.work.ideas.label": TR("Идеи", "Ideas", "Идеялар"),
+  "onboard.work.ideas.hint": TR("дизайн, стратегия", "design, strategy", "дизайн, стратегия"),
+
+  "results.title": TR("План", "Results", "Нәтижелер"),
+  "results.sub": TR(
+    "После онбординга запустите построение: карьера, финансы, текст для резюме из API (Groq в .env — опция).",
+    "After onboarding, run generation: careers, money plan, and resume text from the API (Groq optional in .env).",
+    "Онбордингтен соң генерация: карьера, қаржы, түйін. Groq .env-те опция.",
+  ),
+  "results.restored": TR(
+    "Показан прошлый план по этому профилю. Ниже — обновить.",
+    "Showing your last result for this profile. Regenerate below for a fresh plan.",
+    "Осы профиль бойынша соңғы план. Төмен—жаңарту.",
+  ),
+  "results.hint": TR(
+    "Онбординг найден. /api/generate с Groq при GROQ_API_KEY, иначе встроенный движок.",
+    "Onboarding found. /api/generate uses Groq if GROQ_API_KEY, else the built-in engine.",
+    "Онбординг бар. GROQ болса Groq, әйтпесе встроенные.",
+  ),
+  "results.noOnboard": TR(
+    "Онбординг не сохранён. Откройте",
+    "No saved onboarding. Open",
+    "Онбординг сақталмады. ашыңыз",
+  ),
+  "results.andFinish": TR("и нажмите «Готово».", "and finish.", "және «Аяқтау» басыңыз."),
+  "results.run": TR("Собрать / обновить план", "Regenerate your plan", "План жаңарту"),
+  "results.runLoading": TR("Сборка…", "Generating…", "Жарылғуда…"),
+  "results.career": TR("Карьерные направления", "Career map", "Карьера картасы"),
+  "results.careerSub": TR(
+    "Три варианта с вилкой зарплат (КЗ, ориентир).",
+    "Three tracks with KZ-style salary ranges.",
+    "3 бағыт, жалақы KZ-ге ұқсас.",
+  ),
+  "results.fin": TR("Деньги и гранты", "Financial route", "Қаржы және гранттар"),
+  "results.finNeed": TR("оцен. нужда в мес.:", "est. monthly need", "болж. апталық қажет"),
+  "results.gap": TR("Пробел до покрытия", "Gap to cover", "Өріс"),
+  "results.grantsTitle": TR("Подобранные гранты", "Matched grants", "Сәйкес гранттар"),
+  "results.noGrants": TR(
+    "В этом прогоне нет — поправьте предметы/город в онбординге.",
+    "No program matches in this run — try adjusting subjects or city.",
+    "Бос — онбордингтегі пән/қаланы өзгертіңіз.",
+  ),
+  "results.resume": TR("Для резюме", "Resume-ready statements", "Кезінде түйін"),
+  "results.match": TR("сопоставление", "match", "сайлау"),
+  "results.dead": TR("срок", "deadline", "мерзім"),
+  "results.m.high": TR("сильно", "high", "күшті"),
+  "results.m.medium": TR("средне", "medium", "орта"),
+  "results.m.low": TR("слабее", "low", "төмен"),
+  "results.errOnboard": TR("Сначала завершите онбординг.", "Finish onboarding first.", "Алдымен онбордингті бітіріңіз."),
+  "results.errApi": TR("{{e}}", "{{e}}", "{{e}}"),
+  "results.unexpected": TR("Неверный ответ API", "Unexpected response from API", "API жауабы сәйкес емес"),
+
+  "gam.profileOk": TR("Профиль заполнен", "Profile complete", "Профиль толық"),
+  "gam.fill": TR("Портфолио", "Portfolio fill", "Портфолио"),
+  "gam.grantsN": TR("+{{n}} грант(а) вам", "+{{n}} grant(s) for you", "+{{n}} грант(тар)"),
+  "gam.onboard": TR("Завершите онбординг для оценки профиля", "Finish onboarding to build your profile", "Профиль үшін онбордингті бітіріңіз"),
+
+  "portfolio.title": TR("Портфолио", "Portfolio", "Портфолио"),
+  "portfolio.sub": TR(
+    "Заметки и файлы (CV, сертификаты) в сеансе браузера, без выгрузки на сервер в этой сборке.",
+    "Notes and files in this session only — not uploaded in this build.",
+    "Осы сессияда, сервер жоқ.",
+  ),
+  "portfolio.intro": TR(
+    "Короткое резюме и существующие материалы (PDF, изображения, Word) — в памяти вкладки, до закрытия окна не уходит на backend.",
+    "A short free-text and files (PDF, images) stay in the tab; session ends, data clears, no server in this demo.",
+    "Күңде сақ, серверсіз демо.",
+  ),
+  "portfolio.about": TR("Несколько слов о себе", "About you", "Өзініз туралы"),
+  "portfolio.phNotes": TR(
+    "проекты, олимпиады, языки…",
+    "projects, olympiads, languages…",
+    "жобалар, пәндер, тілдер…",
+  ),
+  "portfolio.uploads": TR("Загрузить файлы", "Upload files", "Файл жүктеу"),
+  "portfolio.choose": TR("Выбрать", "Choose files", "Таңдау"),
+  "portfolio.load": TR("Загрузка…", "Loading…", "Жарылу…"),
+  "portfolio.limits": TR(
+    "PDF, изобр., Word. макс. {{b}}; до {{n}} шт.",
+    "PDF, images, Word. max {{b}} each, up to {{n}} files.",
+    "макс. {{b}}, {{n}} дана",
+  ),
+  "portfolio.added": TR("Прикреплённые", "Added files", "Тіркелген"),
+  "portfolio.removeAll": TR("Убрать все", "Remove all", "Барын өшіру"),
+  "portfolio.dl": TR("Скачать копию", "Download", "Жүктеп алу"),
+  "portfolio.removeFile": TR("Удалить {{n}}", "Remove {{n}}", "Өшіру: {{n}}"),
+  "portfolio.errRead": TR("Файл не читается.", "Could not read file.", "Оқылмайды."),
+  "portfolio.errBig": TR("Слишком велик (демо) — сожмите.", "File too big for in-browser (demo) — use a smaller export.",
+    "Тым үлкен, демо: кішірек.",
+  ),
+  "portfolio.errMany": TR("Сначала уберите файл, максимум {{n}}", "You can have up to {{n}}. Remove one first.",
+    "Е{{n}} дана, алдымен өшірініз",
+  ),
+  "portfolio.errQuota": TR("Сессия почти полна — сократите.",
+    "Session almost full. Remove a file or shorten notes.",
+    "орын аз — өшіріңіз",
+  ),
+  "portfolio.errEmpty": TR("Пустой файл.", "Empty file.", "Бос файл"),
+  "portfolio.errStillBig": TR(
+    "После чтения слишком велик",
+    "Still too big after read.",
+    "Оқу соңында үлкен",
+  ),
+
+  "acc.title": TR("Справка по доступности", "Accessibility", "Өтімділік"),
+  "acc.desc": TR(
+    "Верх: Контраст, Голос, Справка. Подробности ниже.",
+    "Top: Contrast, Voice, Help. Details follow.",
+    "Контраст, Үн, анықтама.",
+  ),
+  "acc.li1": TR(
+    "Клавиатура: в контуре в режиме высокого контраста.",
+    "Keyboard: clear focus in high-contrast mode.",
+    "Пернетақта, жоғарғы контраст",
+  ),
+  "acc.li2": TR(
+    "landmark: scrollable <main> с id=main, skip-ссылка вверху.",
+    "Main landmark: scrollable main#main for skip and AT.",
+    "main#main, skip",
+  ),
+  "acc.li3": TR(
+    "Скринридеры: навигация внизу, текущий таб aria-current=page",
+    "SR: bottom nav, current page aria-current.",
+    "Төмен пан, aria-current=page",
+  ),
+  "acc.later": TR("Текст интерфейса: РУ, ҚА, EN на выбор.", "UI language: RU, KK, EN in the top bar.",
+    "Тіл: жоғарғы жолақ RU, KK, EN"
+  ),
+  "acc.back": TR("← На главную", "Back to home", "← Бастыға"),
+
+  "grants.metaTitle": TR("Стипендии", "Grants", "Стипендиялар"),
+  "grants.kicker": TR("КАТАЛОГ", "CATALOG", "КАТАЛОҒ"),
+  "grants.title": TR("Стипендии и гранты", "Scholarships and grants", "Стипендия мен гранттар"),
+  "grants.body": TR(
+    "Сравнивайте программы, фильтруйте по типу, как в teñ. Данные: локальный json; порядок с учётом онбординга, если пройдён.",
+    "Compare programs and filter; data from a local list; order uses onboarding if completed.",
+    "teñ-стилі, json, онбордингпен сұрыптау.",
+  ),
+  "grants.search": TR(
+    "Поиск по названию, тегу или региону",
+    "Search by name, tag, or region",
+    "Атау, тег, аймақ",
+  ),
+  "grants.found": TR("Найдено: {{n}}", "Found: {{n}}", "Табылды: {{n}}"),
+  "grants.tip": TR("Идея: пройдите", "Try", "Ұсыныс:"),
+  "grants.tip2": TR(
+    "— подбор сильнее, «Сильное» осмысленно.",
+    " for stronger match filters.",
+    "— «Күшті» мағынада.",
+  ),
+  "grants.tipOnboard": TR("онбординг", "onboarding", "онбординг"),
+  "grants.f.rank": TR("РЕЙТИНГ", "RANK", "РЕЙТИҢ"),
+  "grants.f.mAll": TR("Все", "All", "Барлығы"),
+  "grants.f.strong": TR("Сильное", "Strong", "Күшті"),
+  "grants.f.mid": TR("Средне", "Mid", "Орта"),
+  "grants.f.light": TR("Мягко", "Light", "Жұмсақ"),
+  "grants.f.tipR": TR("Полезнее после онбординга", "Meaningful after onboarding", "Онбординг соңы мағына",
+  ),
+  "grants.f.region": TR("РЕГИОН", "REGION", "АЙМАҚ"),
+  "grants.f.type": TR("ТИП", "TYPE", "ТҮР"),
+  "grants.typeAll": TR("Все", "All", "Барлығы"),
+  "grants.type.monthly": TR("Ежемесячно", "Monthly", "Айлық"),
+  "grants.type.full": TR("Полный/частичн.", "Full/partial", "толық/жарты"),
+  "grants.type.lump": TR("Единовр.", "Lump", "біржолғы"),
+  "grants.type.onetime": TR("Однокр.", "One-time", "бір реттік"),
+  "grants.r.all": TR("Все", "All", "Барлығы"),
+  "grants.r.kz": TR("Казахстан", "Kazakhstan", "ҚР"),
+  "grants.r.eu": TR("Европа", "Europe", "Еуропа"),
+  "grants.r.uk": TR("Великобритания", "UK", "Ұлыбритания"),
+  "grants.r.am": TR("США", "US", "АҚШ"),
+  "grants.r.asia": TR("Азия", "Asia", "Азия"),
+  "grants.r.oth": TR("Другое", "Other", "Басқа"),
+  "grants.reset": TR("Сбросить фильтры", "Reset filters", "Сүзгілерді тазалау"),
+  "grants.shown": TR("Показано {{a}} из {{b}}", "Showing {{a}} of {{b}}", "Көрсетілді {{a}} / {{b}}"),
+  "grants.sort": TR("Сортировка", "Sort", "Сұрыптау"),
+  "grants.sortMatch": TR("По совпадению", "By match", "Сәйкес"),
+  "grants.sortName": TR("A–Z", "A–Z", "A–Z"),
+  "grants.sortDeadline": TR("По сроку", "By deadline", "Мерзімі"),
+  "grants.sortKzt": TR("По поддержке (KZT/мес)", "By support (KZT/mo)", "KZT/ай"),
+  "grants.empty": TR("Ни одна позиция. Сбросьте.", "No matches. Reset filters.", "Нәтиже жоқ. Тазалаңыз."),
+  "grants.badge0": TR("—", "—", "—"),
+  "grants.badge1": TR("#1 Overall", "#1 Overall", "#1 Overall"),
+  "grants.badge2": TR("Сильно", "Strong", "Күшті"),
+  "grants.badge3": TR("Средне", "Med", "Орта"),
+  "grants.badge4": TR("Мягко", "Light", "Жұмсақ"),
+  "grants.view": TR("Далее →", "View →", "Ашу →"),
+  "grants.load": TR("загрузка", "Loading", "жүктеу…"),
+  "grants.filterAria": TR("Фильтры каталога", "Catalog filters", "Каталог сүзгілері"),
+  "grants.searchLabel": TR("Поиск", "Search", "Іздеу"),
+  "grants.tagsAria": TR("Теги", "Tags", "Тегтер"),
+  "grants.badgeIndex": TR("№{{n}}", "No.{{n}}", "№{{n}}"),
+  "portfolio.errFileBig": TR(
+    "«{{name}}» слишком велик (макс. {{max}}).",
+    "“{{name}}” is too large (max {{max}}).",
+    "«{{name}}» тым үлкен (макс. {{max}}).",
+  ),
+  "results.ariaAll": TR("Ваши результаты", "Your results", "Сіздің нәтижелеріңіз"),
+} as const;
+
+function fill(s: string, p?: Record<string, string | number>): string {
+  if (!p) return s;
+  return s.replace(/\{\{(\w+)\}\}/g, (_, k) =>
+    p[k] !== undefined && p[k] !== null ? String(p[k]) : "",
+  );
+}
+
+export function buildMessageMaps(): Record<Locale, Record<string, string>> {
+  const out: Record<Locale, Record<string, string>> = {
+    ru: {},
+    en: {},
+    kk: {},
+  };
+  for (const [k, v] of Object.entries(T) as [string, { ru: string; en: string; kk: string }][]) {
+    out.ru[k] = v.ru;
+    out.en[k] = v.en;
+    out.kk[k] = v.kk;
+  }
+  return out;
+}
+
+const FINAL = buildMessageMaps();
+
+export { FINAL as MESSAGE_MAPS };
+
+export function tFor(
+  locale: Locale,
+  key: string,
+  params?: Record<string, string | number>,
+): string {
+  const map = FINAL[locale] || FINAL.ru;
+  const r = (map as Record<string, string | undefined>)[key] ?? FINAL.ru[key] ?? key;
+  return fill(r, params);
+}
+
+export function tKeys(): string[] {
+  return Object.keys(T);
+}

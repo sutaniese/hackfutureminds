@@ -14,11 +14,19 @@ function budgetKztFromText(s: string): number {
 /** Map onboarding into a valid `POST /api/generate` body. */
 export function buildGenerateRequest(
   o: OnboardingAnswers,
-  opts: { targetUniversity?: string; language?: "en" | "kk" | "ru" }
+  opts: {
+    targetUniversity?: string;
+    language?: "en" | "kk" | "ru";
+    /** i18n: return translated label for a subject id */
+    mapSubjectId?: (id: string) => string;
+  }
 ): GenerateRequest {
   const interests = o.subjectIds
     .map(
-      (id) => ONBOARDING_SUBJECT_OPTIONS.find((x) => x.id === id)?.label || id
+      (id) =>
+        opts.mapSubjectId?.(id) ||
+        ONBOARDING_SUBJECT_OPTIONS.find((x) => x.id === id)?.label ||
+        id
     )
     .filter(Boolean);
   const bud = budgetKztFromText(o.budgetConstraints);

@@ -1,15 +1,19 @@
+"use client";
+
 import { TenWordmark } from "@/components/brand/TenWordmark";
 import { SHELL_PX } from "@/lib/shell-layout";
+import { useI18n } from "@/i18n/I18nProvider";
 import Link from "next/link";
 import { A11yTopBar } from "./A11yTopBar";
 import { BottomNav } from "./BottomNav";
 import { ThemeInit } from "./ThemeInit";
 
 export function MobileAppShell({ children }: { children: React.ReactNode }) {
+  const { t } = useI18n();
   return (
     <div className="flex min-h-dvh w-full min-w-0 flex-col bg-pathwise-page text-foreground">
       <a href="#main" className="pw-skip">
-        Skip to main content
+        {t("skip")}
       </a>
       <ThemeInit />
       <A11yTopBar />
@@ -31,7 +35,7 @@ export function MobileAppShell({ children }: { children: React.ReactNode }) {
           >
             <TenWordmark size="sm" presentational />
           </Link>
-          <span>career navigation for students in Kazakhstan · MVP</span>
+          <span>{t("footer.line")}</span>
         </div>
       </footer>
       <BottomNav />

@@ -1,13 +1,14 @@
 "use client";
 
 import { SHELL_PX } from "@/lib/shell-layout";
+import { useI18n } from "@/i18n/I18nProvider";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 type NavItem = {
   href: string;
-  label: string;
+  labelKey: "nav.home" | "nav.onboarding" | "nav.results" | "nav.grants" | "nav.portfolio";
   isActive: (path: string) => boolean;
   icon: (active: boolean) => ReactNode;
 };
@@ -15,7 +16,7 @@ type NavItem = {
 const items: NavItem[] = [
   {
     href: "/",
-    label: "Home",
+    labelKey: "nav.home",
     isActive: (p) => p === "/" || p === "",
     icon: (active) => (
       <svg
@@ -30,7 +31,7 @@ const items: NavItem[] = [
   },
   {
     href: "/onboarding",
-    label: "Onboard",
+    labelKey: "nav.onboarding",
     isActive: (p) => p.startsWith("/onboarding"),
     icon: (active) => (
       <svg
@@ -45,7 +46,7 @@ const items: NavItem[] = [
   },
   {
     href: "/results",
-    label: "Results",
+    labelKey: "nav.results",
     isActive: (p) => p.startsWith("/results"),
     icon: (active) => (
       <svg
@@ -60,7 +61,7 @@ const items: NavItem[] = [
   },
   {
     href: "/grants",
-    label: "Grants",
+    labelKey: "nav.grants",
     isActive: (p) => p.startsWith("/grants"),
     icon: (active) => (
       <svg
@@ -75,7 +76,7 @@ const items: NavItem[] = [
   },
   {
     href: "/portfolio",
-    label: "Portfolio",
+    labelKey: "nav.portfolio",
     isActive: (p) => p.startsWith("/portfolio"),
     icon: (active) => (
       <svg
@@ -91,6 +92,7 @@ const items: NavItem[] = [
 ];
 
 export function BottomNav() {
+  const { t } = useI18n();
   const path = usePathname() || "/";
 
   return (
@@ -100,7 +102,7 @@ export function BottomNav() {
         paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.4rem)",
       }}
       role="navigation"
-      aria-label="Main sections"
+      aria-label={t("nav.aria")}
     >
       <div
         className={`${SHELL_PX} grid grid-cols-5 gap-1 py-2`}
@@ -123,7 +125,7 @@ export function BottomNav() {
                 {item.icon(active)}
               </span>
               <span className="w-full truncate text-center [color:inherit]">
-                {item.label}
+                {t(item.labelKey)}
               </span>
             </Link>
           );

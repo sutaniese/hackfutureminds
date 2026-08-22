@@ -1,15 +1,16 @@
 import type { Metadata, Viewport } from "next";
 import { MobileAppShell } from "@/components/shell/MobileAppShell";
+import { Providers } from "@/components/providers/Providers";
 import { inter } from "@/lib/fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "teñ. — student",
-    template: "%s | teñ. student",
+    default: "teñ. — карьерная навигация (RU/KK/EN)",
+    template: "%s | teñ.",
   },
   description:
-    "teñ. student app — career map, grants, and portfolio (Kazakhstan, mobile-first).",
+    "teñ. — карта направлений, гранты, портфолио. Казахстан, мобильно в первую очередь.",
 };
 
 export const viewport: Viewport = {
@@ -24,11 +25,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`h-full w-full min-w-0 ${inter.variable}`}>
+    <html lang="ru" className={`h-full w-full min-w-0 ${inter.variable}`} suppressHydrationWarning>
       <body
         className={`${inter.className} min-h-dvh w-full min-w-0 overflow-x-hidden bg-pathwise-page antialiased`}
       >
-        <MobileAppShell>{children}</MobileAppShell>
+        <Providers>
+          <MobileAppShell>{children}</MobileAppShell>
+        </Providers>
       </body>
     </html>
   );

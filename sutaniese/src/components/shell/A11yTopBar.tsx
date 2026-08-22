@@ -5,9 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { TenWordmark } from "@/components/brand/TenWordmark";
 import { SHELL_PX } from "@/lib/shell-layout";
+import { useI18n } from "@/i18n/I18nProvider";
 import { LS_HIGH_CONTRAST, LS_VOICE } from "@/lib/pw-storage";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export function A11yTopBar() {
+  const { t } = useI18n();
   const pathname = usePathname() || "/";
   const [contrast, setContrast] = useState(false);
   const [voice, setVoice] = useState(false);
@@ -84,36 +87,37 @@ export function A11yTopBar() {
         >
           <TenWordmark size="md" presentational />
         </Link>
+        <LanguageSwitcher />
         <div
           className="ml-auto flex min-w-0 flex-1 flex-wrap items-center justify-end gap-1"
           role="group"
-          aria-label="Accessibility options"
+          aria-label={t("a11y.group")}
         >
-          <span className="sr-only">Accessibility options</span>
+          <span className="sr-only">{t("a11y.group")}</span>
           <button
             type="button"
             onClick={toggleContrast}
             aria-pressed={contrast}
             className={pill(contrast)}
           >
-            Contrast
+            {t("a11y.contrast")}
           </button>
           <button
             type="button"
             onClick={toggleVoice}
             aria-pressed={voice}
             className={pill(voice)}
-            title="Prefers voice mode; full flow comes later"
+            title={t("a11y.voiceTitle")}
           >
-            Voice
+            {t("a11y.voice")}
           </button>
           <Link
             href="/accessibility"
             className={`${pill(helpActive)} no-underline`}
             aria-current={helpActive ? "page" : undefined}
-            aria-label="Accessibility help and options"
+            aria-label={t("a11y.helpLabel")}
           >
-            Help
+            {t("a11y.help")}
           </Link>
         </div>
       </div>
