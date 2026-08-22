@@ -7,7 +7,7 @@ export async function readJsonResponse<T>(res: Response): Promise<T | { error: s
     return {
       error: res.ok
         ? "Server returned an HTML page instead of JSON (the API route may have crashed)."
-        : `Request failed (${res.status}). The server returned an HTML error page instead of JSON—check server logs and environment variables (e.g. GROQ_API_KEY).`,
+        : `Request failed (${res.status}). The server returned an HTML error page instead of JSON—check deployment logs and that this API route is included in the build.`,
     };
   }
 

@@ -19,7 +19,11 @@ export async function POST(request: Request) {
   try {
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey || apiKey.includes("replace-me")) {
-      return NextResponse.json({ error: "GROQ_API_KEY is missing." }, { status: 500 });
+      // 200 + JSON avoids some proxies/CDNs surfacing an HTML error shell for 5xx.
+      return NextResponse.json(
+        { error: "GROQ_API_KEY is not configured on the server.", transcript: "" },
+        { status: 200 },
+      );
     }
 
     let formData: FormData;

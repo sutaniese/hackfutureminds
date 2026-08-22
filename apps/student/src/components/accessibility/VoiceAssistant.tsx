@@ -41,6 +41,31 @@ function speak(text: string, locale: string) {
   window.speechSynthesis.speak(utterance);
 }
 
+function apiUrl(path: string) {
+  return typeof window !== "undefined"
+    ? new URL(path, window.location.origin).toString()
+    : path;
+}
+
+/** Turn transport/parser errors into short, localized UI copy (no raw HTML snippets). */
+function mapVoiceTransportError(raw: string, t: (key: string) => string): string {
+  const u = raw.toLowerCase();
+  if (
+    u.includes("<!doctype") ||
+    u.includes("html error page") ||
+    u.includes("html page instead") ||
+    u.includes("error page instead of json") ||
+    (u.includes("request failed") && u.includes("500"))
+  ) {
+    return t("a11y.voiceServerHtml");
+  }
+  if (u.includes("groq_api_key") || u.includes("groq_api") || u.includes("not configured on the server")) {
+    return t("a11y.voiceNoGroq");
+  }
+  if (raw.length > 200) return t("a11y.voiceGenericErr");
+  return raw;
+}
+
 function grantUrl(intent: Extract<VoiceIntent, { action: "search_grants" }>) {
   const params = new URLSearchParams();
   if (intent.query) params.set("q", intent.query);
@@ -134,9 +159,10 @@ export function VoiceAssistant() {
         }
         executeIntent(body.intent);
       } catch (error) {
-        const fallback = error instanceof Error ? error.message : "Voice assistant failed.";
-        setMessage(fallback);
-        speak(fallback, locale);
+        const raw = error instanceof Error ? error.message : "";
+        const friendly = mapVoiceTransportError(raw || "voice", t);
+        setMessage(friendly);
+        speak(friendly, locale);
       } finally {
         setBusy(false);
       }
@@ -152,24 +178,32 @@ export function VoiceAssistant() {
         const formData = new FormData();
         formData.set("audio", audio, "voice-command.webm");
         formData.set("locale", locale);
-        const response = await fetch("/api/voice-transcribe", {
+        const response = await fetch(apiUrl("/api/voice-transcribe"), {
           method: "POST",
           body: formData,
         });
         const json = await readJsonResponse<{ transcript?: string; error?: string }>(response);
         if ("error" in json && !("transcript" in json)) {
-          throw new Error((json as { error: string }).error);
+          const friendly = mapVoiceTransportError((json as { error: string }).error, t);
+          setMessage(friendly);
+          speak(friendly, locale);
+          return;
         }
         const body = json as { transcript?: string; error?: string };
-        if (!response.ok || !body.transcript) {
-          throw new Error(body.error || "Groq transcription failed.");
+        const line = typeof body.transcript === "string" ? body.transcript.trim() : "";
+        if (!line) {
+          const friendly = mapVoiceTransportError(body.error || "", t);
+          setMessage(friendly);
+          speak(friendly, locale);
+          return;
         }
-        setTranscript(body.transcript);
-        await submitCommand(body.transcript);
+        setTranscript(line);
+        await submitCommand(line);
       } catch (error) {
-        const fallback = error instanceof Error ? error.message : "Groq transcription failed.";
-        setMessage(fallback);
-        speak(fallback, locale);
+        const raw = error instanceof Error ? error.message : "";
+        const friendly = mapVoiceTransportError(raw || "transcribe", t);
+        setMessage(friendly);
+        speak(friendly, locale);
       } finally {
         setBusy(false);
       }

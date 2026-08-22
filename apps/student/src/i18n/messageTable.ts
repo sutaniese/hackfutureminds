@@ -59,6 +59,21 @@ const T = {
     "Microphone recording is not available in this browser. Use the text command field above.",
     "Бұл браузерде жазба жоқ. Төмендегі мәтін өрісін қолданыңыз.",
   ),
+  "a11y.voiceServerHtml": TR(
+    "Сервер вернул ошибку вместо ответа. Попробуйте команду текстом ниже или обновите страницу.",
+    "The server returned an error page. Type your command below or refresh the page.",
+    "Сервер қате бетін қайтарды. Төменде мәтінмен жіберіңіз немесе бетті жаңартыңыз.",
+  ),
+  "a11y.voiceNoGroq": TR(
+    "Голос с сервера недоступен (нет GROQ_API_KEY в Vercel). Используйте текстовое поле команды.",
+    "Voice from the server is off (set GROQ_API_KEY on Vercel). Use the text command field.",
+    "Серверлік даыс өшік (Vercel-те GROQ_API_KEY). Мәтін өрісін қолданыңыз.",
+  ),
+  "a11y.voiceGenericErr": TR(
+    "Команда не выполнена. Повторите или введите текстом.",
+    "That command did not run. Try again or type it below.",
+    "Команда орындалмады. Қайталаңыз немесе мәтінмен жіберіңіз.",
+  ),
   "lang.ru": TR("РУ", "RU", "РУ"),
   "lang.kk": TR("ҚА", "KK", "ҚА"),
   "lang.en": TR("EN", "EN", "EN"),
