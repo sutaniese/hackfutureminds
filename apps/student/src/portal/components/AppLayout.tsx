@@ -23,6 +23,7 @@ const TITLE_BY_PATH: Record<string, string> = {
   [`${HUB}/vuzy`]: `${SITE_NAME} — Университеты Казахстана`,
   [`${HUB}/roditeli`]: `${SITE_NAME} — Родители`,
   [`${HUB}/uchitelya`]: `${SITE_NAME} — Учителя`,
+  [`${HUB}/obuchenie`]: `${SITE_NAME} — Обучение`,
   [`${HUB}/enterprise`]: `${SITE_NAME} — Enterprise`,
 }
 

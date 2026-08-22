@@ -11,6 +11,7 @@ const T = {
   ),
   "nav.home": TR("Главная", "Home", "Басты"),
   "nav.onboarding": TR("Старт", "Onboard", "Бастау"),
+  "nav.learning": TR("Учёба", "Learn", "Оқу"),
   "nav.results": TR("План", "Results", "Нәтижелер"),
   "nav.roadmap": TR("Дорожная карта", "Roadmap", "Жол картасы"),
   "nav.grants": TR("Гранты", "Grants", "Гранттар"),

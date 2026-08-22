@@ -8,7 +8,14 @@ import type { ReactNode } from "react";
 
 type NavItem = {
   href: string;
-  labelKey: "nav.home" | "nav.onboarding" | "nav.results" | "nav.roadmap" | "nav.grants" | "nav.portfolio";
+  labelKey:
+    | "nav.home"
+    | "nav.onboarding"
+    | "nav.learning"
+    | "nav.results"
+    | "nav.roadmap"
+    | "nav.grants"
+    | "nav.portfolio";
   isActive: (path: string) => boolean;
   icon: (active: boolean) => ReactNode;
 };
@@ -36,6 +43,17 @@ const items: NavItem[] = [
         <line x1="16" y1="13" x2="8" y2="13" />
         <line x1="16" y1="17" x2="8" y2="17" />
         <polyline points="10 9 9 9 8 9" />
+      </svg>
+    ),
+  },
+  {
+    href: "/learning",
+    labelKey: "nav.learning",
+    isActive: (p) => p.startsWith("/learning"),
+    icon: (active) => (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M22 10L12 5 2 10l10 5 10-5z" />
+        <path d="M6 12v5c0 1.1 2.7 2.5 6 2.5s6-1.4 6-2.5v-5" />
       </svg>
     ),
   },
@@ -104,7 +122,7 @@ export function BottomNav() {
     >
       <div className={`${SHELL_PX} pb-2`}>
         <div
-          className="pointer-events-auto mx-auto grid max-w-xl grid-cols-6 gap-1 rounded-full border border-slate-200 bg-white p-1.5 shadow-[0_14px_35px_rgb(15_23_42_/_0.12)] "
+          className="pointer-events-auto mx-auto grid max-w-2xl grid-cols-7 gap-1 rounded-full border border-slate-200 bg-white p-1.5 shadow-[0_14px_35px_rgb(15_23_42_/_0.12)] "
           style={{ minHeight: "var(--pw-nav)" }}
         >
           {items.map((item) => {

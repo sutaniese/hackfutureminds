@@ -32,6 +32,7 @@ export const ROLE_NAV_SECTIONS: Record<UserRole, SiteNavSection[]> = {
       links: [
         { href: "/", label: "Вход", end: true },
         { href: "/onboarding", label: "Старт" },
+        { href: "/learning", label: "Обучение" },
         { href: "/results", label: "План" },
         { href: "/roadmap", label: "Roadmap" },
         { href: "/grants", label: "Гранты" },
@@ -58,6 +59,7 @@ export const ROLE_NAV_SECTIONS: Record<UserRole, SiteNavSection[]> = {
       links: [
         { href: "/", label: "Вход", end: true },
         { href: "/hub/uchitelya", label: "Класс" },
+        { href: "/hub/obuchenie", label: "Обучение" },
         { href: "/hub/uchenik", label: "Ученики" },
         { href: "/hub/agent", label: "AI-наставник", end: true },
         { href: "/hub/vuzy", label: "Университеты" },
@@ -79,6 +81,8 @@ export function roleForPath(pathname: string): UserRole | null {
   if (
     pathname === "/onboarding" ||
     pathname.startsWith("/onboarding/") ||
+    pathname === "/learning" ||
+    pathname.startsWith("/learning/") ||
     pathname === "/results" ||
     pathname.startsWith("/results/") ||
     pathname === "/roadmap" ||
@@ -100,6 +104,8 @@ export function roleForPath(pathname: string): UserRole | null {
   if (
     pathname === "/hub/uchitelya" ||
     pathname.startsWith("/hub/uchitelya/") ||
+    pathname === "/hub/obuchenie" ||
+    pathname.startsWith("/hub/obuchenie/") ||
     pathname === "/hub/uchenik" ||
     pathname.startsWith("/hub/uchenik/")
   ) {
