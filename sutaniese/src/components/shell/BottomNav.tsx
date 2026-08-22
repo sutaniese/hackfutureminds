@@ -94,7 +94,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 border-t-2 border-pathwise-line bg-pathwise-surface/95 shadow-[0_-1px_0_rgb(15_23_42/0.04)] backdrop-blur"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-pathwise-line bg-pathwise-surface/95 shadow-[0_-1px_2px_rgb(15_23_42/0.05)] backdrop-blur-sm"
       style={{
         paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.4rem)",
       }}
@@ -114,7 +114,7 @@ export function BottomNav() {
               aria-current={active ? "page" : undefined}
               className={`flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-0.5 text-[10px] font-semibold leading-tight no-underline transition-[background,box-shadow,color,transform] duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pw-primary active:scale-[0.98] sm:text-xs ${
                 active
-                  ? "bg-pathwise-accent text-white shadow-pathwise"
+                  ? "bg-pathwise-accent-soft/95 text-pw-primary ring-1 ring-pathwise-accent"
                   : "text-pathwise-muted ring-1 ring-pathwise-line bg-pathwise-surface/80 hover:bg-pathwise-accent-soft/60 hover:text-foreground"
               } `}
             >

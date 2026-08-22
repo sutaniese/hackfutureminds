@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Accessibility",
-  description: "PathWise a11y options and help",
+  description: "teñ. a11y options and help",
 };
 
 export default function AccessibilityPage() {

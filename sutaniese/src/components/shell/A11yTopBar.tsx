@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { TenWordmark } from "@/components/brand/TenWordmark";
 import { LS_HIGH_CONTRAST, LS_VOICE } from "@/lib/pw-storage";
 
 export function A11yTopBar() {
@@ -59,30 +60,26 @@ export function A11yTopBar() {
     });
   }, []);
 
+  /* Active pill = hackhack / front mock: light fill + 1px ring in primary + blue type */
   const pill = (on: boolean) =>
     `pw-tap flex min-h-12 min-w-0 max-w-[9rem] flex-1 items-center justify-center rounded-full px-3 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pw-primary ${
       on
-        ? "bg-pathwise-accent text-white shadow-pathwise"
+        ? "bg-pathwise-accent-soft/95 text-pw-primary ring-1 ring-pathwise-accent"
         : "text-foreground ring-1 ring-pathwise-line bg-pathwise-surface/80 hover:bg-pathwise-accent-soft/60"
     }`;
 
   return (
     <header
-      className="pw-pt-safe sticky top-0 z-30 border-b-2 border-pathwise-line bg-pathwise-surface/90 shadow-pathwise backdrop-blur"
+      className="pw-pt-safe sticky top-0 z-30 border-b border-pathwise-line bg-pathwise-surface/95 shadow-[0_1px_2px_rgb(15_23_42/0.05)] backdrop-blur-sm"
       style={{ minHeight: "var(--pw-a11y-top)" }}
     >
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2 md:px-5">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5 md:px-5">
         <Link
           href="/"
-          className="flex min-h-12 min-w-12 shrink-0 items-center gap-2 no-underline"
+          className="flex min-h-12 min-w-12 shrink-0 items-baseline no-underline"
+          aria-label="teñ, home"
         >
-          <span
-            className="pw-mark flex h-9 min-w-[2.25rem] items-center justify-center rounded-xl px-1.5 text-[12px] font-bold"
-            aria-hidden
-          >
-            PW
-          </span>
-          <span className="text-sm font-semibold text-foreground">PathWise</span>
+          <TenWordmark size="md" presentational />
         </Link>
         <div
           className="ml-auto flex min-w-0 flex-1 flex-wrap items-center justify-end gap-1"

@@ -1,3 +1,4 @@
+import { TenWordmark } from "@/components/brand/TenWordmark";
 import Link from "next/link";
 import { A11yTopBar } from "./A11yTopBar";
 import { BottomNav } from "./BottomNav";
@@ -18,18 +19,16 @@ export function MobileAppShell({ children }: { children: React.ReactNode }) {
       >
         {children}
       </main>
-      <footer className="border-t-2 border-pathwise-line bg-pathwise-surface">
+      <footer className="border-t border-pathwise-line bg-pathwise-surface">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-4 text-xs text-pathwise-muted md:px-5">
           <Link
             href="/"
-            className="pw-mark flex h-7 min-w-[1.75rem] shrink-0 items-center justify-center rounded-md px-1 text-[10px] font-bold no-underline"
-            aria-hidden
+            className="shrink-0 self-center no-underline"
+            aria-label="teñ, home"
           >
-            PW
+            <TenWordmark size="sm" presentational />
           </Link>
-          <span>
-            career navigation for students in Kazakhstan · student app · MVP
-          </span>
+          <span>career navigation for students in Kazakhstan · MVP</span>
         </div>
       </footer>
       <BottomNav />

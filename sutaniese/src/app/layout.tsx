@@ -1,22 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import { MobileAppShell } from "@/components/shell/MobileAppShell";
+import { inter } from "@/lib/fonts";
 import "./globals.css";
-
-/* Same family as `nura` (Inter) for one PathWise look */
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: {
-    default: "PathWise — Student",
-    template: "%s | PathWise Student",
+    default: "teñ. — student",
+    template: "%s | teñ. student",
   },
   description:
-    "PathWise student app — career map, grants, and portfolio (Kazakhstan, mobile-first).",
+    "teñ. student app — career map, grants, and portfolio (Kazakhstan, mobile-first).",
 };
 
 export const viewport: Viewport = {
@@ -32,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`h-full ${inter.variable}`}>
-      <body className={`${inter.className} min-h-dvh antialiased`}>
+      <body className={`${inter.className} min-h-dvh bg-pathwise-page antialiased`}>
         <MobileAppShell>{children}</MobileAppShell>
       </body>
     </html>

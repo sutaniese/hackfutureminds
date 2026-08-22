@@ -1,7 +1,10 @@
 @import "tailwindcss";
 
-/* PathWise — same token set as `nura` (teñ) for a single product look */
+/* teñ. — product shell aligned with nura + hackhack-reference.jpg */
 :root {
+  /* Wordmark: Image #1 — periwinkle type, black full stop */
+  --ten-mark: #4a6fbf;
+  --ten-mark-dot: #0a0a0a;
   --pw-tap: 3rem; /* 48px */
   --pw-radius-card: 1rem; /* align with nura `rounded-2xl` / cards */
   --pw-radius-pill: 9999px;
@@ -37,10 +40,13 @@
   --color-pathwise-accent-soft: var(--pw-accent-soft);
   --color-pathwise-accent-strong: var(--pw-accent-strong);
   --color-pw-primary: var(--pw-primary);
+  --color-pw-primary-foreground: var(--pw-primary-foreground);
   --color-pw-surface: var(--pw-surface);
   --color-pw-muted: var(--pw-muted);
   --color-pw-border: var(--pw-border);
   --shadow-pathwise: var(--pw-shadow);
+  --color-ten-mark: var(--ten-mark);
+  --color-ten-mark-dot: var(--ten-mark-dot);
 }
 
 /* High contrast — toggled via .high-contrast on html (see ThemeInit) */
@@ -52,6 +58,8 @@ html.high-contrast {
   --pw-muted: #1a1a1a;
   --pw-border: #000;
   --pw-shadow: 0 2px 0 #000;
+  --ten-mark: #0000c4;
+  --ten-mark-dot: #000;
 }
 
 html.high-contrast *:focus-visible {
