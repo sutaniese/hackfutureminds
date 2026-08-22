@@ -1,0 +1,12 @@
+{
+  "name": "sutaniese-grants-pipeline",
+  "private": true,
+  "scripts": {
+    "clean": "node scripts/clean-grants-with-claude.js",
+    "seed": "node scripts/seed-grants.js",
+    "refresh": "node scripts/refresh-grants.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4"
+  }
+}
