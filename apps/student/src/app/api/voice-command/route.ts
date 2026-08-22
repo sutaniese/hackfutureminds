@@ -59,7 +59,7 @@ function fallbackIntent(command: string): VoiceAction {
       path: "/grants",
       query: text.includes("bolashak") || text.includes("болаш") ? "bolashak" : undefined,
       match: wantsSuitable ? "high" : "all",
-      openFirst: wantsOpen && /first|перв|луч|best|подход/.test(text),
+      openFirst: wantsOpen && /first|перв|луч|best|подход|suitable|подходящ/i.test(text),
       speak: wantsOpen
         ? "Открываю раздел грантов и подбираю подходящие варианты."
         : "Открываю гранты и включаю подбор подходящих вариантов.",
@@ -137,6 +137,29 @@ function normalizeIntent(value: unknown, command: string): VoiceAction {
   return fallbackIntent(command);
 }
 
+function parseGroqChatJson(text: string): { choices?: Array<{ message?: { content?: string } }> } | null {
+  const trimmed = text.trim();
+  if (!trimmed || trimmed.startsWith("<")) return null;
+  try {
+    return JSON.parse(trimmed) as { choices?: Array<{ message?: { content?: string } }> };
+  } catch {
+    return null;
+  }
+}
+
+/** Strip optional ```json fences and parse model output. */
+function parseModelActionJson(content: string): unknown {
+  let s = content.trim();
+  if (s.startsWith("```")) {
+    s = s.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "");
+  }
+  try {
+    return JSON.parse(s) as unknown;
+  } catch {
+    return null;
+  }
+}
+
 function buildPrompt(input: VoiceRequest, command: string) {
   return [
     "You are a voice accessibility controller for PathWise, a student guidance web app.",
@@ -161,22 +184,23 @@ function buildPrompt(input: VoiceRequest, command: string) {
 }
 
 export async function POST(request: Request) {
-  let input: VoiceRequest;
+  let command = "";
   try {
-    input = (await request.json()) as VoiceRequest;
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
-  }
+    let input: VoiceRequest;
+    try {
+      input = (await request.json()) as VoiceRequest;
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+    }
 
-  const command = cleanCommand(input.command);
-  if (!command) return NextResponse.json({ error: "Empty voice command." }, { status: 400 });
+    command = cleanCommand(input.command);
+    if (!command) return NextResponse.json({ error: "Empty voice command." }, { status: 400 });
 
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey || apiKey.includes("replace-me")) {
-    return NextResponse.json({ intent: fallbackIntent(command), source: "fallback" });
-  }
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey || apiKey.includes("replace-me")) {
+      return NextResponse.json({ intent: fallbackIntent(command), source: "fallback" });
+    }
 
-  try {
     const response = await fetch(GROQ_URL, {
       method: "POST",
       headers: {
@@ -197,15 +221,19 @@ export async function POST(request: Request) {
       }),
     });
 
+    const raw = await response.text().catch(() => "");
+
     if (!response.ok) {
       return NextResponse.json({ intent: fallbackIntent(command), source: "fallback" });
     }
 
-    const data = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
-    const content = data.choices?.[0]?.message?.content;
-    const parsed = content ? JSON.parse(content) : null;
+    const data = parseGroqChatJson(raw);
+    const content = data?.choices?.[0]?.message?.content;
+    const parsed = content ? parseModelActionJson(content) : null;
     return NextResponse.json({ intent: normalizeIntent(parsed, command), source: "groq" });
-  } catch {
-    return NextResponse.json({ intent: fallbackIntent(command), source: "fallback" });
+  } catch (err) {
+    console.error("[voice-command]", err);
+    const safe = command.trim() ? fallbackIntent(command) : fallbackIntent("help");
+    return NextResponse.json({ intent: safe, source: "fallback" });
   }
 }

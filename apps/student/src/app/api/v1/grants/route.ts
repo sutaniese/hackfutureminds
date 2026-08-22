@@ -69,9 +69,23 @@ async function fetchSupabaseGrants(filters: Record<string, string | null>) {
     },
     cache: "no-store",
   });
-  if (!response.ok) throw new Error(await response.text());
+  const raw = await response.text().catch(() => "");
+  if (!response.ok) {
+    throw new Error(raw.slice(0, 400) || response.statusText || "Supabase request failed");
+  }
 
-  const data = (await response.json()) as LiveGrant[];
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed.startsWith("<")) {
+    throw new Error("Supabase returned HTML or an empty body instead of JSON.");
+  }
+  let data: LiveGrant[];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) throw new Error("Supabase JSON was not an array");
+    data = parsed as LiveGrant[];
+  } catch {
+    throw new Error("Supabase returned invalid JSON.");
+  }
   if (!filters.field) return data;
   const fieldAliases = FIELD_ALIASES[filters.field] ?? [filters.field];
   return data.filter((grant) => grant.fields?.includes("any") || grant.fields?.some((field) => fieldAliases.includes(field)));
@@ -90,12 +104,24 @@ export async function GET(request: Request) {
     const data = await fetchSupabaseGrants(filters);
     return NextResponse.json({ data, total: data.length, source: "live" });
   } catch (error) {
-    const data = fallbackData().filter((grant) => matchesFilters(grant, filters));
-    return NextResponse.json({
-      data,
-      total: data.length,
-      source: "fallback",
-      warning: error instanceof Error ? error.message : "Supabase unavailable",
-    });
+    try {
+      const data = fallbackData().filter((grant) => matchesFilters(grant, filters));
+      return NextResponse.json({
+        data,
+        total: data.length,
+        source: "fallback",
+        warning: error instanceof Error ? error.message : "Supabase unavailable",
+      });
+    } catch {
+      return NextResponse.json(
+        {
+          data: [] as LiveGrant[],
+          total: 0,
+          source: "fallback",
+          warning: "Catalog temporarily unavailable.",
+        },
+        { status: 200 },
+      );
+    }
   }
 }

@@ -3,7 +3,9 @@
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import fallbackLiveGrants from "@/data/live-grants.json";
 import { formatGrantAmountLine } from "@/lib/format-grant";
+import { readJsonResponse } from "@/lib/http-json";
 import { useI18n } from "@/i18n/I18nProvider";
 import type { GrantRecord, GrantType } from "@/types/grants";
 import type { OnboardingAnswers } from "@/types/onboarding";
@@ -80,6 +82,11 @@ function typeMsgKey(t: GrantType | "all") {
 }
 
 const MATCH_KEYS: MatchPill[] = ["all", "high", "medium", "low"];
+
+function staticFallbackRows(): GrantRecord[] {
+  const arr = fallbackLiveGrants as unknown as LiveGrant[];
+  return Array.isArray(arr) ? arr.map(toGrantRecord) : [];
+}
 
 function toGrantRecord(grant: LiveGrant): GrantRecord {
   const type: GrantType = grant.type === "one-time" ? "one_time" : grant.type;
@@ -213,24 +220,42 @@ export function GrantsListClient() {
     async function load() {
       setError(null);
       try {
-        const response = await fetch("/api/v1/grants", { cache: "no-store" });
-        const json = (await response.json()) as {
+        const grantsUrl =
+          typeof window !== "undefined"
+            ? new URL("/api/v1/grants", window.location.origin).toString()
+            : "/api/v1/grants";
+        const response = await fetch(grantsUrl, { cache: "no-store" });
+        const json = await readJsonResponse<{
           data?: LiveGrant[];
           source?: "live" | "fallback";
           warning?: string;
+        }>(response);
+        if ("error" in json && !("data" in json)) {
+          throw new Error((json as { error: string }).error);
+        }
+        const body = json as {
+          data?: LiveGrant[];
+          source?: "live" | "fallback";
+          warning?: string;
+          error?: string;
         };
-        if (!response.ok || !Array.isArray(json.data)) {
-          throw new Error(json.warning || "Could not load grants.");
+        if (!response.ok || !Array.isArray(body.data)) {
+          throw new Error(
+            body.warning || body.error || "Could not load grants.",
+          );
         }
         if (!cancelled) {
-          setRows(json.data.map(toGrantRecord));
-          setSource(json.source ?? "fallback");
+          setRows(body.data.map(toGrantRecord));
+          setSource(body.source ?? "fallback");
         }
       } catch (err) {
         if (!cancelled) {
-          setRows([]);
+          setRows(staticFallbackRows());
           setSource("fallback");
-          setError(err instanceof Error ? err.message : "Could not load grants.");
+          const raw = err instanceof Error ? err.message : "";
+          const looksLikeHtmlJson =
+            /unexpected token/i.test(raw) || /<!doctype/i.test(raw) || /not valid json/i.test(raw);
+          setError(looksLikeHtmlJson ? t("grants.fetchErr") : raw || t("grants.fetchErr"));
         }
       }
     }
@@ -238,7 +263,7 @@ export function GrantsListClient() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   const baseRows = useMemo(
     () => rows.map((grant) => rankLiveGrant(grant, onboarding)),

@@ -9,6 +9,7 @@ import { StudentNotesPanel } from '../components/StudentNotesPanel'
 import { api, type ServerStudent } from '../lib/api'
 import { downloadParentReportPdf } from '../lib/exportParentReportPdf'
 import { useStudents } from '../state/StudentContext'
+import { readJsonResponse } from '@/lib/http-json'
 
 export function ParentsPage() {
   const {
@@ -65,31 +66,34 @@ export function ParentsPage() {
           dataUrl,
         }),
       })
-      const payload = (await response.json().catch(() => null)) as
-        | {
-            student?: {
-              displayName: string
-              age: number
-              city: string
-              language: 'ru' | 'kk' | 'en'
-              target_university: string
-              interests: string[]
-              achievements: string[]
-              primaryCareerTitle: string
-              portfolio_block: string
-              monthly_cost: number
-              needsFinancialHelp: boolean
-            }
-            source?: 'groq' | 'local-fallback'
-            error?: string
-          }
-        | null
-
-      if (!response.ok || !payload?.student) {
-        throw new Error(payload?.error || 'Groq не смог прочитать файл ученика.')
+      type ExtractPayload = {
+        student?: {
+          displayName: string
+          age: number
+          city: string
+          language: 'ru' | 'kk' | 'en'
+          target_university: string
+          interests: string[]
+          achievements: string[]
+          primaryCareerTitle: string
+          portfolio_block: string
+          monthly_cost: number
+          needsFinancialHelp: boolean
+        }
+        source?: 'groq' | 'local-fallback'
+        error?: string
+      }
+      const raw = await readJsonResponse<ExtractPayload>(response)
+      if ("error" in raw && !("student" in raw)) {
+        throw new Error((raw as { error: string }).error)
+      }
+      const parsed = raw as ExtractPayload
+      if (!response.ok || !parsed.student) {
+        throw new Error(parsed.error || "Groq не смог прочитать файл ученика.")
       }
 
-      const extracted = payload.student
+      const payload = parsed
+      const extracted = parsed.student
       const id = `student-${slugify(extracted.displayName)}-${Date.now().toString(36)}`
       const student: Partial<ServerStudent> = {
         id,

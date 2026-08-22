@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useI18n } from "@/i18n/I18nProvider";
+import { readJsonResponse } from "@/lib/http-json";
 import { LS_VOICE } from "@/lib/pw-storage";
 
 type VoiceIntent =
@@ -53,13 +54,13 @@ function grantUrl(intent: Extract<VoiceIntent, { action: "search_grants" }>) {
 export function VoiceAssistant() {
   const router = useRouter();
   const pathname = usePathname() || "/";
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const [enabled, setEnabled] = useState(false);
   const [listening, setListening] = useState(false);
   const [busy, setBusy] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [typedCommand, setTypedCommand] = useState("");
-  const [message, setMessage] = useState("Voice assistant ready.");
+  const [message, setMessage] = useState("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -116,16 +117,22 @@ export function VoiceAssistant() {
       const clean = command.trim();
       if (!clean) return;
       setBusy(true);
-      setMessage("Thinking...");
+      setMessage(t("a11y.voiceThinking"));
       try {
         const response = await fetch("/api/voice-command", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ command: clean, pathname, locale }),
         });
-        const json = (await response.json()) as { intent?: VoiceIntent; error?: string };
-        if (!response.ok || !json.intent) throw new Error(json.error || "Voice assistant failed.");
-        executeIntent(json.intent);
+        const json = await readJsonResponse<{ intent?: VoiceIntent; error?: string }>(response);
+        if ("error" in json && !("intent" in json)) {
+          throw new Error((json as { error: string }).error);
+        }
+        const body = json as { intent?: VoiceIntent; error?: string };
+        if (!response.ok || !body.intent) {
+          throw new Error(body.error || "Voice assistant failed.");
+        }
+        executeIntent(body.intent);
       } catch (error) {
         const fallback = error instanceof Error ? error.message : "Voice assistant failed.";
         setMessage(fallback);
@@ -134,13 +141,13 @@ export function VoiceAssistant() {
         setBusy(false);
       }
     },
-    [executeIntent, locale, pathname],
+    [executeIntent, locale, pathname, t],
   );
 
   const transcribeAudio = useCallback(
     async (audio: Blob) => {
       setBusy(true);
-      setMessage("Transcribing with Groq...");
+      setMessage(t("a11y.voiceTranscribing"));
       try {
         const formData = new FormData();
         formData.set("audio", audio, "voice-command.webm");
@@ -149,12 +156,16 @@ export function VoiceAssistant() {
           method: "POST",
           body: formData,
         });
-        const json = (await response.json()) as { transcript?: string; error?: string };
-        if (!response.ok || !json.transcript) {
-          throw new Error(json.error || "Groq transcription failed.");
+        const json = await readJsonResponse<{ transcript?: string; error?: string }>(response);
+        if ("error" in json && !("transcript" in json)) {
+          throw new Error((json as { error: string }).error);
         }
-        setTranscript(json.transcript);
-        await submitCommand(json.transcript);
+        const body = json as { transcript?: string; error?: string };
+        if (!response.ok || !body.transcript) {
+          throw new Error(body.error || "Groq transcription failed.");
+        }
+        setTranscript(body.transcript);
+        await submitCommand(body.transcript);
       } catch (error) {
         const fallback = error instanceof Error ? error.message : "Groq transcription failed.";
         setMessage(fallback);
@@ -163,7 +174,7 @@ export function VoiceAssistant() {
         setBusy(false);
       }
     },
-    [locale, submitCommand],
+    [locale, submitCommand, t],
   );
 
   const cleanupStream = useCallback(() => {
@@ -195,11 +206,11 @@ export function VoiceAssistant() {
       recorder.onerror = () => {
         cleanupStream();
         setListening(false);
-        setMessage("Microphone recording failed. Please try again.");
+        setMessage(t("a11y.voiceMicFail"));
       };
       recorder.start();
       setTranscript("");
-      setMessage("Listening with Groq audio... I will stop automatically.");
+      setMessage(t("a11y.voiceListening"));
       setListening(true);
       stopTimerRef.current = window.setTimeout(() => {
         if (mediaRecorderRef.current?.state === "recording") {
@@ -211,9 +222,9 @@ export function VoiceAssistant() {
     } catch {
       setListening(false);
       cleanupStream();
-      setMessage("Microphone permission is blocked or unavailable.");
+      setMessage(t("a11y.voiceMicBlocked"));
     }
-  }, [busy, cleanupStream, listening, supported, transcribeAudio]);
+  }, [busy, cleanupStream, listening, supported, t, transcribeAudio]);
 
   const stopListening = useCallback(() => {
     if (stopTimerRef.current !== null) {
@@ -233,7 +244,7 @@ export function VoiceAssistant() {
     <section
       className="fixed bottom-[calc(var(--pw-nav)+1.8rem)] left-4 right-4 z-50 mx-auto max-w-xl rounded-[1.5rem] border border-slate-200 bg-white/95 p-3 shadow-[0_18px_60px_rgb(15_23_42_/_0.18)]"
       aria-live="polite"
-      aria-label="Voice assistant"
+      aria-label={t("a11y.voiceTitle")}
     >
       <div className="flex items-center gap-3">
         <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${listening ? "bg-[#FF6B6B]" : "bg-[#6C63FF]"} text-white shadow-sm`}>
@@ -243,14 +254,12 @@ export function VoiceAssistant() {
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-pathwise-accent-strong">
-            Voice assistant
+            {t("a11y.voiceTitle")}
           </p>
           <p className="truncate text-sm font-semibold text-pathwise-ink">
-            {transcript || message}
+            {transcript || message || t("a11y.voiceReady")}
           </p>
-          <p className="text-xs text-pathwise-muted">
-            Groq audio: say “open grants and find suitable grants for me”
-          </p>
+          <p className="text-xs text-pathwise-muted">{t("a11y.voiceHint")}</p>
         </div>
         <button
           type="button"
@@ -258,7 +267,7 @@ export function VoiceAssistant() {
           disabled={!supported || busy}
           className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-[#6C63FF] px-4 text-sm font-bold text-white shadow-sm transition hover:bg-[#5B54D8] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {busy ? "..." : listening ? "Stop" : "Speak"}
+          {busy ? "…" : listening ? t("a11y.voiceStop") : t("a11y.voiceSpeak")}
         </button>
       </div>
       <form
@@ -270,26 +279,26 @@ export function VoiceAssistant() {
         }}
       >
         <label className="sr-only" htmlFor="voice-command-text">
-          Type a voice command
+          {t("a11y.voiceTypeLabel")}
         </label>
         <input
           id="voice-command-text"
           value={typedCommand}
           onChange={(event) => setTypedCommand(event.target.value)}
           className="pw-input min-h-12 flex-1 px-4 py-2 text-sm"
-          placeholder="Type command if microphone is blocked"
+          placeholder={t("a11y.voicePlaceholder")}
         />
         <button
           type="submit"
           disabled={busy || !typedCommand.trim()}
           className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-bold text-pathwise-ink transition hover:bg-slate-50 disabled:opacity-50"
         >
-          Run
+          {t("a11y.voiceRun")}
         </button>
       </form>
       {!supported ? (
         <p className="mt-2 rounded-2xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
-          Microphone recording is not available in this browser. Use the text command field above.
+          {t("a11y.voiceNoRecorder")}
         </p>
       ) : null}
     </section>
