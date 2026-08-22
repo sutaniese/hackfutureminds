@@ -76,14 +76,17 @@ export function UserProgressProvider({ children }: { children: ReactNode }) {
   const [userProgress, setUserProgress] = useState<UserProgress>(DEFAULT_PROGRESS);
   const [levelUpEvent, setLevelUpEvent] = useState<LevelUpEvent | null>(null);
   const [badgeEvent, setBadgeEvent] = useState<BadgeEvent | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setUserProgress(applyDailyStreak(loadProgress()));
+    setReady(true);
   }, []);
 
   useEffect(() => {
+    if (!ready) return;
     saveProgress(userProgress);
-  }, [userProgress]);
+  }, [ready, userProgress]);
 
   const awardXp = useCallback((amount: number, eventId: string) => {
     setUserProgress((current) => {
@@ -118,7 +121,10 @@ export function UserProgressProvider({ children }: { children: ReactNode }) {
   const setProfileCompletion = useCallback((value: number) => {
     setUserProgress((current) => ({
       ...current,
-      profileCompletion: Math.min(100, Math.max(0, Math.round(value))),
+      profileCompletion: Math.max(
+        current.profileCompletion,
+        Math.min(100, Math.max(0, Math.round(value))),
+      ),
     }));
   }, []);
 
