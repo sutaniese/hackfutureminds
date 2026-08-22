@@ -28,6 +28,12 @@ All primary UI is under the `(mobile)` route group with a `max-w-md` column, a *
 
 - **Handler:** `src/app/api/generate/route.ts` — `generateDeterministic` in `src/lib/generate/deterministic.ts` (careers, finance from `api/grants.json` matching, portfolio text). If **`GROQ_API_KEY`** is set, `src/lib/generate/groq-optional.ts` calls the Groq OpenAI-compatible chat API once; on failure or if unset, the same deterministic output is used (demo always works). See `.env.example` for optional env vars. **Request parsing & validation:** `src/lib/generate/parse-request.ts`. Use `Content-Type: application/json` and the `GenerateRequest` shape in `src/types/generate.ts`.
 
+## Results experience and gamification (step 6)
+
+- **`/results`:** The three artifacts are shown on one screen: **career map** (3 paths, KZT salary callouts), **financial route** (monthly need, coverage bar, **matched grants** with match level), **resume-ready** portfolio text.
+- **Persistence:** A successful `POST /api/generate` is saved in `sessionStorage` as `pathwise-last-generate` (v1 JSON with an onboarding snapshot + `GenerateResponse`). The next visit to Results restores it when the snapshot matches the current `pathwise-onboarding-answers`.
+- **Gamification:** `src/lib/gamification.ts` (portfolio fill %, profile complete rule) + `src/components/results/ResultsGamificationBar.tsx` (badge, **+N grants** line, progress). Grant list and section entrance use `globals.css` animation classes; motion is limited when `prefers-reduced-motion: reduce`.
+
 ## Scripts
 
 | Command | Description |

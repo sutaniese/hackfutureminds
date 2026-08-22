@@ -295,12 +295,11 @@ export function generateDeterministic(
     interests: interests.length
       ? interests
       : ["interdisciplinary"],
-    achievements:
-      request.achievements?.length
-        ? request.achievements
-        : (onboarding?.achievements
-            ? [onboarding.achievements]
-            : [""]) ?? [""],
+    achievements: request.achievements?.length
+      ? request.achievements
+      : onboarding?.achievements
+        ? [onboarding.achievements]
+        : [""],
     target_university:
       request.target_university ||
       (onboarding ? `Target based on city: ${onboarding.city || "KZ"}` : ""),
