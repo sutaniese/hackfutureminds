@@ -1,5 +1,5 @@
 import { topicsForSubject } from "./catalog";
-import { tasksLabel } from "./plural";
+import { daysLabel, tasksLabel } from "./plural";
 import type { DiagnosticResult, LearningProfile, LearningState, ScorePair, TopicState } from "./store";
 import { emptyTopicState } from "./store";
 import type { Difficulty, Grade, Task, Topic } from "./types";
@@ -362,7 +362,7 @@ export function buildStudyPlan(
   }
 
   const headline = days && days > 0
-    ? `До цели ${days} дн. — план на ${weeks.length} нед. по ${profile.minutesPerDay} мин в день`
+    ? `До цели ${daysLabel(days)} — план на ${weeks.length} нед. по ${profile.minutesPerDay} мин в день`
     : `План на ${weeks.length} нед. по ${profile.minutesPerDay} мин в день`;
 
   return { headline, minutesPerDay: profile.minutesPerDay, weeks, source: "local" };
