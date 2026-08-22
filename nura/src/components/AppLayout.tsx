@@ -40,28 +40,24 @@ export function AppLayout() {
     <div className="min-h-screen bg-white">
       <header className="sticky top-0 z-30 border-b border-slate-100 bg-white/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
-          <NavLink to="/agent" className="flex items-center gap-2 no-underline" aria-label={SITE_NAME}>
+          <NavLink to="/agent" className="flex items-center no-underline" aria-label={SITE_NAME}>
             {tenant.logoUrl ? (
               <img
                 src={tenant.logoUrl}
-                alt={tenant.displayName}
-                className="h-8 w-8 rounded-lg object-contain"
-                width={32}
-                height={32}
+                alt={SITE_NAME}
+                className="h-9 w-9 rounded-lg object-contain"
+                width={36}
+                height={36}
               />
             ) : (
               <span
-                className="flex h-8 min-w-[2rem] items-center justify-center rounded-lg px-1 text-[11px] font-bold text-white"
+                className="flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg px-1 text-[12px] font-bold text-white"
                 style={{ backgroundColor: 'var(--pw-accent)' }}
                 aria-hidden
               >
                 {tenant.logoMark}
               </span>
             )}
-            <span className="text-base font-semibold tracking-tight text-pathwise-ink">
-              {SITE_NAME}
-            </span>
-            <span className="hidden text-xs text-pathwise-muted sm:inline">· {tenant.displayName}</span>
           </NavLink>
 
           <nav className="-mx-1 flex flex-1 flex-wrap gap-1" aria-label="Разделы">
@@ -79,8 +75,26 @@ export function AppLayout() {
       </main>
 
       <footer className="mt-12 border-t border-slate-100 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-6 text-xs text-pathwise-muted">
-          {SITE_NAME} · карьерная навигация для школьников Казахстана · MVP
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-6 text-xs text-pathwise-muted">
+          {tenant.logoUrl ? (
+            <img
+              src={tenant.logoUrl}
+              alt=""
+              aria-hidden
+              className="h-7 w-7 rounded-md object-contain opacity-90"
+              width={28}
+              height={28}
+            />
+          ) : (
+            <span
+              className="flex h-7 min-w-[1.75rem] items-center justify-center rounded-md px-1 text-[10px] font-bold text-white"
+              style={{ backgroundColor: 'var(--pw-accent)' }}
+              aria-hidden
+            >
+              {tenant.logoMark}
+            </span>
+          )}
+          <span>карьерная навигация для школьников Казахстана · MVP</span>
         </div>
       </footer>
     </div>

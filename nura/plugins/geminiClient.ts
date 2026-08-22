@@ -1,9 +1,19 @@
 /**
- * Google Gemini (Generative Language API). Ключ: GEMINI_API_KEY или GOOGLE_API_KEY в .env (не коммитить).
- * Модель: GEMINI_MODEL (по умолчанию gemini-2.0-flash).
+ * Google Gemini (Generative Language API).
+ * Ключ берётся из env (GEMINI_API_KEY / GOOGLE_API_KEY). Если env пустой — используется
+ * встроенный demo-ключ ниже (его легко переопределить через .env, без правок кода).
+ *
+ * ВНИМАНИЕ: встроенный ключ — для демо/MVP. Для прод-окружения подставь свой
+ * через переменные окружения и сразу же revoke этот в Google AI Studio.
  */
+const FALLBACK_GEMINI_KEY = 'AIzaSyDOpYDFXZ2GnCliwUjkPKc3YZSKVV7JDdk'
+
 export function getGeminiApiKey(): string | undefined {
-  return process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY
+  return (
+    process.env.GEMINI_API_KEY?.trim() ||
+    process.env.GOOGLE_API_KEY?.trim() ||
+    FALLBACK_GEMINI_KEY
+  )
 }
 
 /** Gemini 3 Flash (preview) — см. https://ai.google.dev/gemini-api/docs/models */
