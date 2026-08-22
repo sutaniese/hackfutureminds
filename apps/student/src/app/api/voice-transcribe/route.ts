@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getGroqApiKey, getGroqAudioModel } from "@/lib/groq-env";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
 
     const groqForm = new FormData();
     groqForm.set("file", audio, "voice-command.webm");
-    groqForm.set("model", process.env.GROQ_AUDIO_MODEL || DEFAULT_AUDIO_MODEL);
+    groqForm.set("model", getGroqAudioModel(DEFAULT_AUDIO_MODEL));
     groqForm.set("response_format", "json");
     if (locale === "en") groqForm.set("language", "en");
     if (locale === "ru") groqForm.set("language", "ru");
@@ -81,7 +82,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       transcript,
-      model: process.env.GROQ_AUDIO_MODEL || DEFAULT_AUDIO_MODEL,
+      model: getGroqAudioModel(DEFAULT_AUDIO_MODEL),
     });
   } catch (err) {
     console.error("[voice-transcribe]", err);

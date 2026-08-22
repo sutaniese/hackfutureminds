@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getGroqApiKey, getGroqChatModel } from "@/lib/groq-env";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -201,8 +202,8 @@ export async function POST(request: Request) {
     command = cleanCommand(input.command);
     if (!command) return NextResponse.json({ error: "Empty voice command." }, { status: 400 });
 
-    const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey || apiKey.includes("replace-me")) {
+    const apiKey = getGroqApiKey();
+    if (!apiKey) {
       return NextResponse.json({ intent: fallbackIntent(command), source: "fallback" });
     }
 
@@ -214,7 +215,7 @@ export async function POST(request: Request) {
       },
       signal: AbortSignal.timeout(GROQ_FETCH_MS),
       body: JSON.stringify({
-        model: process.env.GROQ_MODEL || DEFAULT_MODEL,
+        model: getGroqChatModel(DEFAULT_MODEL),
         temperature: 0,
         response_format: { type: "json_object" },
         messages: [
