@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { TenWordmark } from "@/components/brand/TenWordmark";
+import { SHELL_PX } from "@/lib/shell-layout";
 import { LS_HIGH_CONTRAST, LS_VOICE } from "@/lib/pw-storage";
 
 export function A11yTopBar() {
@@ -73,7 +74,9 @@ export function A11yTopBar() {
       className="pw-pt-safe sticky top-0 z-30 border-b border-pathwise-line bg-pathwise-surface/95 shadow-[0_1px_2px_rgb(15_23_42/0.05)] backdrop-blur-sm"
       style={{ minHeight: "var(--pw-a11y-top)" }}
     >
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5 md:px-5">
+      <div
+        className={`${SHELL_PX} flex flex-wrap items-center gap-x-3 gap-y-2 py-2.5`}
+      >
         <Link
           href="/"
           className="flex min-h-12 min-w-12 shrink-0 items-baseline no-underline"

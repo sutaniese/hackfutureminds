@@ -1,5 +1,6 @@
 "use client";
 
+import { SHELL_PX } from "@/lib/shell-layout";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -102,7 +103,7 @@ export function BottomNav() {
       aria-label="Main sections"
     >
       <div
-        className="mx-auto grid w-full max-w-6xl grid-cols-5 gap-1 px-2 py-2"
+        className={`${SHELL_PX} grid grid-cols-5 gap-1 py-2`}
         style={{ minHeight: "var(--pw-nav)" }}
       >
         {items.map((item) => {

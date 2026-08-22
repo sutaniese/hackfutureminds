@@ -24,8 +24,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`h-full ${inter.variable}`}>
-      <body className={`${inter.className} min-h-dvh bg-pathwise-page antialiased`}>
+    <html lang="en" className={`h-full w-full min-w-0 ${inter.variable}`}>
+      <body
+        className={`${inter.className} min-h-dvh w-full min-w-0 overflow-x-hidden bg-pathwise-page antialiased`}
+      >
         <MobileAppShell>{children}</MobileAppShell>
       </body>
     </html>
