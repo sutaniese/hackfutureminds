@@ -81,6 +81,16 @@ export function HomeView() {
     [t],
   );
 
+  const learnSteps = useMemo(
+    () =>
+      ([1, 2, 3, 4] as const).map((step) => ({
+        step,
+        title: t(`home.learn.s${step}.title`),
+        body: t(`home.learn.s${step}.body`),
+      })),
+    [t],
+  );
+
   const accountItems = useMemo(
     () =>
       [
@@ -121,16 +131,26 @@ export function HomeView() {
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link
-                href={isAuthed ? ROLE_ENTRY_PATHS[user?.role ?? "student"] : "/register"}
+                href={isAuthed ? "/learning" : "/register?redirect=%2Flearning"}
                 className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#111827] px-6 text-sm font-black text-white no-underline shadow-sm transition hover:-translate-y-0.5 hover:bg-[#6C63FF]"
               >
                 {t("home.landing.ctaPrimary")}
               </Link>
               <Link
+                href={
+                  isAuthed
+                    ? "/learning/diagnostics"
+                    : "/register?redirect=%2Flearning%2Fdiagnostics"
+                }
+                className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#6C63FF] bg-[#6C63FF]/10 px-6 text-sm font-black text-[#554dd6] no-underline shadow-sm transition hover:-translate-y-0.5 hover:bg-[#6C63FF]/15"
+              >
+                {t("home.landing.ctaSecondary")}
+              </Link>
+              <Link
                 href="/grants"
                 className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-200 bg-white px-6 text-sm font-black text-[#111827] no-underline shadow-sm transition hover:-translate-y-0.5 hover:border-[#6C63FF]"
               >
-                {t("home.landing.ctaSecondary")}
+                {t("home.landing.ctaGrants")}
               </Link>
               {isAuthed && user?.email ? (
                 <Link
@@ -191,6 +211,43 @@ export function HomeView() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-[2.5rem] border border-slate-200 bg-white p-5 shadow-sm md:p-8">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-[0.68rem] font-black uppercase tracking-[0.22em] text-[#6C63FF]">
+              {t("home.learn.kicker")}
+            </p>
+            <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-[#111827]">
+              {t("home.learn.title")}
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-slate-600">{t("home.learn.lead")}</p>
+          </div>
+          <Link
+            href={
+              isAuthed ? "/learning/diagnostics" : "/register?redirect=%2Flearning%2Fdiagnostics"
+            }
+            className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-[#6C63FF] px-6 text-sm font-black text-white no-underline shadow-sm transition hover:-translate-y-0.5"
+          >
+            {t("home.landing.ctaSecondary")}
+          </Link>
+        </div>
+
+        <div className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {learnSteps.map((item) => (
+            <article
+              key={item.step}
+              className="relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-[#f8fafc] p-5"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#6C63FF] text-base font-black text-white">
+                {item.step}
+              </span>
+              <h3 className="mt-4 text-lg font-black leading-tight text-[#111827]">{item.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{item.body}</p>
+            </article>
+          ))}
         </div>
       </section>
 
