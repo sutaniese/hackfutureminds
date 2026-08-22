@@ -1,19 +1,16 @@
 /**
- * Cross-app links between the student core (`apps/student`, Next.js) and the
- * B2B portal (`apps/portal`, Vite).
+ * Links inside the unified Next app (`apps/student`): student shell routes and
+ * the B2B hub under `PORTAL_HUB_BASE` (e.g. `/hub/agent`, `/hub/vuzy`).
  *
- * **Unified site (default):** the portal is mounted under the same origin as
- * the student app at `PORTAL_HUB_BASE` (e.g. `/hub`). Next.js proxies `/hub/*`
- * and portal API routes to the Vite dev server in development.
- *
- * **Split deploy:** set `NEXT_PUBLIC_PORTAL_URL` to an absolute origin (e.g.
- * `https://portal.example.com`) and `VITE_STUDENT_URL` for the student origin.
+ * **Split deploy:** set `NEXT_PUBLIC_PORTAL_URL` to an absolute origin so hub
+ * links open on another site; set `NEXT_PUBLIC_STUDENT_URL` (or legacy
+ * `VITE_STUDENT_URL`) for absolute student URLs from the hub header.
  */
 
-/** Path prefix where the Vite portal is served on the student origin. */
+/** Path prefix for B2B hub routes on the same origin as the student app. */
 export const PORTAL_HUB_BASE = "/hub";
 
-/** Legacy direct Vite URL (only when not using unified /hub). */
+/** Optional absolute portal URL for split deploy. */
 export const DEFAULT_PORTAL_URL = "";
 export const DEFAULT_STUDENT_URL = "";
 
@@ -49,7 +46,7 @@ export function portalHref(
   return `${hub}${p}`;
 }
 
-/** Build a student-app URL from the portal (uses `VITE_STUDENT_URL` if set). */
+/** Build a student-app URL from the hub (pass `NEXT_PUBLIC_STUDENT_URL` when split). */
 export function studentHref(
   path: string,
   envUrl: string | undefined = undefined,
