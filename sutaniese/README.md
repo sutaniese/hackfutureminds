@@ -50,7 +50,21 @@ If `node_modules` was copied or installed on a slow Windows mount and packages l
 
 ## Deploy (Vercel)
 
-Official Vercel guides (404 / `NOT_FOUND` / config): [Why a successful build can still 404](https://vercel.com/guides/why-is-my-deployed-project-giving-404), [How to debug 404 errors](https://vercel.com/kb/guide/how-to-debug-404-errors), [Build & output settings](https://vercel.com/docs/deployments/configure-a-build#build-and-development-settings). In the dashboard, the **Next.js** framework preset (not “Other”) must be selected; one [community report](https://community.vercel.com/t/404-error-on-vercel-deployment-despite-successful-build/5601) fixed a persistent 404 that way.
+[Next.js on Vercel (official)](https://vercel.com/docs/frameworks/next)
+
+### Quick checklist (sutaniese on Vercel)
+
+1. **Connect the Git repo** you push to (e.g. `main`).
+2. **Settings → General → Root Directory** = **`sutaniese`** if `sutaniese/package.json` is at the repo top next to `nura/`; use **`hacksteppe/sutaniese`** if GitHub shows that full path. Use **only the folder name(s)** (no `C:\…`, no `\package.json`).
+3. **Framework** should be **Next.js** (or leave auto-detect; the repo has `sutaniese/vercel.json` with `"framework": "nextjs"`).
+4. **Do not** set a custom **Output** directory for this app; leaving it empty is correct for Serverless/Edge Next.
+5. **Redeploy** after changing the root. Confirm **`/api/health`** returns `{"ok":true,"service":"sutaniese"}` and **`/`** loads the home page.
+
+Optional: add **`GROQ_API_KEY`** (and `GROQ_MODEL` if you use it) in **Settings → Environment Variables** for production so `/api/generate` can call Groo; the app still works with the built-in engine if unset.
+
+The repo includes **`sutaniese/vercel.json`**, **`.nvmrc`** (Node 20, matches `package.json` `engines`), and **`outputFileTracingRoot`** in `next.config.ts` pointing at this folder so file tracing matches a monorepo layout.
+
+Official Vercel guides (404 / `NOT_FOUND` / build): [Why 404 can happen after a “successful” deploy](https://vercel.com/guides/why-is-my-deployed-project-giving-404), [How to debug 404 errors](https://vercel.com/kb/guide/how-to-debug-404-errors), [Build & development settings](https://vercel.com/docs/deployments/configure-a-build#build-and-development-settings). A wrong **output directory** or a framework set to “Other” instead of Next is a common cause [report](https://community.vercel.com/t/404-error-on-vercel-deployment-despite-successful-build/5601).
 
 The student app lives in **`sutaniese`**, not at the monorepo root, so Vercel must build **that** folder. A wrong **Root directory** or a wrong **output directory** can show **`404: NOT_FOUND`**, `DEPLOYMENT_NOT_FOUND` (bad URL or deleted deploy), or an empty file tree.
 
