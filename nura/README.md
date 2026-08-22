@@ -25,7 +25,7 @@ npm run dev
 
 1. Скопируйте `.env.example` → `.env`.
 2. Укажите **`GEMINI_API_KEY`** (или `GOOGLE_API_KEY`). **Не коммитьте** ключ и не вставляйте его в код.
-3. При необходимости задайте **`GEMINI_MODEL`** (например `gemini-2.0-flash` или `gemini-1.5-flash`).
+3. При необходимости задайте **`GEMINI_MODEL`** (по умолчанию **`gemini-3-flash-preview`** — Gemini 3 Flash).
 4. Перезапустите `npm run dev`.
 
 Запросы dev API (ключ не в клиентском бандле):

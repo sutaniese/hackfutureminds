@@ -6,7 +6,8 @@ export function getGeminiApiKey(): string | undefined {
   return process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY
 }
 
-const DEFAULT_MODEL = 'gemini-2.0-flash'
+/** Gemini 3 Flash (preview) — см. https://ai.google.dev/gemini-api/docs/models */
+const DEFAULT_MODEL = 'gemini-3-flash-preview'
 
 function extractText(data: unknown): string {
   const d = data as {
