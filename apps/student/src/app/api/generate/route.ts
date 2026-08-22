@@ -3,6 +3,7 @@ import { tryGenerateWithGroq } from "@/lib/generate/groq-optional";
 import { generateDeterministic } from "@/lib/generate/deterministic";
 import { parseGenerateRequest } from "@/lib/generate/parse-request";
 import { queryLiveGrants, type LiveGrantRow } from "@/lib/grants-live-query";
+import { jsonSafeClone } from "@/lib/json-safe";
 import type {
   GenerateLanguage,
   GenerateRequest,
@@ -239,7 +240,7 @@ export async function POST(request: Request) {
           available_grants: [] as LiveGrant[],
         } as GenerateRequest & { available_grants: LiveGrant[] };
         return NextResponse.json(
-          withLiveGrants(generateDeterministic(minimal), [], payload),
+          jsonSafeClone(withLiveGrants(generateDeterministic(minimal), [], payload)),
         );
       } catch (e2) {
         console.error("[generate] deterministic recovery failed", e2);

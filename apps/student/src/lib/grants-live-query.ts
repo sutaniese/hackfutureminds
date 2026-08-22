@@ -1,4 +1,5 @@
 import fallbackGrants from "@/data/live-grants.json";
+import { jsonSafeClone } from "@/lib/json-safe";
 
 export type LiveGrantRow = {
   id: string;
@@ -34,11 +35,12 @@ function fallbackData(): LiveGrantRow[] {
 }
 
 function matchesFilters(grant: LiveGrantRow, filters: Record<string, string | null>) {
+  const fields = Array.isArray(grant.fields) ? grant.fields : [];
   const fieldAliases = filters.field ? FIELD_ALIASES[filters.field] ?? [filters.field] : [];
   if (
     filters.field &&
-    !grant.fields.includes("any") &&
-    !grant.fields.some((field) => fieldAliases.includes(field))
+    !fields.includes("any") &&
+    !fields.some((field) => fieldAliases.includes(field))
   ) {
     return false;
   }
@@ -49,8 +51,10 @@ function matchesFilters(grant: LiveGrantRow, filters: Record<string, string | nu
 }
 
 async function fetchSupabaseGrants(filters: Record<string, string | null>) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_KEY;
+  const supabaseUrl =
+    process.env.SUPABASE_URL?.trim() ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const serviceKey = process.env.SUPABASE_SERVICE_KEY?.trim();
   if (!supabaseUrl || !serviceKey) throw new Error("Supabase env vars are missing.");
 
   const url = new URL(`${supabaseUrl}/rest/v1/grants`);
@@ -83,12 +87,14 @@ async function fetchSupabaseGrants(filters: Record<string, string | null>) {
   } catch {
     throw new Error("Supabase returned invalid JSON.");
   }
-  if (!filters.field) return data;
+  const safe = jsonSafeClone(data);
+  if (!filters.field) return safe;
   const fieldAliases = FIELD_ALIASES[filters.field] ?? [filters.field];
-  return data.filter(
-    (grant) =>
-      grant.fields?.includes("any") ||
-      grant.fields?.some((field) => fieldAliases.includes(field)),
+  return safe.filter(
+    (grant) => {
+      const fields = Array.isArray(grant.fields) ? grant.fields : [];
+      return fields.includes("any") || fields.some((field) => fieldAliases.includes(field));
+    },
   );
 }
 
