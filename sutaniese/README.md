@@ -56,14 +56,20 @@ The student app lives in **`sutaniese`**, not at the monorepo root, so Vercel mu
 
 ### 1) Pick the correct “Root directory” (most common fix)
 
-In GitHub, look at the path to **`sutaniese/package.json`**.
+**This field is relative to your Git repository on GitHub, not a path on your computer.**
 
-| You see in the repo | Set Vercel → Settings → **General** → **Root directory** to |
-|----------------------|----------------------------------------------------------------|
-| `sutaniese/package.json` at the top level of the default branch | **`sutaniese`** |
-| `hacksteppe/sutaniese/...` (or any extra folder in front) | the **full** path, e.g. **`hacksteppe/sutaniese`**, not `sutaniese` only |
+- **Set only the project folder** (e.g. `sutaniese`). It must be the directory that **contains** `package.json` — the word **`package.json` is not** part of the value.
+- **Do not** paste a Windows or macOS path such as `C:\Users\...\sutaniese\package.json`. Vercel builds in the cloud: those paths do not exist there and the build will fail with “Root Directory … does not exist.”
+- Use **forward slashes** in the value if a segment is nested, e.g. `hacksteppe/sutaniese` (if your repo tree looks like that on GitHub).
 
-If you are unsure, open the repo in the browser: the Root directory must be the folder that **contains** the Next `package.json` and `vercel.json`.
+| What you see in the GitHub file tree (path to the folder with `package.json`) | Vercel **Root directory** value to enter |
+|--------------------------------------------------------------------------------|------------------------------------------|
+| Repository root is `nura/`, `sutaniese/` (sibling folders) | **`sutaniese`** |
+| App is nested, e.g. `hacksteppe/sutaniese/...` | **`hacksteppe/sutaniese`** |
+
+**Wrong:** `C:\Users\...\sutaniese\package.json`, `sutaniese\package.json`, `sutaniese/package.json` as the root string (the last is a *file* path, not a folder; use `sutaniese` only).
+
+**Right:** `sutaniese` (or the nested path above) — nothing else.
 
 ### 2) Vercel build settings (leave defaults for Next)
 
