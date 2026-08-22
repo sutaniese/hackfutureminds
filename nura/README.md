@@ -11,6 +11,12 @@
 - `/uchitelya` — учительский модуль (классы, invite, рек. письма, CSV)
 - `/enterprise` — B2B / ЕНТ-центры (white-label, аналитика, CRM, bulk-отчёты)
 
+## Деплой (Vercel) и 404
+
+Это **Vite + React Router (SPA)**. В продакшене на Vercel без rewrites путь вроде `/agent` не соответствует физическому файлу в `dist/`, и сервер отдаёт **404**. В корне модуля есть `vercel.json` с `rewrites` на `index.html` (как в [доке Vercel](https://vercel.com/docs/rewrites) / SPA-гайдах). В **Project Settings** укажите **Root directory** = `nura` (папка с `package.json` **относительно** репозитория, без `C:\` и без `\package.json`).
+
+`plugins/*` (REST `/api/...`) работают **только в `npm run dev`**. Статичный `vite build` на Vercel не поднимает этот middleware: запросы к `/api/*` в production не к хосту-разработчика приведут к 404, если нет отдельного backend.
+
 ## Архитектура
 
 ```
