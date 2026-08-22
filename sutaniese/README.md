@@ -19,6 +19,11 @@ All primary UI is under the `(mobile)` route group with a `max-w-md` column, a *
 
 `/onboarding` runs a **7-step** flow: questions match `student_dev_EN.md` (subjects, free time, achievements, work style, KZ vs abroad, city, budget). **Step X of 7** + bar at the top; answers are held in **React state**; on **Finish** they are also written to `sessionStorage` as `pathwise-onboarding-answers` for the next demo step (e.g. `/api/generate`).
 
+## Data models and grants (step 4)
+
+- **Types:** `src/types/generate.ts` (`GenerateRequest` / `GenerateResponse`, `CareerMapItem`, `FinancialRoute`, `MatchedGrantSummary` aligned with `student_dev_EN.md`), `src/types/grants.ts` (`GrantRecord` with KZ fields), **onboarding** remains in `src/types/onboarding.ts`.
+- **Grants database:** `api/grants.json` (30+ hardcoded programs, demo annotations: tags, KZ relevance, `suggestedMatchBlurb` as a match reason, and `coverageContributionKzt` for later stacking in `/api/generate`). **Loader:** `src/lib/grants-data.ts` (`ALL_GRANTS`, `getGrantById`, `grantCount`).
+
 ## Scripts
 
 | Command | Description |
