@@ -6,3 +6,6 @@ dist
 
 # дубликат логотипа в корне (используйте public/logo.png)
 /logo.png
+
+# локальный JSON-store + Obsidian-vault (создаётся при первом запуске dev-сервера)
+ten-vault/

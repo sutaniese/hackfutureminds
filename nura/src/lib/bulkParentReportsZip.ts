@@ -1,5 +1,6 @@
 import JSZip from 'jszip'
 import type { EnterpriseCohortMember } from '../data/enterpriseCohort'
+import { SITE_NAME } from '../site'
 
 function sanitizeFilePart(s: string) {
   return s.replace(/[^\wа-яА-ЯёЁ.-]+/gi, '_').slice(0, 48)
@@ -7,7 +8,7 @@ function sanitizeFilePart(s: string) {
 
 function buildReportText(m: EnterpriseCohortMember, tenantName: string) {
   return [
-    `PathWise — персональный отчёт для родителей`,
+    `${SITE_NAME} — персональный отчёт для родителей`,
     `Центр (white-label): ${tenantName}`,
     '',
     `Ученик: ${m.displayName}`,
@@ -44,7 +45,7 @@ export async function downloadBulkParentReportsZip(
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `PathWise_bulk_roditeli_${sanitizeFilePart(tenantName)}.zip`
+  a.download = `${SITE_NAME}_bulk_roditeli_${sanitizeFilePart(tenantName)}.zip`
   a.click()
   URL.revokeObjectURL(url)
 }

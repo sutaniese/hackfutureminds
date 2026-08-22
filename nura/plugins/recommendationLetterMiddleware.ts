@@ -3,7 +3,7 @@ import { getGeminiApiKey, geminiGenerate } from './geminiClient'
 
 export type RecommendationLetterRequest = {
   language: 'kk' | 'ru' | 'en'
-  /** Полный JSON-профиль ученика из «базы» (как в PathWise) */
+  /** Полный JSON-профиль ученика из «базы» (как в ten) */
   student: Record<string, unknown>
 }
 

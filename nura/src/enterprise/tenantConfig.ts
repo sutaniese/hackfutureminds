@@ -20,9 +20,9 @@ export const DEFAULT_TENANT_ID = 'pathwise'
 export const TENANTS: Record<string, TenantBranding> = {
   pathwise: {
     id: 'pathwise',
-    displayName: 'teñ. · PathWise',
+    displayName: 'ten',
     logoUrl: '/logo.png',
-    logoMark: 'tñ',
+    logoMark: 'ten',
     colors: {
       ink: '#1A2E40',
       muted: '#A2B9BC',

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { SITE_NAME } from '../site'
 import type { GrantItem } from '../types/pathwise'
 
 type Props = {
@@ -71,7 +72,7 @@ export function FinancialCalculator({ monthlyNeedKzt, grants, studentName }: Pro
             aria-describedby="family-budget-help"
           />
           <p id="family-budget-help" className="mt-2 text-xs text-pathwise-muted">
-            Ориентир стоимости в PathWise:{' '}
+            Ориентир стоимости в {SITE_NAME}:{' '}
             <span className="font-medium text-pathwise-ink">{formatMoney(monthlyNeedKzt)}</span> / мес.
           </p>
         </div>

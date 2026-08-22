@@ -1,5 +1,6 @@
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
+import { SITE_NAME } from '../site'
 
 /**
  * Собирает видимый блок отчёта (#parent-report-root) в многостраничный PDF (A4).
@@ -35,5 +36,5 @@ export async function downloadParentReportPdf(root: HTMLElement, fileBaseName: s
   }
 
   const safe = fileBaseName.replace(/[^\wа-яА-ЯёЁ-]+/gi, '_').slice(0, 80)
-  pdf.save(`PathWise_родители_${safe}.pdf`)
+  pdf.save(`${SITE_NAME}_roditeli_${safe}.pdf`)
 }

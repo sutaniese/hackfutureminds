@@ -44,7 +44,7 @@ async function callGemini(body: CareerCompareRequestBody): Promise<CareerCompare
   const userPrompt = `Регион по умолчанию: Казахстан (${body.region ?? 'Казахстан'}).
 
 Профессия, которую родитель считает подходящей для ребёнка: "${body.parentProfession}".
-Профессия/направление, которое выбрал ребёнок в PathWise: "${body.childProfession}".
+Профессия/направление, которое выбрал ребёнок в ten: "${body.childProfession}".
 
 Верни СТРОГО JSON (без markdown, без пояснений до или после JSON) по схеме:
 {

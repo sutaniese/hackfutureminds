@@ -1,4 +1,5 @@
 import type { TeacherClass } from '../types/teacher'
+import { SITE_NAME } from '../site'
 
 const OLYMPIAD_RE = /олимпиад|olympiad|\boi\b|physics|химия|биолог|математ/i
 
@@ -28,7 +29,7 @@ export function downloadClassAchievementsReport(klass: TeacherClass, filenameBas
     .slice(0, 8)
 
   const lines: string[] = []
-  lines.push('PathWise;Экспорт достижений класса')
+  lines.push(`${SITE_NAME};Экспорт достижений класса`)
   lines.push(`Класс;${escapeCsvCell(klass.name)}`)
   lines.push(`Код приглашения;${klass.inviteCode}`)
   lines.push('')

@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react'
+import { SITE_NAME } from '../site'
 
 export type MarketSide = {
   salaryRangeKzt: string
@@ -61,7 +62,7 @@ export function CareerComparison({ childProfession }: Props) {
         Сравнение профессий
       </h2>
       <p className="mt-1 text-sm text-pathwise-muted">
-        Выбор ребёнка в PathWise:{' '}
+        Выбор ребёнка в {SITE_NAME}:{' '}
         <span className="font-semibold text-pathwise-ink">{childProfession || '—'}</span>. Введите
         профессию, которую вы считаете более подходящей — мы запросим у Gemini ориентиры по рынку (KZ).
       </p>

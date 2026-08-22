@@ -4,7 +4,7 @@ import type { StudentProfile } from './pathwise'
 export type ClassStudentRow = {
   id: string
   onboardingComplete: boolean
-  /** Основные направления из PathWise */
+  /** Основные направления из ten */
   careerDirections: string[]
   /** Нужна ли усиленная финансовая поддержка / гранты */
   needsFinancialHelp: boolean

@@ -1,3 +1,5 @@
+import { SITE_NAME } from '../site'
+
 /** Упрощённые карточки учеников потока для массовых отчётов (демо, не все 524) */
 export type EnterpriseCohortMember = {
   id: string
@@ -38,7 +40,7 @@ export const ENTERPRISE_COHORT: EnterpriseCohortMember[] = FIRST.flatMap((name, 
       displayName,
       primaryProfession,
       grantsSecuredKzt,
-      parentSummary: `Профиль PathWise: ${primaryProfession}. Подобраны гранты на сумму ~${(grantsSecuredKzt / 1_000_000).toFixed(1)} млн ₸ (демо). Рекомендуем обсудить финмаршрут на семейной встрече.`,
+      parentSummary: `Профиль ${SITE_NAME}: ${primaryProfession}. Подобраны гранты на сумму ~${(grantsSecuredKzt / 1_000_000).toFixed(1)} млн ₸ (демо). Рекомендуем обсудить финмаршрут на семейной встрече.`,
     } satisfies EnterpriseCohortMember
   })
   return batch

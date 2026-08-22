@@ -1,42 +1,85 @@
-# PathWise / teñ. — фронтенд-модули (`nura`)
+# ten — фронтенд-модули (`nura`)
 
-Компоненты:
+Полнофункциональный MVP: онбординг учеников, родительский/учительский/Enterprise-модули
+и **персональный AI-наставник на Gemini с памятью в Obsidian-vault**.
 
-- `ParentDashboard.tsx` — профиль, карьерная карта и финмаршрут **только для чтения**.
-- `FinancialCalculator.tsx` — бюджет семьи → gap и подсветка грантов.
-- `CareerComparison.tsx` — сравнение «ваша профессия» vs выбор ребёнка через **Gemini API** (прокси в dev).
-- `TeacherDashboard.tsx` — классы, **уникальный invite code**, таблица учеников, письмо через **`/api/recommendation-letter`**, **CSV-экспорт** достижений класса.
-- **Enterprise**: `TenantThemeContext` + CSS variables (Tailwind `pathwise.*` → `var(--pw-*)`), `EnterpriseHub.tsx`, `EnterpriseAnalytics.tsx` (Recharts), **`POST /api/crm-sync`**, массовый **ZIP** отчётов (`jszip`).
+## Маршруты
 
-## Бренд по умолчанию (teñ.)
+- `/agent` — AI-наставник (чат + заметки) ⟵ **главная**
+- `/uchenik` — онбординг и редактирование учеников
+- `/roditeli` — родительский модуль (read-only + PDF)
+- `/uchitelya` — учительский модуль (классы, invite, рек. письма, CSV)
+- `/enterprise` — B2B / ЕНТ-центры (white-label, аналитика, CRM, bulk-отчёты)
 
-- Фон (cream): `#F5F5DC`, акцент: `#5F7ADB`, текст: `#1A2E40`, вторичный: `#A2B9BC`.
-- Логотип: файл **`public/logo.png`** (раздаётся как `/logo.png`).
+## Архитектура
+
+```
+nura/
+├─ ten-vault/                       ← persistent store + Obsidian-vault (gitignored)
+│  ├─ db.json                       ← students/classes/conversations
+│  ├─ students/<id>/profile.md      ← Obsidian-страница ученика (память агента)
+│  ├─ students/<id>/notes/*.md      ← writable заметки
+│  └─ classes/<id>.md               ← обзор класса
+├─ plugins/                         ← Vite-middleware (dev backend)
+│  ├─ vaultStore.ts                 ← JSON+MD persistence
+│  ├─ studentsApiMiddleware.ts      ← REST CRUD
+│  ├─ agentMiddleware.ts            ← Gemini chat (RAG по vault)
+│  ├─ careerCompareMiddleware.ts    ← /api/career-compare
+│  ├─ recommendationLetterMiddleware.ts
+│  ├─ crmSyncMiddleware.ts          ← /api/crm-sync (мок)
+│  └─ geminiClient.ts
+└─ src/                             ← React + Vite + TS
+```
+
+## REST API (dev)
+
+| Метод+путь | Что делает |
+|---|---|
+| `GET /api/health` | живость |
+| `GET /api/students` | список учеников |
+| `POST /api/students` | upsert |
+| `GET/PUT/DELETE /api/students/:id` | по одному |
+| `GET/POST /api/students/:id/notes` | список/создание заметки (Obsidian) |
+| `GET/DELETE /api/students/:id/notes/:fileName` | чтение/удаление заметки |
+| `GET/POST/DELETE /api/classes[/:id]` | классы |
+| `POST /api/classes/join` | привязка ученика к классу по invite-коду |
+| `POST /api/agent/chat` | сообщение агенту (RAG по vault) |
+| `GET /api/agent/history?studentId=…` | история чата |
+| `POST /api/agent/clear` | очистить чат |
+| `POST /api/career-compare` | сравнение профессий |
+| `POST /api/recommendation-letter` | рек. письмо |
+| `POST /api/crm-sync` | мок CRM sync |
+
+## AI-агент (Gemini + Obsidian)
+
+- Каждое сообщение ученика разогревается **системным промптом + profile.md + всеми
+  заметками из `notes/`** этого ученика → отправляется в **Gemini**
+  (модель `gemini-3-flash-preview`, переопределяется `GEMINI_MODEL`).
+- Агент умеет «запоминать» по команде: если ответ содержит блок
+  `<<SAVE_NOTE title="…">>…<<END_NOTE>>`, бэкенд автоматически сохраняет заметку
+  в `students/<id>/notes/`. На фронте в чате появится `🗒 Сохранено в …`.
+- История диалога per-student хранится в `db.json` и переживает перезагрузку.
+- Без `GEMINI_API_KEY` агент работает в `fallback`-режиме (не падает).
+
+Vault можно **открыть в Obsidian**: указать `nura/ten-vault` как vault
+(или сделать симлинк) — graph и backlinks сразу подхватятся.
+
+## Бренд по умолчанию
+
+- Фон `#F5F5DC`, акцент `#5F7ADB`, текст `#1A2E40`, вторичный `#A2B9BC`.
+- Логотип: `public/logo.png` → `/logo.png`.
+- White-label: `src/enterprise/tenantConfig.ts` + CSS-переменные.
 
 ## Запуск
 
 ```bash
 cd nura
 npm install
-npm run dev
+cp .env.example .env  # вставить GEMINI_API_KEY
+npm run dev           # http://localhost:5173 (или 5174)
 ```
 
-## Google Gemini API
-
-1. Скопируйте `.env.example` → `.env`.
-2. Укажите **`GEMINI_API_KEY`** (или `GOOGLE_API_KEY`). **Не коммитьте** ключ и не вставляйте его в код.
-3. При необходимости задайте **`GEMINI_MODEL`** (по умолчанию **`gemini-3-flash-preview`** — Gemini 3 Flash).
-4. Перезапустите `npm run dev`.
-
-Запросы dev API (ключ не в клиентском бандле):
-
-- `POST /api/career-compare` — `plugins/careerCompareMiddleware.ts` + `plugins/geminiClient.ts`
-- `POST /api/recommendation-letter` — тело `{ "language": "kk"|"ru"|"en", "student": { ...профиль } }`, ответ `{ letter, source }`
-- `POST /api/crm-sync` — мок CRM (`plugins/crmSyncMiddleware.ts`), тело `{ "tenant_id"?, "batch_size"? }`.
-
-## PDF
-
-Кнопка «Скачать PDF-отчёт» использует `html2canvas` + `jspdf` и сохраняет содержимое блока `#parent-report-root`.
+При первом старте создастся `ten-vault/` с двумя демо-учениками и одним классом.
 
 ## Сборка
 
@@ -44,5 +87,3 @@ npm run dev
 npm run build
 npm run preview
 ```
-
-Для статического хостинга без Node нужен отдельный backend для API и защиты ключа Gemini.

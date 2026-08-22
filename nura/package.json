@@ -1,5 +1,5 @@
 {
-  "name": "pathwise-nura-parents",
+  "name": "ten-nura",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -14,6 +14,7 @@
     "jszip": "^3.10.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
     "recharts": "^2.13.3"
   },
   "devDependencies": {

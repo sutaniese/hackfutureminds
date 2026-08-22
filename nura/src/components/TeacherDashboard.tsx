@@ -1,68 +1,84 @@
-import { FormEvent, useCallback, useMemo, useState } from 'react'
-import { buildSeedClasses } from '../data/classroomSeed'
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import { downloadClassAchievementsReport } from '../lib/exportClassAchievements'
-import type { ClassStudentRow, TeacherClass } from '../types/teacher'
+import { adaptClass } from '../lib/classAdapter'
+import { api, type ServerClass } from '../lib/api'
+import { SITE_NAME } from '../site'
+import { useStudents } from '../state/StudentContext'
+import type { ClassStudentRow } from '../types/teacher'
 import type { StudentProfile } from '../types/pathwise'
 
-const INITIAL_CLASSES = buildSeedClasses()
-
-function generateInviteCode(existing: Set<string>) {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  for (let attempt = 0; attempt < 40; attempt++) {
-    let s = 'PW-'
-    for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)]
-    if (!existing.has(s)) return s
-  }
-  return `PW-${Date.now().toString(36).toUpperCase().slice(-6)}`
-}
-
-function newClassId() {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return `class-${crypto.randomUUID()}`
-  return `class-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
-}
-
 export function TeacherDashboard() {
-  const [classes, setClasses] = useState<TeacherClass[]>(INITIAL_CLASSES)
-  const [activeId, setActiveId] = useState(INITIAL_CLASSES[0]?.id ?? '')
+  const { students } = useStudents()
+  const [classes, setClasses] = useState<ServerClass[]>([])
+  const [activeId, setActiveId] = useState<string>('')
   const [newName, setNewName] = useState('11«Б» — профориентация')
   const [letterLang, setLetterLang] = useState<'kk' | 'ru' | 'en'>('ru')
   const [letterStudentId, setLetterStudentId] = useState<string>('')
   const [letterLoading, setLetterLoading] = useState(false)
   const [letterText, setLetterText] = useState('')
   const [letterMeta, setLetterMeta] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  const activeClass = useMemo(
-    () => classes.find((c) => c.id === activeId) ?? classes[0] ?? null,
+  const reload = useCallback(async () => {
+    setError(null)
+    try {
+      const list = await api.listClasses()
+      setClasses(list)
+      setActiveId((prev) => (prev && list.find((c) => c.id === prev) ? prev : list[0]?.id ?? ''))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Не удалось загрузить классы')
+    }
+  }, [])
+
+  useEffect(() => {
+    void reload()
+  }, [reload])
+
+  const activeServerClass = useMemo(
+    () => classes.find((c) => c.id === activeId) ?? null,
     [classes, activeId],
   )
 
+  const activeLegacy = useMemo(
+    () => (activeServerClass ? adaptClass(activeServerClass, students) : null),
+    [activeServerClass, students],
+  )
+
   const onCreateClass = useCallback(
-    (e: FormEvent) => {
+    async (e: FormEvent) => {
       e.preventDefault()
       const name = newName.trim()
       if (!name) return
-      const codes = new Set(classes.map((c) => c.inviteCode))
-      const inviteCode = generateInviteCode(codes)
-      const created: TeacherClass = {
-        id: newClassId(),
-        name,
-        inviteCode,
-        students: [],
+      try {
+        const created = await api.createClass(name)
+        setClasses((prev) => [...prev, created])
+        setActiveId(created.id)
+        setNewName('')
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Не удалось создать класс')
       }
-      setClasses((prev) => [...prev, created])
-      setActiveId(created.id)
     },
-    [newName, classes],
+    [newName],
   )
 
-  const handleExport = () => {
-    if (!activeClass) return
-    downloadClassAchievementsReport(activeClass, `PathWise_${activeClass.name}`)
+  async function onDeleteClass(id: string) {
+    if (!confirm('Удалить класс?')) return
+    try {
+      await api.deleteClass(id)
+      await reload()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось удалить класс')
+    }
   }
 
-  const handleLetter = async () => {
-    if (!activeClass) return
-    const row = activeClass.students.find((s) => s.id === letterStudentId)
+  function handleExport() {
+    if (!activeLegacy) return
+    downloadClassAchievementsReport(activeLegacy, `ten_${activeLegacy.name}`)
+  }
+
+  async function handleLetter() {
+    if (!activeLegacy) return
+    const row = activeLegacy.students.find((s) => s.id === letterStudentId)
     if (!row) {
       setLetterMeta('Выберите ученика из списка.')
       return
@@ -90,16 +106,14 @@ export function TeacherDashboard() {
 
   return (
     <div className="space-y-8">
-      <section
-        className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-        aria-labelledby="teacher-dash-title"
-      >
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm" aria-labelledby="teacher-dash-title">
         <h2 id="teacher-dash-title" className="text-lg font-semibold text-pathwise-ink">
           Учительский дашборд
         </h2>
         <p className="mt-1 text-sm text-pathwise-muted">
           Создание класса, код приглашения, свод по ученикам и инструменты для отчёта директору.
         </p>
+        {error && <p className="mt-2 text-sm text-rose-600">{error}</p>}
 
         <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Классы">
           {classes.map((c) => (
@@ -107,10 +121,10 @@ export function TeacherDashboard() {
               key={c.id}
               type="button"
               role="tab"
-              aria-selected={c.id === activeClass?.id}
+              aria-selected={c.id === activeServerClass?.id}
               onClick={() => setActiveId(c.id)}
               className={`min-h-[44px] rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
-                c.id === activeClass?.id
+                c.id === activeServerClass?.id
                   ? 'bg-pathwise-accent text-white shadow'
                   : 'bg-pathwise-surface text-pathwise-ink ring-1 ring-slate-200 hover:bg-slate-100'
               }`}
@@ -118,9 +132,10 @@ export function TeacherDashboard() {
               {c.name}
             </button>
           ))}
+          {classes.length === 0 && <p className="text-sm text-pathwise-muted">Классов пока нет — создайте ниже.</p>}
         </div>
 
-        {activeClass && (
+        {activeServerClass && (
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
             <form
               onSubmit={onCreateClass}
@@ -144,36 +159,45 @@ export function TeacherDashboard() {
                 Создать класс и сгенерировать код
               </button>
               <p className="mt-2 text-xs text-pathwise-muted">
-                Код приглашения уникален в рамках ваших классов на этом устройстве (демо в браузере).
+                Класс сохраняется на сервере (vault: <code>ten-vault/classes/&lt;id&gt;.md</code>).
               </p>
             </form>
 
             <div className="rounded-xl border border-pathwise-accent/30 bg-pathwise-accentSoft/40 p-4">
               <h3 className="text-sm font-semibold text-pathwise-ink">Текущий класс</h3>
               <p className="mt-2 text-sm text-pathwise-muted">Название</p>
-              <p className="text-base font-semibold text-pathwise-ink">{activeClass.name}</p>
+              <p className="text-base font-semibold text-pathwise-ink">{activeServerClass.name}</p>
               <p className="mt-4 text-sm text-pathwise-muted">Код приглашения</p>
               <p
                 className="mt-1 font-mono text-2xl font-bold tracking-widest text-pathwise-ink"
                 aria-live="polite"
               >
-                {activeClass.inviteCode}
+                {activeServerClass.inviteCode}
               </p>
-              <button
-                type="button"
-                onClick={() => {
-                  void navigator.clipboard?.writeText(activeClass.inviteCode)
-                }}
-                className="mt-3 text-sm font-medium text-pathwise-accent underline-offset-2 hover:underline"
-              >
-                Скопировать код
-              </button>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void navigator.clipboard?.writeText(activeServerClass.inviteCode)
+                  }}
+                  className="text-sm font-medium text-pathwise-accent underline-offset-2 hover:underline"
+                >
+                  Скопировать код
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDeleteClass(activeServerClass.id)}
+                  className="rounded-lg border border-rose-200 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50"
+                >
+                  Удалить класс
+                </button>
+              </div>
             </div>
           </div>
         )}
       </section>
 
-      {activeClass && (
+      {activeLegacy && (
         <section
           className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
           aria-labelledby="class-table-title"
@@ -184,7 +208,7 @@ export function TeacherDashboard() {
                 Сводный дашборд класса
               </h2>
               <p className="mt-1 text-sm text-pathwise-muted">
-                Онбординг, направления PathWise, флаг финансовой поддержки.
+                Онбординг, направления в {SITE_NAME}, флаг финансовой поддержки.
               </p>
             </div>
             <button
@@ -215,14 +239,15 @@ export function TeacherDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
-                {activeClass.students.length === 0 ? (
+                {activeLegacy.students.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-4 py-8 text-center text-pathwise-muted">
-                      В классе пока нет учеников. Отправьте им код <strong>{activeClass.inviteCode}</strong> (демо).
+                      В классе пока нет учеников. Дайте им код <strong>{activeLegacy.inviteCode}</strong> или
+                      привяжите вручную в разделе «Ученики».
                     </td>
                   </tr>
                 ) : (
-                  activeClass.students.map((s) => <StudentTableRow key={s.id} row={s} />)
+                  activeLegacy.students.map((s) => <StudentTableRow key={s.id} row={s} />)
                 )}
               </tbody>
             </table>
@@ -230,7 +255,7 @@ export function TeacherDashboard() {
         </section>
       )}
 
-      {activeClass && (
+      {activeLegacy && (
         <section
           className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
           aria-labelledby="rec-letter-title"
@@ -255,7 +280,7 @@ export function TeacherDashboard() {
                 className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm focus:border-pathwise-accent"
               >
                 <option value="">— выберите —</option>
-                {activeClass.students.map((s) => (
+                {activeLegacy.students.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.profile.displayName}
                   </option>
@@ -294,7 +319,7 @@ export function TeacherDashboard() {
             type="button"
             onClick={handleLetter}
             disabled={letterLoading || !letterStudentId}
-            className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-pathwise-accent px-5 py-3 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50"
+            className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-pathwise-accent px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
           >
             {letterLoading ? 'Генерация…' : 'Сгенерировать письмо'}
           </button>
