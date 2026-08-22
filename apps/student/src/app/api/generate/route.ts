@@ -11,34 +11,41 @@ export const runtime = "nodejs";
  * deterministic local logic (demo-safe, no key required).
  */
 export async function POST(request: Request) {
-  let json: unknown;
   try {
-    json = await request.json();
-  } catch {
-    return NextResponse.json(
-      { error: "Invalid JSON body" },
-      { status: 400 }
-    );
-  }
+    let json: unknown;
+    try {
+      json = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON body" },
+        { status: 400 }
+      );
+    }
 
-  let payload;
-  try {
-    payload = parseGenerateRequest(json);
+    let payload;
+    try {
+      payload = parseGenerateRequest(json);
+    } catch (e) {
+      return NextResponse.json(
+        { error: e instanceof Error ? e.message : "Bad request" },
+        { status: 400 }
+      );
+    }
+
+    if (process.env.GROQ_API_KEY) {
+      const ai = await tryGenerateWithGroq(payload);
+      if (ai && isLikelyResponse(ai)) {
+        return NextResponse.json(ai);
+      }
+    }
+
+    return NextResponse.json(generateDeterministic(payload));
   } catch (e) {
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : "Bad request" },
-      { status: 400 }
+      { error: e instanceof Error ? e.message : "Generate route failed" },
+      { status: 500 }
     );
   }
-
-  if (process.env.GROQ_API_KEY) {
-    const ai = await tryGenerateWithGroq(payload);
-    if (ai && isLikelyResponse(ai)) {
-      return NextResponse.json(ai);
-    }
-  }
-
-  return NextResponse.json(generateDeterministic(payload));
 }
 
 function isLikelyResponse(v: object): v is {

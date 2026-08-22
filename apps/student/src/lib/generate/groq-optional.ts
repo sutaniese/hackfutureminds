@@ -48,9 +48,16 @@ ${JSON.stringify(request).slice(0, 12_000)}`;
 
   if (!res.ok) return null;
 
-  const data = (await res.json()) as {
+  let data: {
     choices?: { message?: { content?: string } }[];
   };
+  try {
+    data = (await res.json()) as {
+      choices?: { message?: { content?: string } }[];
+    };
+  } catch {
+    return null;
+  }
   const out = data.choices?.[0]?.message?.content?.trim() ?? "";
   if (!out) return null;
 
