@@ -8,7 +8,7 @@ export function XPBar() {
 
   return (
     <section
-      className="sticky top-[var(--pw-a11y-top)] z-20 border-b border-slate-200 bg-white/95"
+      className="fixed left-0 right-0 top-[var(--pw-a11y-top)] z-20 border-b border-slate-200 bg-white/95"
       aria-label={`XP progress: ${progress.xp} XP, level ${progress.level} ${levelName}`}
     >
       <div className="mx-auto flex min-h-12 w-full max-w-7xl items-center gap-3 px-4 py-2 sm:px-6 lg:px-8">

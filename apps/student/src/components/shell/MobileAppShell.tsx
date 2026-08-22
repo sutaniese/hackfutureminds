@@ -21,6 +21,7 @@ export function MobileAppShell({ children }: { children: React.ReactNode }) {
       <ThemeInit />
       <A11yTopBar />
       <XPBar />
+      <div className="h-12 shrink-0" aria-hidden />
       <main
         id="main"
         className={`pw-route-in pw-pb-nav ${SHELL_PX} flex-1 overflow-y-auto py-6 md:py-10`}
