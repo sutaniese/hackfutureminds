@@ -9,6 +9,7 @@ import {
   type StudentLearningSnapshot,
 } from '@/lib/learning/store'
 import type { Topic } from '@/lib/learning/types'
+import { studentsLabel } from '@/lib/learning/plural'
 import { downloadLearningProgressReport } from '../lib/exportLearningProgress'
 
 function levelTone(level: 1 | 2 | 3 | 4) {
@@ -179,7 +180,7 @@ export function ClassLearningDashboard() {
                     </span>
                     <Bar value={(topic.count / Math.max(1, stats.total)) * 100} color="#FF6B6B" />
                     <span className="w-16 shrink-0 text-right text-xs font-bold text-pathwise-muted">
-                      {topic.count} уч.
+                      {studentsLabel(topic.count)}
                     </span>
                   </div>
                 ))}

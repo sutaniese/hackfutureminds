@@ -16,6 +16,7 @@ import {
   weakSpots,
 } from "@/lib/learning/recommend";
 import { LEVEL_LABELS } from "@/lib/learning/store";
+import { attemptsLabel, daysLabel, tasksLabel } from "@/lib/learning/plural";
 import { LEARNING_GOALS } from "@/lib/learning/types";
 import { EmptyState, Pill, ProgressBar, StatTile } from "./LearningUI";
 import { useLearning } from "./useLearning";
@@ -166,13 +167,13 @@ export function LearningDashboard() {
           <StatTile
             label="Освоено"
             value={`${summary.mastery}%`}
-            hint={`${summary.solvedTasks} из ${summary.totalTasks} заданий`}
+            hint={`${summary.solvedTasks} из ${tasksLabel(summary.totalTasks)}`}
             tone="accent"
           />
           <StatTile
             label="Точность"
             value={summary.accuracy === null ? "—" : `${summary.accuracy}%`}
-            hint={`${summary.attempts} попыток`}
+            hint={attemptsLabel(summary.attempts)}
             tone={summary.accuracy !== null && summary.accuracy >= 70 ? "good" : "warn"}
           />
           <StatTile
@@ -182,7 +183,7 @@ export function LearningDashboard() {
           />
           <StatTile
             label={profile.examDate ? "До цели" : "Дедлайн"}
-            value={days !== null && days >= 0 ? `${days} дн.` : profile.examDate ? "прошёл" : "не задан"}
+            value={days !== null && days >= 0 ? daysLabel(days) : profile.examDate ? "прошёл" : "не задан"}
             hint={profile.examDate || "укажите дату в профиле"}
             tone={deadlineTone(days)}
           />
@@ -235,7 +236,7 @@ export function LearningDashboard() {
                       <ProgressBar value={mastery} />
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-pathwise-muted">
-                      <span>{item.topic.tasks.length} заданий</span>
+                      <span>{tasksLabel(item.topic.tasks.length)}</span>
                       <span aria-hidden>·</span>
                       <span>освоено {mastery}%</span>
                       <span aria-hidden>·</span>
@@ -308,7 +309,7 @@ export function LearningDashboard() {
                     Дата: {profile.examDate}
                   </p>
                   <p className="mt-2 text-sm font-black text-[#6C63FF]">
-                    {days !== null && days >= 0 ? `Осталось ${days} дн.` : "Дата уже прошла"}
+                    {days !== null && days >= 0 ? `Осталось ${daysLabel(days)}` : "Дата уже прошла"}
                   </p>
                 </div>
               ) : (
@@ -323,7 +324,10 @@ export function LearningDashboard() {
                     Следующий шаг
                   </p>
                   <p className="mt-1 text-sm font-bold leading-6 text-pathwise-ink">
-                    {item.topic.title}: решить {item.topic.tasks.length - topicStateOf(state, item.topic.id).solved.length} заданий
+                    {item.topic.title}: решить{" "}
+                    {tasksLabel(
+                      item.topic.tasks.length - topicStateOf(state, item.topic.id).solved.length,
+                    )}
                   </p>
                 </div>
               ))}

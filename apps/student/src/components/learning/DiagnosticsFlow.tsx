@@ -22,6 +22,7 @@ import {
   upsertRosterEntry,
   writeLearningProfile,
 } from "@/lib/learning/store";
+import { topicsLabel } from "@/lib/learning/plural";
 import { LEARNING_GOALS, isAnswerCorrect, taskCorrectLabel } from "@/lib/learning/types";
 import type { Difficulty, Grade, LearningGoalId, Task } from "@/lib/learning/types";
 import { AnswerField } from "./AnswerField";
@@ -281,7 +282,7 @@ export function DiagnosticsFlow() {
               Начать диагностику
             </button>
             <p className="text-xs font-semibold text-pathwise-muted">
-              {DIAGNOSTIC_SIZE} вопросов · {subjectTopicCount} тем по предмету «{subjectTitle(subjectId)}»
+              {DIAGNOSTIC_SIZE} вопросов · {topicsLabel(subjectTopicCount)} по предмету «{subjectTitle(subjectId)}»
             </p>
           </div>
         </ContentCard>

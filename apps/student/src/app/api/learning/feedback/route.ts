@@ -51,12 +51,10 @@ function localFeedback(body: FeedbackRequest): FeedbackResponse {
     };
   }
 
-  const correct = body.correctAnswer?.trim();
-  const head = correct ? `Правильный ответ: ${correct}. ` : "";
   return {
-    feedback: explanation
-      ? `${head}${explanation}`
-      : `${head}Разбери условие ещё раз по шагам и проверь, какое правило здесь применяется.`,
+    feedback:
+      explanation ||
+      "Разбери условие ещё раз по шагам и проверь, какое правило здесь применяется.",
     nextStep: body.skill
       ? `Повтори навык «${body.skill}» в конспекте темы и вернись к похожему заданию.`
       : "Открой конспект темы и вернись к заданию того же уровня.",

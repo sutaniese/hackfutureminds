@@ -1,4 +1,5 @@
 import { topicsForSubject } from "./catalog";
+import { tasksLabel } from "./plural";
 import type { DiagnosticResult, LearningProfile, LearningState, ScorePair, TopicState } from "./store";
 import { emptyTopicState } from "./store";
 import type { Difficulty, Grade, Task, Topic } from "./types";
@@ -270,6 +271,8 @@ export function recommendTopics(
       reasons.push(`подходит для ${profile.grade} класса`);
     } else {
       score -= 10;
+      const ahead = topic.grades.every((grade) => grade > profile.grade);
+      reasons.push(ahead ? "программа старших классов" : "материал прошлых классов");
     }
 
     if (goals.has("olympiad") && topic.tasks.some((task) => task.difficulty === 3)) {
@@ -350,7 +353,7 @@ export function buildStudyPlan(
       topicIds: slice.map((item) => item.topic.id),
       goals: [
         `Разобрать конспект: ${slice[0].topic.title}`,
-        `Решить ${slice.reduce((sum, item) => sum + item.topic.tasks.length, 0)} заданий и закрыть ошибки`,
+        `Решить ${tasksLabel(slice.reduce((sum, item) => sum + item.topic.tasks.length, 0))} и закрыть ошибки`,
         index === weeksCount - 1
           ? "Пройти диагностику ещё раз и сравнить уровень"
           : "Повторить слабые навыки прошлой недели",
