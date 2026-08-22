@@ -62,15 +62,15 @@ export function AgentChat() {
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm" aria-labelledby="agent-title">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+    <section className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm" aria-labelledby="agent-title">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-pathwise-line pb-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-pathwise-accent">AI-наставник</p>
           <h2 id="agent-title" className="mt-1 text-lg font-semibold text-pathwise-ink">
             Чат с агентом по Obsidian-vault
           </h2>
           <p className="text-xs text-pathwise-muted">
-            Память агента — папка <code className="rounded bg-slate-100 px-1">ten-vault/students/&lt;id&gt;</code>.
+            Память агента — папка <code className="rounded bg-pathwise-accentSoft px-1">ten-vault/students/&lt;id&gt;</code>.
             Файлы можно открыть в Obsidian.
           </p>
         </div>
@@ -82,7 +82,7 @@ export function AgentChat() {
             id="agent-student"
             value={activeStudentId ?? ''}
             onChange={(e) => setActiveStudentId(e.target.value || null)}
-            className="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pathwise-accent"
+            className="rounded-xl border border-pathwise-line px-3 py-2 text-sm focus:border-pathwise-accent"
           >
             <option value="">— ученик не выбран —</option>
             {students.map((s) => (
@@ -95,7 +95,7 @@ export function AgentChat() {
             type="button"
             onClick={handleClear}
             disabled={!activeStudentId || messages.length === 0}
-            className="min-h-[40px] rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium text-pathwise-muted hover:bg-slate-50 disabled:opacity-50"
+            className="min-h-[40px] rounded-xl border border-pathwise-line px-3 py-2 text-xs font-medium text-pathwise-muted hover:bg-pathwise-accentSoft/50 disabled:opacity-50"
           >
             Очистить чат
           </button>
@@ -123,7 +123,7 @@ export function AgentChat() {
               <Bubble key={i} msg={m} />
             ))}
             {busy && (
-              <div className="self-start rounded-2xl bg-white px-4 py-2 text-sm text-pathwise-muted ring-1 ring-slate-200">
+              <div className="self-start rounded-2xl bg-pathwise-surface px-4 py-2 text-sm text-pathwise-muted ring-1 ring-pathwise-line">
                 агент думает…
               </div>
             )}
@@ -134,14 +134,14 @@ export function AgentChat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Спросите: «расскажи про мой план», «сохрани заметку: …»"
-              className="min-h-[44px] flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pathwise-accent"
+              className="min-h-[44px] flex-1 rounded-xl border border-pathwise-line px-3 py-2 text-sm focus:border-pathwise-accent"
               disabled={busy}
               aria-label="Сообщение агенту"
             />
             <button
               type="submit"
               disabled={busy || !input.trim()}
-              className="min-h-[44px] rounded-xl bg-pathwise-accent px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+              className="min-h-[44px] rounded-xl bg-pathwise-accent px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
             >
               Отправить
             </button>
@@ -171,7 +171,7 @@ function Bubble({ msg }: { msg: ChatMessage }) {
       className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2 text-sm leading-relaxed shadow-sm ${
         mine
           ? 'self-end bg-pathwise-accent text-white'
-          : 'self-start bg-white text-pathwise-ink ring-1 ring-slate-200'
+          : 'self-start bg-pathwise-surface text-pathwise-ink ring-1 ring-pathwise-line'
       }`}
     >
       {msg.text}

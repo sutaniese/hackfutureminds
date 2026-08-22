@@ -23,14 +23,14 @@ export function ParentsPage() {
 
   return (
     <>
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm">
         <h1 className="text-2xl font-bold text-pathwise-ink md:text-3xl">Родители</h1>
         <p className="mt-2 max-w-3xl text-sm text-pathwise-muted">
           Профиль ребёнка только для чтения, калькулятор разрыва, сравнение профессий (Gemini), PDF для семьи.
         </p>
       </div>
 
-      <div className="flex flex-wrap items-end gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-wrap items-end gap-4 rounded-2xl border border-pathwise-line bg-pathwise-surface p-4 shadow-sm">
         <div className="min-w-[200px] flex-1">
           <label htmlFor="parent-student" className="text-sm font-medium text-pathwise-ink">
             Ученик
@@ -39,7 +39,7 @@ export function ParentsPage() {
             id="parent-student"
             value={activeStudentId ?? ''}
             onChange={(e) => setActiveStudentId(e.target.value || null)}
-            className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm font-medium focus:border-pathwise-accent"
+            className="mt-2 w-full rounded-xl border border-pathwise-line px-3 py-3 text-sm font-medium focus:border-pathwise-accent"
           >
             <option value="">— выберите —</option>
             {students.map((s) => (
@@ -53,7 +53,7 @@ export function ParentsPage() {
           type="button"
           onClick={handlePdf}
           disabled={!activeStudent || pdfBusy}
-          className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-pathwise-ink px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-pathwise-ink px-5 py-3 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {pdfBusy ? 'Сборка PDF…' : 'Скачать PDF-отчёт'}
         </button>
@@ -65,7 +65,7 @@ export function ParentsPage() {
       <div
         id="parent-report-root"
         ref={reportRef}
-        className="space-y-8 rounded-2xl border border-dashed border-slate-200 bg-pathwise-surface/50 p-4 md:p-6"
+        className="space-y-8 rounded-2xl border border-dashed border-pathwise-line bg-pathwise-surface/50 p-4 md:p-6"
       >
         <ParentDashboard student={activeStudent ?? null} />
         {activeStudent && (

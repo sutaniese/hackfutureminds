@@ -17,7 +17,7 @@ export function UniversityDetailPage() {
 
   if (!u) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center">
+      <div className="rounded-2xl border border-dashed border-pathwise-line bg-pathwise-surface p-10 text-center">
         <p className="text-sm font-medium text-pathwise-ink">Университет не найден</p>
         <Link
           to="/vuzy"
@@ -53,7 +53,7 @@ export function UniversityDetailPage() {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6">
           <Section title="About the University">
-            <p className="text-sm leading-relaxed text-slate-700">{data.description}</p>
+            <p className="text-sm leading-relaxed text-pathwise-ink">{data.description}</p>
             {data.website && (
               <a
                 href={data.website}
@@ -82,7 +82,7 @@ export function UniversityDetailPage() {
                   <button
                     type="button"
                     onClick={() => setShowAllPrograms((v) => !v)}
-                    className="mt-4 inline-flex items-center gap-1 rounded-full border border-slate-200 px-4 py-1.5 text-xs font-semibold text-pathwise-ink hover:bg-pathwise-accentSoft"
+                    className="mt-4 inline-flex items-center gap-1 rounded-full border border-pathwise-line px-4 py-1.5 text-xs font-semibold text-pathwise-ink hover:bg-pathwise-accentSoft"
                   >
                     {showAllPrograms ? 'Show Less' : `Show More (${moreCount} more)`}
                   </button>
@@ -172,7 +172,7 @@ function Hero({
   u: ReturnType<typeof getUniversityWithDefaults>
 }) {
   return (
-    <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+    <section className="overflow-hidden rounded-3xl border border-pathwise-line bg-pathwise-surface shadow-sm">
       <div className="relative h-56 w-full overflow-hidden bg-pathwise-accentSoft">
         <img
           src={u.bannerUrl}
@@ -183,8 +183,8 @@ function Hero({
             ;(e.currentTarget as HTMLImageElement).style.display = 'none'
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-white/10 to-transparent" />
-        <span className="absolute left-4 top-4 inline-flex items-center rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-pathwise-ink shadow-sm">
+        <div className="absolute inset-0 bg-gradient-to-t from-pathwise-surface/80 via-pathwise-surface/10 to-transparent" />
+        <span className="absolute left-4 top-4 inline-flex items-center rounded-full bg-pathwise-surface/90 px-3 py-1 text-xs font-semibold text-pathwise-ink shadow-sm">
           #{u.rank} Overall
         </span>
       </div>
@@ -201,7 +201,7 @@ function Hero({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm">
       <h2 className="mb-4 text-base font-semibold text-pathwise-ink">{title}</h2>
       {children}
     </section>
@@ -210,11 +210,11 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function ProgramRow({ p }: { p: StudyProgram }) {
   return (
-    <li className="rounded-xl border border-slate-100 bg-pathwise-accentSoft/30 p-4">
+    <li className="rounded-xl border border-pathwise-line bg-pathwise-accentSoft/30 p-4">
       <p className="text-sm font-semibold text-pathwise-ink">{p.titleEn}</p>
       <p className="mt-0.5 text-xs text-pathwise-muted">{p.titleRu}</p>
       <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold">
-        <span className="rounded-full bg-white px-2 py-0.5 text-pathwise-ink shadow-sm">
+        <span className="rounded-full bg-pathwise-surface px-2 py-0.5 text-pathwise-ink shadow-sm">
           {p.durationYears} {p.durationYears === 1 ? 'year' : 'years'}
         </span>
         <span className="rounded-full bg-pathwise-accent px-2 py-0.5 text-white shadow-sm">
@@ -231,7 +231,7 @@ function IntakeRow({ it }: { it: Intake }) {
     ? it.deadline
     : `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
   return (
-    <li className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-slate-100 bg-pathwise-accentSoft/30 p-4">
+    <li className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-pathwise-line bg-pathwise-accentSoft/30 p-4">
       <div>
         <p className="text-sm font-semibold text-pathwise-ink">
           {it.season} • {it.type}
@@ -250,7 +250,7 @@ function IntakeRow({ it }: { it: Intake }) {
 
 function ScholarshipRow({ s }: { s: Scholarship }) {
   return (
-    <li className="rounded-xl border border-slate-100 bg-pathwise-accentSoft/30 p-4">
+    <li className="rounded-xl border border-pathwise-line bg-pathwise-accentSoft/30 p-4">
       <p className="text-sm font-semibold text-pathwise-ink">{s.title}</p>
       <p className="mt-1 text-xs text-pathwise-muted">{s.description}</p>
       {s.note && <p className="mt-1 text-[11px] text-pathwise-muted">{s.note}</p>}
@@ -260,7 +260,7 @@ function ScholarshipRow({ s }: { s: Scholarship }) {
 
 function DocRow({ d }: { d: RequiredDoc }) {
   return (
-    <li className="rounded-xl border border-slate-100 bg-pathwise-accentSoft/30 p-4">
+    <li className="rounded-xl border border-pathwise-line bg-pathwise-accentSoft/30 p-4">
       <div className="flex flex-wrap items-center gap-2">
         <p className="text-sm font-semibold text-pathwise-ink">{d.titleKz}</p>
         {d.required && (
@@ -270,7 +270,7 @@ function DocRow({ d }: { d: RequiredDoc }) {
         )}
       </div>
       <p className="mt-1 text-xs text-pathwise-muted">{d.noteKz}</p>
-      <p className="mt-2 text-xs italic text-slate-500">{d.noteEn}</p>
+      <p className="mt-2 text-xs italic text-pathwise-muted">{d.noteEn}</p>
     </li>
   )
 }
@@ -285,7 +285,7 @@ function YourFitCard({
   requiredDocs: RequiredDoc[]
 }) {
   return (
-    <div className="rounded-2xl border border-pathwise-accent bg-gradient-to-br from-pathwise-accentSoft via-white to-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-pathwise-accent bg-gradient-to-br from-pathwise-accentSoft via-pathwise-surface to-pathwise-surface p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-pathwise-ink">Your Fit</h3>
       <p className="mt-1 text-xs text-pathwise-muted">Sign in to see your eligibility</p>
       <dl className="mt-4 space-y-2 text-sm">
@@ -338,7 +338,7 @@ function SidebarCard({
   children: React.ReactNode
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-5 shadow-sm">
       <h3 className="mb-3 text-sm font-semibold text-pathwise-ink">{title}</h3>
       <dl className="space-y-2.5 text-sm">{children}</dl>
     </div>
@@ -347,7 +347,7 @@ function SidebarCard({
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-2 last:border-0 last:pb-0">
+    <div className="flex items-start justify-between gap-3 border-b border-pathwise-line pb-2 last:border-0 last:pb-0">
       <dt className="text-xs text-pathwise-muted">{label}</dt>
       <dd className="text-right text-sm font-medium text-pathwise-ink">{children}</dd>
     </div>

@@ -14,7 +14,7 @@ export function ParentDashboard({ student, reportSection = true }: Props) {
   if (!student) {
     return (
       <section
-        className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+        className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm"
         aria-labelledby="parent-dash-empty"
       >
         <h2 id="parent-dash-empty" className="text-lg font-semibold text-pathwise-ink">
@@ -29,11 +29,11 @@ export function ParentDashboard({ student, reportSection = true }: Props) {
 
   return (
     <section
-      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+      className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm"
       aria-labelledby={labelId}
       {...(reportSection ? { 'data-report-section': 'dashboard' } : {})}
     >
-      <header className="border-b border-slate-100 pb-4">
+      <header className="border-b border-pathwise-line pb-4">
         <p className="text-xs font-medium uppercase tracking-wide text-pathwise-accent">
           Только просмотр
         </p>
@@ -76,7 +76,7 @@ export function ParentDashboard({ student, reportSection = true }: Props) {
               {student.interests.map((i) => (
                 <li
                   key={i}
-                  className="rounded-full bg-white px-3 py-1 text-xs font-medium text-pathwise-ink ring-1 ring-slate-200"
+                  className="rounded-full bg-pathwise-surface px-3 py-1 text-xs font-medium text-pathwise-ink ring-1 ring-pathwise-line"
                 >
                   {i}
                 </li>
@@ -118,13 +118,13 @@ export function ParentDashboard({ student, reportSection = true }: Props) {
           {student.career_map.map((c) => (
             <li
               key={c.title}
-              className="flex flex-col rounded-xl border border-slate-200 bg-pathwise-surface p-4"
+              className="flex flex-col rounded-xl border border-pathwise-line bg-pathwise-surface p-4"
             >
               <span className="text-sm font-semibold text-pathwise-ink">{c.title}</span>
               <span className="mt-2 text-xs text-pathwise-accent">{c.salary}</span>
               <p className="mt-2 flex-1 text-xs leading-relaxed text-pathwise-muted">{c.path}</p>
               {c.vacancies && c.vacancies.length > 0 && (
-                <div className="mt-3 border-t border-slate-200 pt-2">
+                <div className="mt-3 border-t border-pathwise-line pt-2">
                   <span className="text-[10px] font-semibold uppercase text-pathwise-muted">
                     Примеры ролей
                   </span>
@@ -161,12 +161,12 @@ export function ParentDashboard({ student, reportSection = true }: Props) {
           </div>
         </div>
         <h4 className="mt-4 text-sm font-semibold text-pathwise-ink">Подобранные гранты</h4>
-        <ul className="mt-2 divide-y divide-slate-100 rounded-xl border border-slate-200">
+        <ul className="mt-2 divide-y divide-pathwise-line rounded-xl border border-pathwise-line">
           {student.financial_route.grants.map((g) => (
             <li key={g.name} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
               <span className="font-medium text-pathwise-ink">{g.name}</span>
               <span className="text-pathwise-muted">{g.amountLabel}</span>
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-pathwise-muted">
+              <span className="rounded-full bg-pathwise-accentSoft px-2 py-0.5 text-xs text-pathwise-muted">
                 дедлайн: {g.deadline}
               </span>
               <span className="text-xs text-pathwise-muted">

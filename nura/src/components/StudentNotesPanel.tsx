@@ -58,15 +58,15 @@ export function StudentNotesPanel({ studentId }: Props) {
 
   return (
     <section
-      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+      className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm"
       aria-labelledby="notes-panel-title"
     >
-      <header className="border-b border-slate-100 pb-4">
+      <header className="border-b border-pathwise-line pb-4">
         <h3 id="notes-panel-title" className="text-lg font-semibold text-pathwise-ink">
           Obsidian-заметки ученика
         </h3>
         <p className="text-xs text-pathwise-muted">
-          Файлы сохраняются в <code className="rounded bg-slate-100 px-1">ten-vault/students/{studentId}/notes/</code>.
+          Файлы сохраняются в <code className="rounded bg-pathwise-accentSoft px-1">ten-vault/students/{studentId}/notes/</code>.
           Их видит и AI-агент.
         </p>
       </header>
@@ -76,20 +76,20 @@ export function StudentNotesPanel({ studentId }: Props) {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Заголовок (станет именем .md)"
-          className="min-h-[44px] rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pathwise-accent"
+          className="min-h-[44px] rounded-xl border border-pathwise-line px-3 py-2 text-sm focus:border-pathwise-accent"
         />
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Текст заметки в markdown"
           rows={4}
-          className="rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pathwise-accent"
+          className="rounded-xl border border-pathwise-line px-3 py-2 text-sm focus:border-pathwise-accent"
         />
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="submit"
             disabled={busy}
-            className="min-h-[40px] rounded-xl bg-pathwise-ink px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+            className="min-h-[40px] rounded-xl bg-pathwise-ink px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
           >
             {busy ? 'Сохраняю…' : 'Сохранить заметку'}
           </button>
@@ -97,7 +97,7 @@ export function StudentNotesPanel({ studentId }: Props) {
             type="button"
             onClick={reload}
             disabled={busy}
-            className="min-h-[40px] rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-pathwise-muted hover:bg-slate-50"
+            className="min-h-[40px] rounded-xl border border-pathwise-line px-4 py-2 text-sm font-medium text-pathwise-muted hover:bg-pathwise-accentSoft/50"
           >
             Обновить список
           </button>
@@ -105,7 +105,7 @@ export function StudentNotesPanel({ studentId }: Props) {
         </div>
       </form>
 
-      <ul className="mt-5 divide-y divide-slate-100 rounded-xl border border-slate-200">
+      <ul className="mt-5 divide-y divide-pathwise-line rounded-xl border border-pathwise-line">
         {notes.length === 0 ? (
           <li className="px-4 py-6 text-center text-sm text-pathwise-muted">Заметок пока нет.</li>
         ) : (
@@ -114,7 +114,7 @@ export function StudentNotesPanel({ studentId }: Props) {
               <div className="min-w-[200px] flex-1">
                 <p className="font-semibold text-pathwise-ink">{n.title}</p>
                 <p className="font-mono text-xs text-pathwise-muted">{n.fileName}</p>
-                <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-50 p-2 text-xs">
+                <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap rounded-lg bg-pathwise-accentSoft/30 p-2 text-xs">
                   {n.content}
                 </pre>
               </div>

@@ -13,9 +13,16 @@ const TENANT_IDS = new Set(Object.keys(TENANTS))
 
 function applyCssVars(t: TenantBranding) {
   const r = document.documentElement
+  r.style.setProperty('--background', t.colors.pageBg)
+  r.style.setProperty('--foreground', t.colors.ink)
   r.style.setProperty('--pw-ink', t.colors.ink)
   r.style.setProperty('--pw-muted', t.colors.muted)
   r.style.setProperty('--pw-surface', t.colors.surface)
+  r.style.setProperty('--pw-border', t.colors.border)
+  r.style.setProperty('--pw-shadow', '0 1px 3px rgb(15 23 42 / 0.08)')
+  r.style.setProperty('--pw-radius-card', '0.875rem')
+  r.style.setProperty('--pw-primary', t.colors.accent)
+  r.style.setProperty('--pw-primary-strong', t.colors.accentStrong ?? t.colors.accent)
   r.style.setProperty('--pw-accent', t.colors.accent)
   r.style.setProperty('--pw-accent-strong', t.colors.accentStrong ?? t.colors.accent)
   r.style.setProperty('--pw-accent-soft', t.colors.accentSoft)

@@ -41,7 +41,7 @@ export function EnterpriseHub() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-pathwise-ink">White-label (tenant_id)</h2>
         <p className="mt-1 text-sm text-pathwise-muted">
           Цвета и логотип берутся из контекста и CSS-переменных Tailwind — весь интерфейс перекрашивается под
@@ -55,7 +55,7 @@ export function EnterpriseHub() {
             id="tenant-select"
             value={tenantId}
             onChange={(e) => setTenantId(e.target.value)}
-            className="min-h-[44px] rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium focus:border-pathwise-accent"
+            className="min-h-[44px] rounded-xl border border-pathwise-line px-3 py-2 text-sm font-medium focus:border-pathwise-accent"
           >
             {Object.values(TENANTS).map((t) => (
               <option key={t.id} value={t.id}>
@@ -63,7 +63,7 @@ export function EnterpriseHub() {
               </option>
             ))}
           </select>
-          <div className="flex items-center gap-3 rounded-xl bg-pathwise-surface px-4 py-2 ring-1 ring-slate-200">
+          <div className="flex items-center gap-3 rounded-xl bg-pathwise-surface px-4 py-2 ring-1 ring-pathwise-line">
             {tenant.logoUrl ? (
               <img
                 src={tenant.logoUrl}
@@ -91,10 +91,10 @@ export function EnterpriseHub() {
 
       <EnterpriseAnalytics />
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-pathwise-ink">CRM-синхронизация (демо)</h2>
         <p className="mt-1 text-sm text-pathwise-muted">
-          Мок-эндпоинт <code className="rounded bg-slate-100 px-1">POST /api/crm-sync</code> имитирует выгрузку
+          Мок-эндпоинт <code className="rounded bg-pathwise-accentSoft px-1">POST /api/crm-sync</code> имитирует выгрузку
           карточек учеников во внешнюю CRM.
         </p>
         <button
@@ -112,7 +112,7 @@ export function EnterpriseHub() {
         )}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-pathwise-ink">Массовые отчёты для родителей</h2>
         <p className="mt-1 text-sm text-pathwise-muted">
           Генерация ZIP-архива с персональными текстовыми отчётами по каждому ученику демо-потока (
@@ -122,7 +122,7 @@ export function EnterpriseHub() {
           type="button"
           onClick={runBulkReports}
           disabled={bulkBusy}
-          className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl border border-pathwise-accent bg-pathwise-accentSoft px-5 py-3 text-sm font-semibold text-pathwise-ink hover:bg-teal-100 disabled:opacity-50"
+          className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl border border-pathwise-accent bg-pathwise-accentSoft px-5 py-3 text-sm font-semibold text-pathwise-ink hover:bg-pathwise-accentSoft/80 disabled:opacity-50"
         >
           {bulkBusy ? 'Сборка архива…' : 'Сгенерировать отчёты для всего потока (ZIP)'}
         </button>

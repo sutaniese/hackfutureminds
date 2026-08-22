@@ -120,7 +120,7 @@ export function StudentEditor({ studentId, onSaved }: Props) {
   return (
     <form
       onSubmit={onSubmit}
-      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+      className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm"
       aria-label={initial ? 'Редактирование ученика' : 'Онбординг нового ученика'}
     >
       <h2 className="text-lg font-semibold text-pathwise-ink">
@@ -203,7 +203,7 @@ export function StudentEditor({ studentId, onSaved }: Props) {
         <button
           type="submit"
           disabled={busy}
-          className="min-h-[44px] rounded-xl bg-pathwise-accent px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+          className="min-h-[44px] rounded-xl bg-pathwise-accent px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
         >
           {busy ? 'Сохраняю…' : initial ? 'Сохранить изменения' : 'Создать и привязать'}
         </button>
@@ -212,8 +212,8 @@ export function StudentEditor({ studentId, onSaved }: Props) {
       </div>
 
       <style>{`
-        .input { width: 100%; min-height: 44px; border-radius: 12px; border: 1px solid #e2e8f0; padding: 0.5rem 0.75rem; font-size: 0.875rem; background: white; }
-        .input:focus { outline: 2px solid var(--pw-accent); outline-offset: 2px; }
+        .input { width: 100%; min-height: 44px; border-radius: 12px; border: 1px solid var(--pw-border, #e2e8f0); padding: 0.5rem 0.75rem; font-size: 0.875rem; background: var(--pw-surface, #fff); }
+        .input:focus { outline: 2px solid var(--pw-primary, var(--pw-accent)); outline-offset: 2px; }
       `}</style>
     </form>
   )

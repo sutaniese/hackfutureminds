@@ -44,7 +44,7 @@ export function FinancialCalculator({ monthlyNeedKzt, grants, studentName }: Pro
 
   return (
     <section
-      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+      className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm"
       aria-labelledby="financial-calc-title"
       data-report-section="calculator"
     >
@@ -68,7 +68,7 @@ export function FinancialCalculator({ monthlyNeedKzt, grants, studentName }: Pro
             autoComplete="off"
             value={budgetRaw}
             onChange={(e) => setBudgetRaw(e.target.value)}
-            className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-lg font-semibold tabular-nums shadow-inner focus:border-pathwise-accent"
+            className="mt-2 w-full rounded-xl border border-pathwise-line px-4 py-3 text-lg font-semibold tabular-nums shadow-inner focus:border-pathwise-accent"
             aria-describedby="family-budget-help"
           />
           <p id="family-budget-help" className="mt-2 text-xs text-pathwise-muted">
@@ -78,7 +78,7 @@ export function FinancialCalculator({ monthlyNeedKzt, grants, studentName }: Pro
         </div>
 
         <div
-          className="flex flex-col justify-center rounded-xl bg-pathwise-surface p-4 ring-1 ring-slate-100"
+          className="flex flex-col justify-center rounded-xl bg-pathwise-surface p-4 ring-1 ring-pathwise-line"
           role="status"
           aria-live="polite"
         >
@@ -106,7 +106,7 @@ export function FinancialCalculator({ monthlyNeedKzt, grants, studentName }: Pro
               className={`rounded-xl border px-4 py-3 transition-colors ${
                 active
                   ? 'border-pathwise-accent bg-pathwise-accentSoft ring-2 ring-pathwise-accent/30'
-                  : 'border-slate-200 bg-white'
+                  : 'border-pathwise-line bg-pathwise-surface'
               }`}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">

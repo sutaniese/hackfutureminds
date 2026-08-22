@@ -9,7 +9,11 @@ export type TenantBranding = {
   colors: {
     ink: string
     muted: string
+    /** Cards / header surfaces (usually #fff, aligned with `sutaniese` –pw-surface) */
     surface: string
+    /** Page background behind cards (e.g. #f4f6fb — PathWise `sutaniese`) */
+    pageBg: string
+    border: string
     accent: string
     accentStrong?: string
     accentSoft: string
@@ -24,13 +28,16 @@ export const TENANTS: Record<string, TenantBranding> = {
     displayName: 'teñ',
     logoUrl: '/logo.png',
     logoMark: 'teñ',
+    // Match `hacksteppe/sutaniese` globals: primary #1d4ed8, page #f4f6fb, borders #e2e8f0
     colors: {
-      ink: '#0F172A',
-      muted: '#64748B',
-      surface: '#F5F8FF',
-      accent: '#7AA0E5',
-      accentStrong: '#4F7FD1',
-      accentSoft: '#EAF1FC',
+      ink: '#0f172a',
+      muted: '#64748b',
+      surface: '#ffffff',
+      pageBg: '#f4f6fb',
+      border: '#e2e8f0',
+      accent: '#1d4ed8',
+      accentStrong: '#1e40af',
+      accentSoft: '#eff6ff',
     },
   },
   'ent-iq-hub': {
@@ -41,8 +48,11 @@ export const TENANTS: Record<string, TenantBranding> = {
     colors: {
       ink: '#0c1e3c',
       muted: '#5b6b8c',
-      surface: '#f0f6ff',
+      surface: '#ffffff',
+      pageBg: '#f0f6ff',
+      border: '#e2e8f0',
       accent: '#2563eb',
+      accentStrong: '#1d4ed8',
       accentSoft: '#dbeafe',
     },
   },
@@ -54,8 +64,11 @@ export const TENANTS: Record<string, TenantBranding> = {
     colors: {
       ink: '#1e1b4b',
       muted: '#6b6680',
-      surface: '#faf5ff',
+      surface: '#ffffff',
+      pageBg: '#faf5ff',
+      border: '#e2e8f0',
       accent: '#7c3aed',
+      accentStrong: '#5b21b6',
       accentSoft: '#ede9fe',
     },
   },

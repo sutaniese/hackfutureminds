@@ -30,29 +30,29 @@ export function AppLayout() {
   }, [pathname])
 
   const navCls = ({ isActive }: { isActive: boolean }) =>
-    `inline-flex min-h-[40px] items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors no-underline ${
+    `inline-flex min-h-12 min-w-12 max-w-full items-center justify-center rounded-full px-3 py-2 text-sm font-semibold transition-colors no-underline ${
       isActive
-        ? 'bg-pathwise-accent text-white shadow-sm'
-        : 'text-pathwise-ink hover:bg-pathwise-accentSoft'
+        ? 'bg-pathwise-accent text-white shadow-pathwise'
+        : 'text-foreground ring-1 ring-pathwise-line hover:bg-pathwise-accentSoft/60'
     }`
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="sticky top-0 z-30 border-b border-slate-100 bg-white/85 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
-          <NavLink to="/agent" className="flex items-center no-underline" aria-label={SITE_NAME}>
+    <div className="min-h-screen bg-pathwise-page text-foreground">
+      <header className="sticky top-0 z-30 border-b-2 border-pathwise-line bg-pathwise-surface/90 shadow-pathwise backdrop-blur">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3 md:px-5">
+          <NavLink to="/agent" className="flex min-h-12 min-w-12 items-center no-underline" aria-label={SITE_NAME}>
             {tenant.logoUrl ? (
               <img
                 src={tenant.logoUrl}
                 alt={SITE_NAME}
-                className="h-9 w-9 rounded-lg object-contain"
+                className="h-9 w-9 rounded-xl border border-pathwise-line/80 object-contain"
                 width={36}
                 height={36}
               />
             ) : (
               <span
-                className="flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg px-1 text-[12px] font-bold text-white"
-                style={{ backgroundColor: 'var(--pw-accent)' }}
+                className="flex h-9 min-w-[2.25rem] items-center justify-center rounded-xl px-1 text-[12px] font-bold text-white"
+                style={{ backgroundColor: 'var(--pw-primary, var(--pw-accent))' }}
                 aria-hidden
               >
                 {tenant.logoMark}
@@ -70,25 +70,25 @@ export function AppLayout() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+      <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 md:px-5 md:py-8">
         <Outlet />
       </main>
 
-      <footer className="mt-12 border-t border-slate-100 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-6 text-xs text-pathwise-muted">
+      <footer className="mt-10 border-t-2 border-pathwise-line bg-pathwise-surface">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-5 text-xs text-pathwise-muted md:px-5">
           {tenant.logoUrl ? (
             <img
               src={tenant.logoUrl}
               alt=""
               aria-hidden
-              className="h-7 w-7 rounded-md object-contain opacity-90"
+              className="h-7 w-7 rounded-lg border border-pathwise-line/80 object-contain opacity-90"
               width={28}
               height={28}
             />
           ) : (
             <span
               className="flex h-7 min-w-[1.75rem] items-center justify-center rounded-md px-1 text-[10px] font-bold text-white"
-              style={{ backgroundColor: 'var(--pw-accent)' }}
+              style={{ backgroundColor: 'var(--pw-primary, var(--pw-accent))' }}
               aria-hidden
             >
               {tenant.logoMark}

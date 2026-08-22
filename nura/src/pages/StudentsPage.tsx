@@ -16,7 +16,7 @@ export function StudentsPage() {
 
   return (
     <>
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm">
         <h1 className="text-2xl font-bold text-pathwise-ink md:text-3xl">Ученики</h1>
         <p className="mt-2 max-w-3xl text-sm text-pathwise-muted">
           Онбординг и редактирование учеников. Данные пишутся в локальный JSON-store и Obsidian-vault.
@@ -24,19 +24,19 @@ export function StudentsPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
-        <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <aside className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-4 shadow-sm">
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setMode('new')}
-              className="min-h-[40px] flex-1 rounded-xl bg-pathwise-ink px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+              className="min-h-[40px] flex-1 rounded-xl bg-pathwise-ink px-3 py-2 text-sm font-semibold text-white hover:opacity-90"
             >
               + Новый ученик
             </button>
             <button
               type="button"
               onClick={() => setMode('edit')}
-              className="min-h-[40px] rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-pathwise-ink hover:bg-slate-50"
+              className="min-h-[40px] rounded-xl border border-pathwise-line px-3 py-2 text-sm font-medium text-pathwise-ink hover:bg-pathwise-accentSoft/50"
             >
               Редактировать
             </button>
@@ -56,7 +56,7 @@ export function StudentsPage() {
                   className={`flex-1 rounded-xl px-3 py-2 text-left text-sm ${
                     s.id === activeStudentId
                       ? 'bg-pathwise-accentSoft font-semibold text-pathwise-ink'
-                      : 'hover:bg-slate-50'
+                      : 'hover:bg-pathwise-accentSoft/50'
                   }`}
                 >
                   <div className="font-medium text-pathwise-ink">{s.displayName}</div>

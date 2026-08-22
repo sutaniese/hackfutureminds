@@ -54,7 +54,7 @@ export function CareerComparison({ childProfession }: Props) {
 
   return (
     <section
-      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+      className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm"
       aria-labelledby="career-compare-title"
       data-report-section="career-compare"
     >
@@ -79,18 +79,18 @@ export function CareerComparison({ childProfession }: Props) {
             value={parentProfession}
             onChange={(e) => setParentProfession(e.target.value)}
             placeholder="Например: государственный служащий / бухгалтер / юрист"
-            className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-pathwise-accent"
+            className="mt-2 w-full rounded-xl border border-pathwise-line px-4 py-3 text-sm focus:border-pathwise-accent"
             aria-describedby="parent-profession-hint"
           />
           <p id="parent-profession-hint" className="mt-1 text-xs text-pathwise-muted">
-            Для демо нужен ключ <code className="rounded bg-slate-100 px-1">GEMINI_API_KEY</code> в{' '}
-            <code className="rounded bg-slate-100 px-1">.env</code> (только dev-сервер, не в браузер).
+            Для демо нужен ключ <code className="rounded bg-pathwise-accentSoft px-1">GEMINI_API_KEY</code> в{' '}
+            <code className="rounded bg-pathwise-accentSoft px-1">.env</code> (только dev-сервер, не в браузер).
           </p>
         </div>
         <button
           type="submit"
           disabled={loading || !childProfession.trim()}
-          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl bg-pathwise-accent px-5 py-3 text-sm font-semibold text-white shadow hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl bg-pathwise-accent px-5 py-3 text-sm font-semibold text-white shadow-pathwise hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? 'Запрос к Gemini…' : 'Сравнить с данными рынка'}
         </button>
@@ -104,7 +104,7 @@ export function CareerComparison({ childProfession }: Props) {
 
       {result && (
         <div className="mt-6 grid gap-4 md:grid-cols-2" role="region" aria-label="Результат сравнения">
-          <div className="rounded-xl border border-slate-200 p-4">
+          <div className="rounded-xl border border-pathwise-line p-4">
             <h3 className="text-sm font-semibold text-pathwise-ink">Ваш вариант</h3>
             <p className="mt-1 text-xs text-pathwise-muted">{parentProfession}</p>
             <dl className="mt-3 space-y-2 text-sm">
