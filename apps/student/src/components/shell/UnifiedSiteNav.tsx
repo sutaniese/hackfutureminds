@@ -9,6 +9,7 @@ import {
 } from "@/lib/site-nav";
 import { SHELL_PX } from "@/lib/shell-layout";
 import { useSelectedRole } from "./useSelectedRole";
+import { useAuth } from "./useAuth";
 
 function navClass(active: boolean) {
   return `inline-flex min-h-11 shrink-0 items-center justify-center rounded-full px-3.5 py-2 text-sm font-semibold no-underline transition-colors ${
@@ -21,7 +22,10 @@ function navClass(active: boolean) {
 export function UnifiedSiteNav() {
   const pathname = usePathname() || "/";
   const { role, ready, clearRole } = useSelectedRole();
+  const { user, status, logout } = useAuth();
   const sections = role ? ROLE_NAV_SECTIONS[role] : [];
+
+  const accountLabel = user?.name?.trim() || user?.email || "";
 
   return (
     <section className="border-b-2 border-pathwise-line bg-pathwise-surface/90 shadow-pathwise backdrop-blur">
@@ -32,10 +36,12 @@ export function UnifiedSiteNav() {
               <p className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-pathwise-accent-strong">
                 {role ? `Роль: ${ROLE_LABELS[role]}` : "Вход по роли"}
               </p>
-              <p className="mt-1 text-sm font-semibold text-pathwise-ink">
-                {role
-                  ? "Показываем только доступные разделы"
-                  : "Выберите студента, родителя или учителя на главной"}
+              <p className="mt-1 truncate text-sm font-semibold text-pathwise-ink">
+                {user
+                  ? accountLabel
+                  : role
+                    ? "Показываем только доступные разделы"
+                    : "Выберите студента, родителя или учителя на главной"}
               </p>
             </div>
 
@@ -70,15 +76,42 @@ export function UnifiedSiteNav() {
                 </div>
               ))}
             </div>
-            {role ? (
-              <Link
-                href="/"
-                onClick={clearRole}
-                className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-pathwise-line bg-white/80 px-3.5 py-2 text-sm font-semibold text-pathwise-muted no-underline transition hover:bg-pathwise-accent-soft/70"
-              >
-                Сменить роль
-              </Link>
-            ) : null}
+
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              {role && status === "authed" ? (
+                <Link
+                  href="/"
+                  onClick={clearRole}
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-pathwise-line bg-white/80 px-3.5 py-2 text-sm font-semibold text-pathwise-muted no-underline transition hover:bg-pathwise-accent-soft/70"
+                >
+                  Сменить роль
+                </Link>
+              ) : null}
+              {status === "authed" ? (
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="inline-flex min-h-11 items-center justify-center rounded-full bg-pathwise-accent px-3.5 py-2 text-sm font-semibold text-white shadow-pathwise transition hover:bg-[color:var(--pw-accent-strong)]"
+                >
+                  Выйти
+                </button>
+              ) : status === "guest" ? (
+                <>
+                  <Link
+                    href="/login"
+                    className="inline-flex min-h-11 items-center justify-center rounded-full border border-pathwise-line bg-white/80 px-3.5 py-2 text-sm font-semibold text-foreground no-underline transition hover:bg-pathwise-accent-soft/70"
+                  >
+                    Войти
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="inline-flex min-h-11 items-center justify-center rounded-full bg-pathwise-accent px-3.5 py-2 text-sm font-semibold text-white no-underline shadow-pathwise transition hover:bg-[color:var(--pw-accent-strong)]"
+                  >
+                    Регистрация
+                  </Link>
+                </>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>

@@ -10,6 +10,7 @@ import {
 } from '@/lib/site-nav'
 import { RoleRouteGuard } from '@/components/shell/RoleRouteGuard'
 import { useSelectedRole } from '@/components/shell/useSelectedRole'
+import { useAuth } from '@/components/shell/useAuth'
 import { withAssetBase } from '../lib/publicUrl'
 import { useTenantTheme } from '../enterprise/TenantThemeContext'
 import { SITE_NAME } from '../site'
@@ -37,7 +38,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const { tenant } = useTenantTheme()
   const pathname = usePathname() || '/'
   const { role, ready, clearRole } = useSelectedRole()
+  const { user, status, logout } = useAuth()
   const sections = role ? ROLE_NAV_SECTIONS[role] : []
+  const accountLabel = user?.name?.trim() || user?.email || ''
 
   useEffect(() => {
     document.title = TITLE_BY_PATH[pathname] ?? SITE_NAME
@@ -76,21 +79,51 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <p className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-pathwise-accentStrong">
                 {role ? `Роль: ${ROLE_LABELS[role]}` : 'Вход по роли'}
               </p>
-              <p className="text-sm font-semibold text-pathwise-ink">
-                {role
-                  ? 'Показываем только доступные разделы'
-                  : 'Выберите студента, родителя или учителя на главной'}
+              <p className="truncate text-sm font-semibold text-pathwise-ink">
+                {user
+                  ? accountLabel
+                  : role
+                    ? 'Показываем только доступные разделы'
+                    : 'Выберите студента, родителя или учителя на главной'}
               </p>
             </div>
 
-            <Link
-              href="/"
-              onClick={clearRole}
-              className="inline-flex min-h-12 items-center justify-center rounded-full bg-pathwise-accent px-4 text-sm font-semibold text-white no-underline shadow-pathwise transition-colors hover:bg-[color:var(--pw-accent-strong)]"
-              aria-label="Сменить роль"
-            >
-              Сменить роль
-            </Link>
+            <div className="flex flex-wrap items-center gap-2">
+              {role && status === 'authed' ? (
+                <Link
+                  href="/"
+                  onClick={clearRole}
+                  className="inline-flex min-h-12 items-center justify-center rounded-full border border-pathwise-line bg-white/80 px-4 text-sm font-semibold text-pathwise-muted no-underline transition hover:bg-pathwise-accentSoft/70"
+                  aria-label="Сменить роль"
+                >
+                  Сменить роль
+                </Link>
+              ) : null}
+              {status === 'authed' ? (
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="inline-flex min-h-12 items-center justify-center rounded-full bg-pathwise-accent px-4 text-sm font-semibold text-white shadow-pathwise transition-colors hover:bg-[color:var(--pw-accent-strong)]"
+                >
+                  Выйти
+                </button>
+              ) : status === 'guest' ? (
+                <>
+                  <Link
+                    href="/login"
+                    className="inline-flex min-h-12 items-center justify-center rounded-full border border-pathwise-line bg-white/80 px-4 text-sm font-semibold text-foreground no-underline transition hover:bg-pathwise-accentSoft/70"
+                  >
+                    Войти
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="inline-flex min-h-12 items-center justify-center rounded-full bg-pathwise-accent px-4 text-sm font-semibold text-white no-underline shadow-pathwise transition-colors hover:bg-[color:var(--pw-accent-strong)]"
+                  >
+                    Регистрация
+                  </Link>
+                </>
+              ) : null}
+            </div>
           </div>
 
           <div className="mt-3 rounded-[1.6rem] border border-pathwise-line/80 bg-gradient-to-r from-pathwise-accentSoft via-pathwise-surface to-pathwise-surface p-3">
