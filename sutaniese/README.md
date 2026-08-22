@@ -39,3 +39,5 @@ Open [http://localhost:3000](http://localhost:3000).
 
 - [Next.js documentation](https://nextjs.org/docs)
 - [create-next-app](https://nextjs.org/docs/app/api-reference/cli/create-next-app)
+
+_(Test: local `git` commit; section safe to delete.)_
