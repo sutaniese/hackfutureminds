@@ -321,6 +321,57 @@ export function recommendTopics(
   return scored.sort((a, b) => b.score - a.score).slice(0, limit);
 }
 
+/* ---------------------------- повторение тем ---------------------------- */
+
+export type ReviewItem = {
+  topic: Topic;
+  daysSince: number;
+  intervalDays: number;
+  mastery: number;
+  urgency: "due" | "soon";
+};
+
+/**
+ * Интервал повторения зависит от того, насколько уверенно тема закрыта:
+ * слабую тему возвращаем через 3 дня, освоенную — через неделю.
+ */
+export function reviewIntervalDays(mastery: number): number {
+  if (mastery >= 100) return 7;
+  if (mastery >= 60) return 5;
+  return 3;
+}
+
+/** Темы, к которым пора вернуться: простое интервальное повторение. */
+export function reviewQueue(
+  topics: readonly Topic[],
+  profile: LearningProfile | null,
+  state: LearningState,
+  now: number = Date.now(),
+): ReviewItem[] {
+  const scope = profile ? topicsForSubject(topics, profile.subjectId) : [...topics];
+
+  const items: ReviewItem[] = [];
+  for (const topic of scope) {
+    const topicState = topicStateOf(state, topic.id);
+    if (topicState.attempts === 0 || topicState.lastAt === 0) continue;
+
+    const daysSince = Math.floor((now - topicState.lastAt) / 86_400_000);
+    const mastery = topicMastery(topic, state);
+    const intervalDays = reviewIntervalDays(mastery);
+    if (daysSince < intervalDays - 1) continue;
+
+    items.push({
+      topic,
+      daysSince,
+      intervalDays,
+      mastery,
+      urgency: daysSince >= intervalDays ? "due" : "soon",
+    });
+  }
+
+  return items.sort((a, b) => b.daysSince - a.daysSince);
+}
+
 /* -------------------------------- план ---------------------------------- */
 
 export function daysUntil(dateIso: string | undefined): number | null {

@@ -11,6 +11,7 @@ import {
   learningSummary,
   priorityLabel,
   recommendTopics,
+  reviewQueue,
   topicMastery,
   topicStateOf,
   weakSpots,
@@ -19,6 +20,7 @@ import { LEVEL_LABELS } from "@/lib/learning/store";
 import { attemptsLabel, daysLabel, ofTasksLabel, tasksLabel } from "@/lib/learning/plural";
 import { LEARNING_GOALS } from "@/lib/learning/types";
 import { EmptyState, Pill, ProgressBar, StatTile } from "./LearningUI";
+import { ReminderBanner } from "./ReminderBanner";
 import { useLearning } from "./useLearning";
 
 type PlanWeek = { index: number; title: string; goals: string[] };
@@ -50,6 +52,7 @@ export function LearningDashboard() {
     [profile, state, topics],
   );
   const weak = useMemo(() => weakSpots(topics, state, 5), [state, topics]);
+  const reviews = useMemo(() => reviewQueue(topics, profile, state), [profile, state, topics]);
   const localPlan = useMemo(() => buildStudyPlan(topics, profile, state), [profile, state, topics]);
   const days = useMemo(() => daysUntil(profile?.examDate), [profile?.examDate]);
   const subject = profile ? findSubject(profile.subjectId) : null;
@@ -128,6 +131,8 @@ export function LearningDashboard() {
 
   return (
     <div className="flex flex-col gap-5">
+      <ReminderBanner days={days} reviews={reviews} />
+
       <ContentCard>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
@@ -336,7 +341,7 @@ export function LearningDashboard() {
         </div>
       </section>
 
-      <ContentCard>
+      <ContentCard id="plan">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h3 className="text-lg font-black tracking-tight text-pathwise-ink">План подготовки</h3>

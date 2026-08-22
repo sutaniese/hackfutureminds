@@ -53,6 +53,18 @@ export function PageHero({
   );
 }
 
-export function ContentCard({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn("pw-card p-5 md:p-6", className)}>{children}</div>;
+export function ContentCard({
+  children,
+  className,
+  id,
+}: {
+  children: ReactNode;
+  className?: string;
+  id?: string;
+}) {
+  return (
+    <div id={id} className={cn("pw-card p-5 md:p-6", className)}>
+      {children}
+    </div>
+  );
 }
