@@ -1,16 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import { MobileAppShell } from "@/components/shell/MobileAppShell";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+/* Same family as `nura` (Inter) for one PathWise look */
+const inter = Inter({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -34,10 +31,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-dvh antialiased`}
-      >
+    <html lang="en" className={`h-full ${inter.variable}`}>
+      <body className={`${inter.className} min-h-dvh antialiased`}>
         <MobileAppShell>{children}</MobileAppShell>
       </body>
     </html>

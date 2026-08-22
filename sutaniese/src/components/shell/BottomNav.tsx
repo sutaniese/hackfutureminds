@@ -94,7 +94,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 border-t-2 border-[var(--pw-border)] bg-[var(--pw-surface)]/95 backdrop-blur"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t-2 border-pathwise-line bg-pathwise-surface/95 shadow-[0_-1px_0_rgb(15_23_42/0.04)] backdrop-blur"
       style={{
         paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.4rem)",
       }}
@@ -102,7 +102,7 @@ export function BottomNav() {
       aria-label="Main sections"
     >
       <div
-        className="mx-auto grid w-full max-w-md grid-cols-5"
+        className="mx-auto grid w-full max-w-6xl grid-cols-5 gap-1 px-2 py-2"
         style={{ minHeight: "var(--pw-nav)" }}
       >
         {items.map((item) => {
@@ -112,22 +112,16 @@ export function BottomNav() {
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className={`flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 px-0.5 text-[10px] font-semibold leading-tight no-underline transition-[color,transform] duration-200 active:scale-[0.98] sm:text-xs ${
+              className={`flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-0.5 text-[10px] font-semibold leading-tight no-underline transition-[background,box-shadow,color,transform] duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pw-primary active:scale-[0.98] sm:text-xs ${
                 active
-                  ? "text-[var(--pw-primary)]"
-                  : "text-[var(--pw-muted)] hover:text-foreground"
+                  ? "bg-pathwise-accent text-white shadow-pathwise"
+                  : "text-pathwise-muted ring-1 ring-pathwise-line bg-pathwise-surface/80 hover:bg-pathwise-accent-soft/60 hover:text-foreground"
               } `}
             >
-              <span
-                className={
-                  active
-                    ? "text-[var(--pw-primary)]"
-                    : "text-[var(--pw-muted)]"
-                }
-              >
+              <span aria-hidden className="shrink-0 [color:inherit]">
                 {item.icon(active)}
               </span>
-              <span className="w-full truncate text-center">
+              <span className="w-full truncate text-center [color:inherit]">
                 {item.label}
               </span>
             </Link>

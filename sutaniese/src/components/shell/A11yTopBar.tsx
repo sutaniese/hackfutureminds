@@ -2,11 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { LS_HIGH_CONTRAST, LS_VOICE } from "@/lib/pw-storage";
 
 export function A11yTopBar() {
+  const pathname = usePathname() || "/";
   const [contrast, setContrast] = useState(false);
   const [voice, setVoice] = useState(false);
+  const helpActive = pathname.startsWith("/accessibility");
 
   useEffect(() => {
     try {
@@ -56,21 +59,42 @@ export function A11yTopBar() {
     });
   }, []);
 
+  const pill = (on: boolean) =>
+    `pw-tap flex min-h-12 min-w-0 max-w-[9rem] flex-1 items-center justify-center rounded-full px-3 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pw-primary ${
+      on
+        ? "bg-pathwise-accent text-white shadow-pathwise"
+        : "text-foreground ring-1 ring-pathwise-line bg-pathwise-surface/80 hover:bg-pathwise-accent-soft/60"
+    }`;
+
   return (
-    <div
-      className="pw-pt-safe sticky top-0 z-30 border-b border-[var(--pw-border)] bg-[var(--pw-surface)]/95 backdrop-blur"
+    <header
+      className="pw-pt-safe sticky top-0 z-30 border-b-2 border-pathwise-line bg-pathwise-surface/90 shadow-pathwise backdrop-blur"
       style={{ minHeight: "var(--pw-a11y-top)" }}
     >
-      <div className="mx-auto flex max-w-md items-center justify-between gap-2 px-2 py-1.5">
-        <span className="text-xs font-medium text-[var(--pw-muted)]">
-          Access
-        </span>
-        <div className="flex items-center gap-1">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2 md:px-5">
+        <Link
+          href="/"
+          className="flex min-h-12 min-w-12 shrink-0 items-center gap-2 no-underline"
+        >
+          <span
+            className="pw-mark flex h-9 min-w-[2.25rem] items-center justify-center rounded-xl px-1.5 text-[12px] font-bold"
+            aria-hidden
+          >
+            PW
+          </span>
+          <span className="text-sm font-semibold text-foreground">PathWise</span>
+        </Link>
+        <div
+          className="ml-auto flex min-w-0 flex-1 flex-wrap items-center justify-end gap-1"
+          role="group"
+          aria-label="Accessibility options"
+        >
+          <span className="sr-only">Accessibility options</span>
           <button
             type="button"
             onClick={toggleContrast}
             aria-pressed={contrast}
-            className="pw-tap flex min-h-12 min-w-12 max-w-[9rem] flex-1 items-center justify-center rounded-full border-2 border-[var(--pw-border)] bg-[var(--pw-surface)] px-3 text-xs font-semibold text-foreground transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pw-primary)]"
+            className={pill(contrast)}
           >
             Contrast
           </button>
@@ -78,20 +102,21 @@ export function A11yTopBar() {
             type="button"
             onClick={toggleVoice}
             aria-pressed={voice}
-            className="pw-tap flex min-h-12 min-w-12 max-w-[9rem] flex-1 items-center justify-center rounded-full border-2 border-[var(--pw-border)] bg-[var(--pw-surface)] px-3 text-xs font-semibold text-foreground transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pw-primary)]"
+            className={pill(voice)}
             title="Prefers voice mode; full flow comes later"
           >
             Voice
           </button>
           <Link
             href="/accessibility"
-            className="pw-tap flex min-w-12 items-center justify-center rounded-full border-2 border-[var(--pw-border)] bg-[var(--pw-surface)] px-3 text-xs font-semibold text-foreground no-underline transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pw-primary)]"
+            className={`${pill(helpActive)} no-underline`}
+            aria-current={helpActive ? "page" : undefined}
             aria-label="Accessibility help and options"
           >
             Help
           </Link>
         </div>
       </div>
-    </div>
+    </header>
   );
 }

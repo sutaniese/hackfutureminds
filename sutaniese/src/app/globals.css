@@ -1,16 +1,21 @@
 @import "tailwindcss";
 
-/* PathWise student app — design tokens (mobile-first, 48px tap baseline) */
+/* PathWise — same token set as `nura` (teñ) for a single product look */
 :root {
   --pw-tap: 3rem; /* 48px */
-  --pw-radius-card: 0.875rem;
+  --pw-radius-card: 1rem; /* align with nura `rounded-2xl` / cards */
   --pw-radius-pill: 9999px;
-  --pw-nav: 3.5rem; /* 56px bar + safe area */
-  --pw-a11y-top: 2.75rem;
+  --pw-nav: 3.75rem;
+  --pw-a11y-top: 3.25rem;
   --background: #f4f6fb;
   --foreground: #0f172a;
+  --pw-ink: #0f172a;
   --pw-primary: #1d4ed8;
+  --pw-primary-strong: #1e40af;
   --pw-primary-foreground: #f8fafc;
+  --pw-accent: #1d4ed8;
+  --pw-accent-strong: #1e40af;
+  --pw-accent-soft: #eff6ff;
   --pw-surface: #ffffff;
   --pw-muted: #64748b;
   --pw-border: #e2e8f0;
@@ -22,12 +27,20 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --color-pathwise-page: var(--background);
+  --color-pathwise-line: var(--pw-border);
+  --color-pathwise-ink: var(--pw-ink);
+  --color-pathwise-muted: var(--pw-muted);
+  --color-pathwise-surface: var(--pw-surface);
+  --color-pathwise-accent: var(--pw-primary);
+  --color-pathwise-accent-soft: var(--pw-accent-soft);
+  --color-pathwise-accent-strong: var(--pw-accent-strong);
   --color-pw-primary: var(--pw-primary);
   --color-pw-surface: var(--pw-surface);
   --color-pw-muted: var(--pw-muted);
   --color-pw-border: var(--pw-border);
+  --shadow-pathwise: var(--pw-shadow);
 }
 
 /* High contrast — toggled via .high-contrast on html (see ThemeInit) */
@@ -56,7 +69,7 @@ html.high-contrast *:focus-visible {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-sans);
 }
 
 /* Safe area + main scroll area padding for bottom nav ( shell adds pb ) */
@@ -80,6 +93,13 @@ body {
   box-shadow: var(--pw-shadow);
   border: 1px solid var(--pw-border);
   transition: box-shadow var(--transition-ui), transform var(--transition-ui);
+}
+
+/* Nura-style primary surface (logo mark, solid CTAs) */
+.pw-mark {
+  background: var(--pw-primary, var(--pw-accent));
+  color: #fff;
+  border-radius: 0.75rem;
 }
 
 .pw-skip {
