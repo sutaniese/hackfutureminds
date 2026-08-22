@@ -1,18 +1,12 @@
+"use client";
+
+import { useParams } from "next/navigation";
 import { ProfilePageClient } from "@/components/profile/ProfilePageClient";
-import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
-
-export const metadata: Metadata = {
-  title: "Профиль",
-  description: "Карточка аккаунта teñ. (данные в этом браузере).",
-};
-
-export default async function ProfileSlugPage({
-  params,
-}: Readonly<{
-  params: Promise<{ slug: string }>;
-}>) {
-  const { slug } = await params;
+export default function ProfileSlugPage() {
+  const params = useParams();
+  const raw = params?.slug;
+  const slug =
+    Array.isArray(raw) ? (raw[0] ?? "") : typeof raw === "string" ? raw : "";
   return <ProfilePageClient slug={slug} />;
 }

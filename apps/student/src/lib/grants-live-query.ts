@@ -1,4 +1,4 @@
-import fallbackGrants from "@/data/live-grants.json";
+import { LIVE_GRANTS_FALLBACK } from "@/data/live-grants-fallback-data";
 import { jsonSafeClone } from "@/lib/json-safe";
 
 export type LiveGrantRow = {
@@ -31,7 +31,7 @@ const FIELD_ALIASES: Record<string, string[]> = {
 };
 
 function fallbackData(): LiveGrantRow[] {
-  return fallbackGrants as LiveGrantRow[];
+  return LIVE_GRANTS_FALLBACK.map((g) => ({ ...g })) as LiveGrantRow[];
 }
 
 function matchesFilters(grant: LiveGrantRow, filters: Record<string, string | null>) {

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
-import fallbackLiveGrants from "@/data/live-grants.json";
+import { LIVE_GRANTS_FALLBACK } from "@/data/live-grants-fallback-data";
 import { formatGrantAmountLine } from "@/lib/format-grant";
 import { looksLikeHttpHtmlFailureMessage, readJsonResponse } from "@/lib/http-json";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -84,7 +84,7 @@ function typeMsgKey(t: GrantType | "all") {
 const MATCH_KEYS: MatchPill[] = ["all", "high", "medium", "low"];
 
 function staticFallbackRows(): GrantRecord[] {
-  const arr = fallbackLiveGrants as unknown as LiveGrant[];
+  const arr = [...LIVE_GRANTS_FALLBACK] as unknown as LiveGrant[];
   return Array.isArray(arr) ? arr.map(toGrantRecord) : [];
 }
 
