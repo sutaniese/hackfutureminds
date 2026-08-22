@@ -3,8 +3,13 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, type ReactNode } from 'react'
-import { STUDENT_PATHS, studentHref } from '@pathwise/shared/links'
-import { SITE_NAV_SECTIONS, isSiteNavActive } from '@/lib/site-nav'
+import {
+  ROLE_LABELS,
+  ROLE_NAV_SECTIONS,
+  isSiteNavActive,
+} from '@/lib/site-nav'
+import { RoleRouteGuard } from '@/components/shell/RoleRouteGuard'
+import { useSelectedRole } from '@/components/shell/useSelectedRole'
 import { withAssetBase } from '../lib/publicUrl'
 import { useTenantTheme } from '../enterprise/TenantThemeContext'
 import { SITE_NAME } from '../site'
@@ -31,6 +36,8 @@ function navClass(active: boolean) {
 export function AppLayout({ children }: { children: ReactNode }) {
   const { tenant } = useTenantTheme()
   const pathname = usePathname() || '/'
+  const { role, ready, clearRole } = useSelectedRole()
+  const sections = role ? ROLE_NAV_SECTIONS[role] : []
 
   useEffect(() => {
     document.title = TITLE_BY_PATH[pathname] ?? SITE_NAME
@@ -67,28 +74,35 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
             <div className="min-w-0 flex-1">
               <p className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-pathwise-accentStrong">
-                Единая платформа
+                {role ? `Роль: ${ROLE_LABELS[role]}` : 'Вход по роли'}
               </p>
               <p className="text-sm font-semibold text-pathwise-ink">
-                Студент, семья, школа и каталог вузов
+                {role
+                  ? 'Показываем только доступные разделы'
+                  : 'Выберите студента, родителя или учителя на главной'}
               </p>
             </div>
 
             <Link
-              href={studentHref(
-                STUDENT_PATHS.onboarding,
-                process.env.NEXT_PUBLIC_STUDENT_URL?.trim() || undefined,
-              )}
+              href="/"
+              onClick={clearRole}
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-pathwise-accent px-4 text-sm font-semibold text-white no-underline shadow-pathwise transition-colors hover:bg-[color:var(--pw-accent-strong)]"
-              aria-label="Онбординг ученика"
+              aria-label="Сменить роль"
             >
-              Онбординг ученика →
+              Сменить роль
             </Link>
           </div>
 
           <div className="mt-3 rounded-[1.6rem] border border-pathwise-line/80 bg-gradient-to-r from-pathwise-accentSoft via-pathwise-surface to-pathwise-surface p-3">
             <div className="flex flex-col gap-2">
-              {SITE_NAV_SECTIONS.map((section) => (
+              {ready && sections.length === 0 ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Link href="/" className={navClass(pathname === '/')}>
+                    Выбрать вход
+                  </Link>
+                </div>
+              ) : null}
+              {sections.map((section) => (
                 <div key={section.title} className="flex min-w-0 items-center gap-2">
                   <span className="hidden w-16 shrink-0 text-xs font-bold uppercase tracking-[0.12em] text-pathwise-muted sm:block">
                     {section.title}
@@ -116,7 +130,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       </header>
 
       <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 md:px-5 md:py-8">
-        {children}
+        <RoleRouteGuard>{children}</RoleRouteGuard>
       </main>
 
       <footer className="mt-10 border-t-2 border-pathwise-line bg-pathwise-surface">

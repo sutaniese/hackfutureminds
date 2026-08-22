@@ -5,6 +5,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { useSelectedRole } from "./useSelectedRole";
 
 type NavItem = {
   href: string;
@@ -94,6 +95,9 @@ const items: NavItem[] = [
 export function BottomNav() {
   const { t } = useI18n();
   const path = usePathname() || "/";
+  const { role, ready } = useSelectedRole();
+
+  if (!ready || role !== "student") return null;
 
   return (
     <nav

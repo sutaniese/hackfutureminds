@@ -6,6 +6,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 import Link from "next/link";
 import { A11yTopBar } from "./A11yTopBar";
 import { BottomNav } from "./BottomNav";
+import { RoleRouteGuard } from "./RoleRouteGuard";
 import { ThemeInit } from "./ThemeInit";
 import { UnifiedSiteNav } from "./UnifiedSiteNav";
 
@@ -24,7 +25,7 @@ export function MobileAppShell({ children }: { children: React.ReactNode }) {
         className={`pw-pb-nav ${SHELL_PX} mx-auto max-w-6xl flex-1 overflow-y-auto py-5 md:py-8`}
         style={{ minHeight: "0" }}
       >
-        {children}
+        <RoleRouteGuard>{children}</RoleRouteGuard>
       </main>
       <footer className="border-t border-pathwise-line bg-pathwise-surface">
         <div

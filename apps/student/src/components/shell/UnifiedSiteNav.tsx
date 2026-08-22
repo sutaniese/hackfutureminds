@@ -2,8 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SITE_NAV_SECTIONS, isSiteNavActive } from "@/lib/site-nav";
+import {
+  ROLE_LABELS,
+  ROLE_NAV_SECTIONS,
+  isSiteNavActive,
+} from "@/lib/site-nav";
 import { SHELL_PX } from "@/lib/shell-layout";
+import { useSelectedRole } from "./useSelectedRole";
 
 function navClass(active: boolean) {
   return `inline-flex min-h-11 shrink-0 items-center justify-center rounded-full px-3.5 py-2 text-sm font-semibold no-underline transition-colors ${
@@ -15,6 +20,8 @@ function navClass(active: boolean) {
 
 export function UnifiedSiteNav() {
   const pathname = usePathname() || "/";
+  const { role, ready, clearRole } = useSelectedRole();
+  const sections = role ? ROLE_NAV_SECTIONS[role] : [];
 
   return (
     <section className="border-b-2 border-pathwise-line bg-pathwise-surface/90 shadow-pathwise backdrop-blur">
@@ -23,15 +30,24 @@ export function UnifiedSiteNav() {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="min-w-0 lg:w-56">
               <p className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-pathwise-accent-strong">
-                Единая платформа
+                {role ? `Роль: ${ROLE_LABELS[role]}` : "Вход по роли"}
               </p>
               <p className="mt-1 text-sm font-semibold text-pathwise-ink">
-                Ученик, семья, школа и вузы в одном интерфейсе
+                {role
+                  ? "Показываем только доступные разделы"
+                  : "Выберите студента, родителя или учителя на главной"}
               </p>
             </div>
 
             <div className="flex min-w-0 flex-1 flex-col gap-2">
-              {SITE_NAV_SECTIONS.map((section) => (
+              {ready && sections.length === 0 ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Link href="/" className={navClass(pathname === "/")}>
+                    Выбрать вход
+                  </Link>
+                </div>
+              ) : null}
+              {sections.map((section) => (
                 <div key={section.title} className="flex min-w-0 items-center gap-2">
                   <span className="hidden w-16 shrink-0 text-xs font-bold uppercase tracking-[0.12em] text-pathwise-muted sm:block">
                     {section.title}
@@ -54,6 +70,15 @@ export function UnifiedSiteNav() {
                 </div>
               ))}
             </div>
+            {role ? (
+              <Link
+                href="/"
+                onClick={clearRole}
+                className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-pathwise-line bg-white/80 px-3.5 py-2 text-sm font-semibold text-pathwise-muted no-underline transition hover:bg-pathwise-accent-soft/70"
+              >
+                Сменить роль
+              </Link>
+            ) : null}
           </div>
         </div>
       </div>
