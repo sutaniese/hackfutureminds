@@ -574,6 +574,24 @@ const T = {
   ),
   "profile.toResults": TR("К плану", "Open plan", "Жоспарға"),
   "profile.toOnboarding": TR("К старту", "Onboarding", "Бастауға"),
+  "profile.age": TR("Возраст", "Age", "Жас"),
+  "profile.example.kicker": TR(
+    "Пример профиля",
+    "Sample profile",
+    "Профиль үлгісі",
+  ),
+  "profile.example.pill": TR("Демо-данные", "Demo data", "Демо деректер"),
+  "profile.example.note": TR(
+    "Статический пример: имя, возраст и предметы заданы в коде страницы.",
+    "Static example: name, age, and subjects are set in the page code.",
+    "Статикалық үлгі: аты, жасы және пәндер бет кодында берілген.",
+  ),
+  "profile.example.fullName": TR("Полное имя", "Full name", "Толық аты"),
+  "profile.example.urlLabel": TR(
+    "Постоянный адрес этого примера",
+    "Permanent URL for this example",
+    "Осы үлгі үшін тұрақты сілтеме",
+  ),
 } as const;
 
 function fill(s: string, p?: Record<string, string | number>): string {
