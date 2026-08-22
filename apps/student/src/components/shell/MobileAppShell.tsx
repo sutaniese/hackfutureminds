@@ -6,9 +6,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 import Link from "next/link";
 import { A11yTopBar } from "./A11yTopBar";
 import { BottomNav } from "./BottomNav";
-import { RoleRouteGuard } from "./RoleRouteGuard";
 import { ThemeInit } from "./ThemeInit";
-import { UnifiedSiteNav } from "./UnifiedSiteNav";
 
 export function MobileAppShell({ children }: { children: React.ReactNode }) {
   const { t } = useI18n();
@@ -19,17 +17,16 @@ export function MobileAppShell({ children }: { children: React.ReactNode }) {
       </a>
       <ThemeInit />
       <A11yTopBar />
-      <UnifiedSiteNav />
       <main
         id="main"
-        className={`pw-pb-nav ${SHELL_PX} mx-auto max-w-6xl flex-1 overflow-y-auto py-5 md:py-8`}
+        className={`pw-pb-nav ${SHELL_PX} flex-1 overflow-y-auto py-5 md:py-8`}
         style={{ minHeight: "0" }}
       >
-        <RoleRouteGuard>{children}</RoleRouteGuard>
+        {children}
       </main>
-      <footer className="border-t border-pathwise-line bg-pathwise-surface">
+      <footer className="border-t border-pathwise-line/50 bg-pathwise-surface/80 backdrop-blur-md">
         <div
-          className={`${SHELL_PX} mx-auto flex max-w-6xl items-center gap-3 py-4 text-xs text-pathwise-muted`}
+          className={`${SHELL_PX} flex items-center gap-3 py-5 text-xs text-pathwise-muted`}
         >
           <Link
             href="/"
@@ -38,7 +35,7 @@ export function MobileAppShell({ children }: { children: React.ReactNode }) {
           >
             <TenWordmark size="sm" presentational />
           </Link>
-          <span>{t("footer.line")}</span>
+          <span className="opacity-70">{t("footer.line")}</span>
         </div>
       </footer>
       <BottomNav />

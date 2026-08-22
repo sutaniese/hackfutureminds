@@ -1,30 +1,37 @@
 @import "tailwindcss";
 
-/* teñ. — product shell aligned with nura + hackhack-reference.jpg */
 :root {
-  /* Wordmark: Image #1 — periwinkle type, black full stop */
-  --ten-mark: #4a6fbf;
-  --ten-mark-dot: #0a0a0a;
-  --pw-tap: 3rem; /* 48px */
-  --pw-radius-card: 1.4rem;
+  --ten-mark: #6366f1;
+  --ten-mark-dot: #0f172a;
+  --pw-tap: 3rem;
+  --pw-radius-card: 1.25rem;
   --pw-radius-pill: 9999px;
-  --pw-nav: 3.75rem;
-  --pw-a11y-top: 3.25rem;
-  --background: #f3f6fb;
+  --pw-nav: 4rem;
+  --pw-a11y-top: 4rem;
+
+  --background: #fafbff;
   --foreground: #0f172a;
   --pw-ink: #0f172a;
-  --pw-primary: #1d4ed8;
-  --pw-primary-strong: #1e40af;
-  --pw-primary-foreground: #f8fafc;
-  --pw-accent: #1d4ed8;
-  --pw-accent-strong: #1e40af;
-  --pw-accent-soft: #eff6ff;
+  --pw-primary: #6366f1;
+  --pw-primary-strong: #4f46e5;
+  --pw-primary-foreground: #ffffff;
+  --pw-accent: #6366f1;
+  --pw-accent-strong: #4f46e5;
+  --pw-accent-soft: #eef2ff;
   --pw-surface: #ffffff;
   --pw-muted: #64748b;
   --pw-border: #e2e8f0;
-  --pw-shadow: 0 12px 35px rgb(15 23 42 / 0.08);
-  --transition-ui: 200ms ease;
+  --pw-shadow: 0 1px 3px rgb(99 102 241 / 0.06), 0 1px 2px rgb(0 0 0 / 0.04);
+  --pw-shadow-lg: 0 10px 40px rgb(99 102 241 / 0.1), 0 4px 12px rgb(0 0 0 / 0.05);
+  --pw-shadow-xl: 0 20px 60px rgb(99 102 241 / 0.12), 0 8px 20px rgb(0 0 0 / 0.06);
+  --transition-ui: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
   --focus-ring: 0 0 0 3px var(--pw-primary);
+
+  --gradient-hero: linear-gradient(135deg, #6366f1 0%, #8b5cf6 40%, #a78bfa 100%);
+  --gradient-hero-soft: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 50%, #faf5ff 100%);
+  --gradient-card: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
+  --gradient-accent: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
 }
 
 @theme inline {
@@ -49,7 +56,6 @@
   --color-ten-mark-dot: var(--ten-mark-dot);
 }
 
-/* High contrast — toggled via .high-contrast on html (see ThemeInit) */
 html.high-contrast {
   --background: #fffef8;
   --foreground: #000;
@@ -67,26 +73,24 @@ html.high-contrast *:focus-visible {
   outline-offset: 2px;
 }
 
-/* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   * {
     transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
   }
 }
 
 body {
-  background:
-    radial-gradient(circle at 12% 8%, rgb(29 78 216 / 0.10), transparent 28rem),
-    radial-gradient(circle at 88% 12%, rgb(14 165 233 / 0.10), transparent 26rem),
-    linear-gradient(180deg, #f8fbff 0%, var(--background) 42%, #eef4fb 100%);
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Safe area + main scroll area padding for bottom nav ( shell adds pb ) */
 @supports (padding: max(0px)) {
   .pw-pb-nav {
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), 4.5rem);
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 5.5rem);
   }
   .pw-pt-safe {
     padding-top: max(env(safe-area-inset-top, 0px), 0.5rem);
@@ -100,80 +104,94 @@ body {
 
 .pw-card {
   border-radius: var(--pw-radius-card);
-  background: color-mix(in srgb, var(--pw-surface) 94%, transparent);
+  background: var(--pw-surface);
   box-shadow: var(--pw-shadow);
   border: 1px solid var(--pw-border);
   transition: box-shadow var(--transition-ui), transform var(--transition-ui), border-color var(--transition-ui);
-  backdrop-filter: blur(14px);
 }
 
 .pw-card:hover {
-  border-color: color-mix(in srgb, var(--pw-primary) 26%, var(--pw-border));
-  box-shadow: 0 18px 45px rgb(15 23 42 / 0.11);
+  box-shadow: var(--pw-shadow-lg);
+  border-color: rgb(99 102 241 / 0.2);
 }
 
-.pw-soft-panel {
-  border: 1px solid color-mix(in srgb, var(--pw-primary) 16%, var(--pw-border));
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--pw-accent-soft) 82%, white) 0%, var(--pw-surface) 46%, color-mix(in srgb, #fff 88%, var(--pw-accent-soft)) 100%);
+.pw-card-glass {
+  border-radius: var(--pw-radius-card);
+  background: rgb(255 255 255 / 0.7);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   box-shadow: var(--pw-shadow);
-  backdrop-filter: blur(14px);
+  border: 1px solid rgb(255 255 255 / 0.6);
+  transition: box-shadow var(--transition-ui), transform var(--transition-ui);
 }
 
-.pw-focus {
-  outline: none;
-}
-
-.pw-focus:focus-visible {
-  outline: 2px solid var(--pw-primary);
-  outline-offset: 3px;
-}
-
-.pw-primary-btn {
-  display: inline-flex;
-  min-height: 2.75rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--pw-radius-pill);
-  background: var(--pw-primary);
-  color: var(--pw-primary-foreground);
-  font-weight: 700;
-  text-decoration: none;
-  box-shadow: 0 10px 24px rgb(29 78 216 / 0.22);
-  transition: transform var(--transition-ui), background var(--transition-ui), box-shadow var(--transition-ui);
-}
-
-.pw-primary-btn:hover {
-  background: var(--pw-primary-strong);
-  transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgb(29 78 216 / 0.28);
-}
-
-.pw-secondary-btn {
-  display: inline-flex;
-  min-height: 2.75rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--pw-radius-pill);
-  border: 1px solid var(--pw-border);
-  background: color-mix(in srgb, var(--pw-surface) 90%, transparent);
-  color: var(--foreground);
-  font-weight: 700;
-  text-decoration: none;
-  transition: transform var(--transition-ui), background var(--transition-ui), border-color var(--transition-ui);
-}
-
-.pw-secondary-btn:hover {
-  border-color: color-mix(in srgb, var(--pw-primary) 40%, var(--pw-border));
-  background: var(--pw-accent-soft);
-  transform: translateY(-1px);
-}
-
-/* Nura-style primary surface (logo mark, solid CTAs) */
 .pw-mark {
-  background: var(--pw-primary, var(--pw-accent));
+  background: var(--gradient-accent);
   color: #fff;
   border-radius: 0.75rem;
+}
+
+.pw-gradient-text {
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.pw-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: #fff;
+  background: var(--gradient-accent);
+  border-radius: var(--pw-radius-pill);
+  box-shadow: 0 4px 14px rgb(99 102 241 / 0.35);
+  transition: all var(--transition-ui);
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+.pw-btn-primary:hover {
+  box-shadow: 0 6px 20px rgb(99 102 241 / 0.45);
+  transform: translateY(-1px);
+}
+
+.pw-btn-primary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.pw-btn-primary:focus-visible {
+  outline: 2px solid var(--pw-primary);
+  outline-offset: 2px;
+}
+
+.pw-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--pw-primary);
+  background: var(--pw-surface);
+  border-radius: var(--pw-radius-pill);
+  border: 1.5px solid var(--pw-border);
+  box-shadow: var(--pw-shadow);
+  transition: all var(--transition-ui);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.pw-btn-secondary:hover {
+  border-color: var(--pw-primary);
+  box-shadow: 0 4px 12px rgb(99 102 241 / 0.12);
+  transform: translateY(-1px);
 }
 
 .pw-skip {
@@ -189,7 +207,7 @@ body {
   background: var(--pw-surface);
   color: var(--foreground);
   border: 2px solid var(--pw-primary);
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   font-weight: 600;
   text-decoration: none;
   transform: translateX(-200vw);
@@ -201,11 +219,26 @@ body {
   outline: none;
 }
 
+.pw-stat-card {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  border-radius: var(--pw-radius-card);
+  background: var(--pw-surface);
+  border: 1px solid var(--pw-border);
+  transition: all var(--transition-ui);
+}
+
+.pw-stat-card:hover {
+  box-shadow: var(--pw-shadow-lg);
+  border-color: rgb(99 102 241 / 0.2);
+  transform: translateY(-2px);
+}
+
 @media (prefers-reduced-motion: no-preference) {
   @keyframes pw-step {
     from {
       opacity: 0;
-      transform: translateY(0.4rem);
+      transform: translateY(0.75rem);
     }
     to {
       opacity: 1;
@@ -213,7 +246,7 @@ body {
     }
   }
   .pw-step-enter {
-    animation: pw-step 0.2s ease-out;
+    animation: pw-step 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   @keyframes pw-badge {
@@ -247,7 +280,7 @@ body {
   @keyframes pw-fade-in-up {
     from {
       opacity: 0;
-      transform: translateY(0.35rem);
+      transform: translateY(1rem);
     }
     to {
       opacity: 1;
@@ -255,6 +288,51 @@ body {
     }
   }
   .pw-artifact-appear {
-    animation: pw-fade-in-up 0.3s ease-out both;
+    animation: pw-fade-in-up 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
   }
+
+  @keyframes pw-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(2rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .pw-slide-up {
+    animation: pw-slide-up 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  @keyframes pw-float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+  }
+  .pw-float {
+    animation: pw-float 3s ease-in-out infinite;
+  }
+
+  @keyframes pw-shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  .pw-shimmer {
+    background: linear-gradient(90deg, transparent 30%, rgb(99 102 241 / 0.08) 50%, transparent 70%);
+    background-size: 200% 100%;
+    animation: pw-shimmer 2s linear infinite;
+  }
+
+  @keyframes pw-pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgb(99 102 241 / 0.3); }
+    100% { box-shadow: 0 0 0 12px rgb(99 102 241 / 0); }
+  }
+  .pw-pulse-ring {
+    animation: pw-pulse-ring 2s ease-out infinite;
+  }
+
+  .pw-stagger-1 { animation-delay: 0.1s; }
+  .pw-stagger-2 { animation-delay: 0.2s; }
+  .pw-stagger-3 { animation-delay: 0.3s; }
+  .pw-stagger-4 { animation-delay: 0.4s; }
 }

@@ -2,9 +2,9 @@ import { loraWordmark } from "@/lib/fonts";
 import { cn } from "@/lib/cn";
 
 const sizes = {
-  sm: "text-[0.9rem] leading-tight",
-  md: "text-[1.35rem] leading-none tracking-[-0.01em] md:text-[1.4rem]",
-  lg: "text-2xl leading-tight",
+  sm: "text-[1rem] leading-tight",
+  md: "text-[1.5rem] leading-none tracking-[-0.02em] md:text-[1.6rem]",
+  lg: "text-3xl leading-tight tracking-[-0.02em]",
 } as const;
 
 type Size = keyof typeof sizes;
@@ -12,13 +12,9 @@ type Size = keyof typeof sizes;
 type Props = {
   className?: string;
   size?: Size;
-  /** Set when parent (e.g. a link) already has an accessible name. */
   presentational?: boolean;
 };
 
-/**
- * teñ. brand (Image #1): Lora, periwinkle “teñ”, black full stop.
- */
 export function TenWordmark({
   className,
   size = "md",
@@ -28,14 +24,14 @@ export function TenWordmark({
     <span
       className={cn(
         loraWordmark.className,
-        "inline-block select-none font-semibold [font-synthesis-weight:none]",
+        "inline-block select-none font-bold [font-synthesis-weight:none]",
         sizes[size],
         className,
       )}
       aria-hidden={presentational ? true : undefined}
       aria-label={presentational ? undefined : "teñ"}
     >
-      <span className="text-ten-mark" aria-hidden>
+      <span className="pw-gradient-text" aria-hidden>
         teñ
       </span>
       <span className="text-ten-mark-dot" aria-hidden>

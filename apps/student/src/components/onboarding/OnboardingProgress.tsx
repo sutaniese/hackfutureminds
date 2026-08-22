@@ -19,15 +19,16 @@ export function OnboardingProgress({ currentStep, total, id }: Props) {
   return (
     <div
       id={id}
-      className="shrink-0 space-y-1.5"
+      className="shrink-0 space-y-2"
       role="group"
       aria-label={t("onboard.srOnlyStep")}
     >
-      <p className="text-center text-xs font-semibold tracking-wide text-pathwise-muted">
-        {label}
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-bold text-indigo-500">{label}</p>
+        <p className="text-xs font-semibold text-slate-400">{Math.round(pct)}%</p>
+      </div>
       <div
-        className="h-2 w-full overflow-hidden rounded-full bg-pathwise-line"
+        className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100"
         role="progressbar"
         aria-valuemin={1}
         aria-valuemax={total}
@@ -36,7 +37,7 @@ export function OnboardingProgress({ currentStep, total, id }: Props) {
         aria-valuetext={label}
       >
         <div
-          className="h-full rounded-full bg-pw-primary transition-[width] duration-300 ease-out"
+          className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 shadow-sm shadow-indigo-500/30 transition-[width] duration-500 ease-out"
           style={{ width: `${pct}%` }}
         />
       </div>

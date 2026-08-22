@@ -31,18 +31,10 @@ export function A11yTopBar() {
       const root = document.documentElement;
       if (next) {
         root.classList.add("high-contrast");
-        try {
-          localStorage.setItem(LS_HIGH_CONTRAST, "1");
-        } catch {
-          /* ignore */
-        }
+        try { localStorage.setItem(LS_HIGH_CONTRAST, "1"); } catch { /* */ }
       } else {
         root.classList.remove("high-contrast");
-        try {
-          localStorage.removeItem(LS_HIGH_CONTRAST);
-        } catch {
-          /* ignore */
-        }
+        try { localStorage.removeItem(LS_HIGH_CONTRAST); } catch { /* */ }
       }
       return next;
     });
@@ -52,71 +44,74 @@ export function A11yTopBar() {
     setVoice((v) => {
       const next = !v;
       try {
-        if (next) {
-          localStorage.setItem(LS_VOICE, "1");
-        } else {
-          localStorage.removeItem(LS_VOICE);
-        }
-      } catch {
-        /* ignore */
-      }
+        if (next) localStorage.setItem(LS_VOICE, "1");
+        else localStorage.removeItem(LS_VOICE);
+      } catch { /* */ }
       return next;
     });
   }, []);
 
-  /* Active pill = hackhack / front mock: light fill + 1px ring in primary + blue type */
-  const pill = (on: boolean) =>
-    `pw-tap flex min-h-12 min-w-0 max-w-[9rem] flex-1 items-center justify-center rounded-full px-3 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pw-primary ${
+  const pillCls = (on: boolean) =>
+    `flex items-center justify-center rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pw-primary ${
       on
-        ? "bg-pathwise-accent-soft/95 text-pw-primary ring-1 ring-pathwise-accent"
-        : "text-foreground ring-1 ring-pathwise-line bg-pathwise-surface/80 hover:bg-pathwise-accent-soft/60"
+        ? "bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200 shadow-sm"
+        : "text-pathwise-muted hover:text-foreground hover:bg-slate-50"
     }`;
 
   return (
     <header
-      className="pw-pt-safe sticky top-0 z-30 border-b border-pathwise-line bg-pathwise-surface/95 shadow-[0_1px_2px_rgb(15_23_42/0.05)] backdrop-blur-sm"
+      className="pw-pt-safe sticky top-0 z-30 border-b border-pathwise-line/40 bg-white/80 backdrop-blur-xl"
       style={{ minHeight: "var(--pw-a11y-top)" }}
     >
-      <div
-        className={`${SHELL_PX} mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 py-2.5`}
-      >
+      <div className={`${SHELL_PX} flex items-center gap-3 py-3`}>
         <Link
           href="/"
-          className="flex min-h-12 min-w-12 shrink-0 items-baseline no-underline"
+          className="flex shrink-0 items-baseline no-underline"
           aria-label="teñ, home"
         >
           <TenWordmark size="md" presentational />
         </Link>
+
         <LanguageSwitcher />
+
         <div
-          className="ml-auto flex min-w-0 flex-1 flex-wrap items-center justify-end gap-1"
+          className="ml-auto flex items-center gap-1.5"
           role="group"
           aria-label={t("a11y.group")}
         >
-          <span className="sr-only">{t("a11y.group")}</span>
           <button
             type="button"
             onClick={toggleContrast}
             aria-pressed={contrast}
-            className={pill(contrast)}
+            className={pillCls(contrast)}
           >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="mr-1 h-3.5 w-3.5" aria-hidden>
+              <circle cx="10" cy="10" r="8" />
+              <path d="M10 2a8 8 0 000 16V2z" fill="white" />
+            </svg>
             {t("a11y.contrast")}
           </button>
           <button
             type="button"
             onClick={toggleVoice}
             aria-pressed={voice}
-            className={pill(voice)}
+            className={pillCls(voice)}
             title={t("a11y.voiceTitle")}
           >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="mr-1 h-3.5 w-3.5" aria-hidden>
+              <path d="M7 4a3 3 0 016 0v4a3 3 0 01-6 0V4zm3 10a5 5 0 005-5h-2a3 3 0 01-6 0H5a5 5 0 005 5zm-1 2v2h2v-2h-2z" />
+            </svg>
             {t("a11y.voice")}
           </button>
           <Link
             href="/accessibility"
-            className={`${pill(helpActive)} no-underline`}
+            className={`${pillCls(helpActive)} no-underline`}
             aria-current={helpActive ? "page" : undefined}
             aria-label={t("a11y.helpLabel")}
           >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="mr-1 h-3.5 w-3.5" aria-hidden>
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zM9 14a1 1 0 112 0 1 1 0 01-2 0z" clipRule="evenodd" />
+            </svg>
             {t("a11y.help")}
           </Link>
         </div>

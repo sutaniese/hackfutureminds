@@ -5,7 +5,6 @@ import { useI18n } from "@/i18n/I18nProvider";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { useSelectedRole } from "./useSelectedRole";
 
 type NavItem = {
   href: string;
@@ -19,14 +18,10 @@ const items: NavItem[] = [
     href: "/",
     labelKey: "nav.home",
     isActive: (p) => p === "/" || p === "",
-    icon: () => (
-      <svg
-        viewBox="0 0 24 24"
-        className="h-6 w-6"
-        fill="currentColor"
-        aria-hidden
-      >
-        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8h5Z" />
+    icon: (active) => (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
       </svg>
     ),
   },
@@ -34,14 +29,13 @@ const items: NavItem[] = [
     href: "/onboarding",
     labelKey: "nav.onboarding",
     isActive: (p) => p.startsWith("/onboarding"),
-    icon: () => (
-      <svg
-        viewBox="0 0 24 24"
-        className="h-6 w-6"
-        fill="currentColor"
-        aria-hidden
-      >
-        <path d="M4 4h16v2H4V4zm0 4h10v2H4V8zm0 4h16v2H4v-2zm0 4h10v2H4v-2zm0 4h8v2H4v-2z" />
+    icon: (active) => (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+        <polyline points="10 9 9 9 8 9" />
       </svg>
     ),
   },
@@ -49,14 +43,11 @@ const items: NavItem[] = [
     href: "/results",
     labelKey: "nav.results",
     isActive: (p) => p.startsWith("/results"),
-    icon: () => (
-      <svg
-        viewBox="0 0 24 24"
-        className="h-6 w-6"
-        fill="currentColor"
-        aria-hidden
-      >
-        <path d="M3 3v18h18v-2H5V3H3zm2 4h2v6H5V7zm4-2h2v8H9V5zm4 3h2v5h-2V8zm4-5h2v10h-2V3z" />
+    icon: (active) => (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <line x1="18" y1="20" x2="18" y2="10" />
+        <line x1="12" y1="20" x2="12" y2="4" />
+        <line x1="6" y1="20" x2="6" y2="14" />
       </svg>
     ),
   },
@@ -64,14 +55,10 @@ const items: NavItem[] = [
     href: "/grants",
     labelKey: "nav.grants",
     isActive: (p) => p.startsWith("/grants"),
-    icon: () => (
-      <svg
-        viewBox="0 0 24 24"
-        className="h-6 w-6"
-        fill="currentColor"
-        aria-hidden
-      >
-        <path d="M12 2C8 2 4 4 4 6v12c0 1 2 2 4 2h2v2H8v2h8v-2h-2v-2h2c2 0 4-1 4-2V6c0-2-4-4-8-4zm0 2c3 0 5 1 5 2s-2 2-5 2-5-1-5-2 2-2 5-2zM6 8.5C7 9 8.5 9.5 12 9.5s5-.5 6-1V18h-1c0-1-2.5-2-5-2s-5 1-5 2H6V8.5z" />
+    icon: (active) => (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+        <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" />
       </svg>
     ),
   },
@@ -79,14 +66,10 @@ const items: NavItem[] = [
     href: "/portfolio",
     labelKey: "nav.portfolio",
     isActive: (p) => p.startsWith("/portfolio"),
-    icon: () => (
-      <svg
-        viewBox="0 0 24 24"
-        className="h-6 w-6"
-        fill="currentColor"
-        aria-hidden
-      >
-        <path d="M4 4h7v4H4V4Zm9 0h7v4h-7V4ZM4 10h7v4H4v-4Zm9 0h7v4h-7v-4ZM4 16h7v4H4v-4Zm9 0h7v4h-7v-4Z" />
+    icon: (active) => (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
       </svg>
     ),
   },
@@ -95,45 +78,44 @@ const items: NavItem[] = [
 export function BottomNav() {
   const { t } = useI18n();
   const path = usePathname() || "/";
-  const { role, ready } = useSelectedRole();
-
-  if (!ready || role !== "student") return null;
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-pathwise-line bg-pathwise-surface/95 shadow-[0_-1px_2px_rgb(15_23_42/0.05)] backdrop-blur-sm"
+      className="fixed bottom-0 left-0 right-0 z-40"
       style={{
         paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.4rem)",
       }}
       role="navigation"
       aria-label={t("nav.aria")}
     >
-      <div
-        className={`${SHELL_PX} grid grid-cols-5 gap-1 py-2`}
-        style={{ minHeight: "var(--pw-nav)" }}
-      >
-        {items.map((item) => {
-          const active = item.isActive(path);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={`flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-0.5 text-[10px] font-semibold leading-tight no-underline transition-[background,box-shadow,color,transform] duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pw-primary active:scale-[0.98] sm:text-xs ${
-                active
-                  ? "bg-pathwise-accent-soft/95 text-pw-primary ring-1 ring-pathwise-accent"
-                  : "text-pathwise-muted ring-1 ring-pathwise-line bg-pathwise-surface/80 hover:bg-pathwise-accent-soft/60 hover:text-foreground"
-              } `}
-            >
-              <span aria-hidden className="shrink-0 [color:inherit]">
-                {item.icon(active)}
-              </span>
-              <span className="w-full truncate text-center [color:inherit]">
-                {t(item.labelKey)}
-              </span>
-            </Link>
-          );
-        })}
+      <div className={`${SHELL_PX} pb-2`}>
+        <div
+          className="mx-auto grid max-w-lg grid-cols-5 gap-1 rounded-2xl border border-white/60 bg-white/75 p-1.5 shadow-lg backdrop-blur-xl"
+          style={{ minHeight: "var(--pw-nav)" }}
+        >
+          {items.map((item) => {
+            const active = item.isActive(path);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={`flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-2 text-[10px] font-semibold leading-tight no-underline transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pw-primary sm:text-xs ${
+                  active
+                    ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/25"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                }`}
+              >
+                <span aria-hidden className="shrink-0">
+                  {item.icon(active)}
+                </span>
+                <span className="w-full truncate text-center">
+                  {t(item.labelKey)}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );

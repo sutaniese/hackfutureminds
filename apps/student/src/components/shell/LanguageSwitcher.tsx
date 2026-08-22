@@ -3,24 +3,19 @@
 import { useI18n } from "@/i18n/I18nProvider";
 import type { Locale } from "@/i18n/locales";
 
-const pill = (on: boolean) =>
-  on
-    ? "bg-pw-primary text-pw-primary-foreground shadow-sm"
-    : "text-foreground ring-1 ring-pathwise-line bg-pathwise-surface/80 hover:bg-pathwise-accent-soft/50";
-
-/**
- * RU (default) · KK · EN
- */
 export function LanguageSwitcher() {
   const { locale, setLocale, t } = useI18n();
 
-  const go = (l: Locale) => {
-    setLocale(l);
-  };
+  const go = (l: Locale) => setLocale(l);
+
+  const pillCls = (on: boolean) =>
+    on
+      ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-sm shadow-indigo-500/20"
+      : "text-slate-500 hover:text-slate-800 hover:bg-slate-50";
 
   return (
     <div
-      className="flex min-h-9 shrink-0 items-center gap-0.5 rounded-full p-0.5 ring-1 ring-pathwise-line/60"
+      className="flex shrink-0 items-center gap-0.5 rounded-xl bg-slate-100/60 p-0.5"
       role="group"
       aria-label={t("lang.aria")}
     >
@@ -35,7 +30,7 @@ export function LanguageSwitcher() {
           key={code}
           type="button"
           onClick={() => go(code)}
-          className={`rounded-full px-2.5 py-1 text-xs font-bold transition ${pill(locale === code)}`}
+          className={`rounded-lg px-2.5 py-1.5 text-[11px] font-bold tracking-wide transition-all duration-200 ${pillCls(locale === code)}`}
           aria-pressed={locale === code}
           title={t(labelKey)}
         >

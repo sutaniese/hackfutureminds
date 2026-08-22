@@ -27,11 +27,7 @@ export type StoredFileItem = {
 
 function loadNotes(): string {
   if (typeof window === "undefined") return "";
-  try {
-    return sessionStorage.getItem(NOTES_KEY) ?? "";
-  } catch {
-    return "";
-  }
+  try { return sessionStorage.getItem(NOTES_KEY) ?? ""; } catch { return ""; }
 }
 
 function loadUploads(): StoredFileItem[] {
@@ -41,34 +37,16 @@ function loadUploads(): StoredFileItem[] {
     if (!raw) return [];
     const p = JSON.parse(raw) as unknown;
     if (!Array.isArray(p)) return [];
-    return p
-      .filter(
-        (x) =>
-          x &&
-          typeof x === "object" &&
-          "id" in x &&
-          "name" in x &&
-          "dataUrl" in x
-      ) as StoredFileItem[];
-  } catch {
-    return [];
-  }
+    return p.filter((x) => x && typeof x === "object" && "id" in x && "name" in x && "dataUrl" in x) as StoredFileItem[];
+  } catch { return []; }
 }
 
 function saveUploads(list: StoredFileItem[]) {
-  try {
-    sessionStorage.setItem(UPLOADS_KEY, JSON.stringify(list));
-  } catch {
-    // quota or private mode
-  }
+  try { sessionStorage.setItem(UPLOADS_KEY, JSON.stringify(list)); } catch { /* */ }
 }
 
 function saveNotes(s: string) {
-  try {
-    sessionStorage.setItem(NOTES_KEY, s);
-  } catch {
-    /* */
-  }
+  try { sessionStorage.setItem(NOTES_KEY, s); } catch { /* */ }
 }
 
 function byteLabel(n: number) {
@@ -90,68 +68,34 @@ export function PortfolioUploadClient() {
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
 
-  useEffect(() => {
-    setNotes(loadNotes());
-    setFiles(loadUploads());
-  }, []);
+  useEffect(() => { setNotes(loadNotes()); setFiles(loadUploads()); }, []);
 
-  const onNotes = (v: string) => {
-    setNotes(v);
-    saveNotes(v);
-  };
+  const onNotes = (v: string) => { setNotes(v); saveNotes(v); };
 
   const totalSize = useCallback(
-    (list: StoredFileItem[], extra: number) =>
-      list.reduce((a, f) => a + f.dataUrl.length, 0) + extra,
+    (list: StoredFileItem[], extra: number) => list.reduce((a, f) => a + f.dataUrl.length, 0) + extra,
     []
   );
 
   const addFile = (file: File) => {
     if (file.size > MAX_BYTES) {
-      setError(
-        t("portfolio.errFileBig", {
-          name: file.name,
-          max: byteLabel(MAX_BYTES),
-        }),
-      );
+      setError(t("portfolio.errFileBig", { name: file.name, max: byteLabel(MAX_BYTES) }));
       return;
     }
     setError(null);
     setBusy(true);
     const r = new FileReader();
-    r.onerror = () => {
-      setBusy(false);
-      setError(t("portfolio.errRead"));
-    };
+    r.onerror = () => { setBusy(false); setError(t("portfolio.errRead")); };
     r.onload = () => {
       setBusy(false);
       const dataUrl = typeof r.result === "string" ? r.result : "";
-      if (!dataUrl) {
-        setError(t("portfolio.errEmpty"));
-        return;
-      }
-      if (dataUrl.length > 2_500_000) {
-        setError(t("portfolio.errStillBig"));
-        return;
-      }
+      if (!dataUrl) { setError(t("portfolio.errEmpty")); return; }
+      if (dataUrl.length > 2_500_000) { setError(t("portfolio.errStillBig")); return; }
       setFiles((prev) => {
-        if (prev.length >= MAX_FILES) {
-          setError(t("portfolio.errMany", { n: MAX_FILES }));
-          return prev;
-        }
+        if (prev.length >= MAX_FILES) { setError(t("portfolio.errMany", { n: MAX_FILES })); return prev; }
         const nextSize = totalSize(prev, dataUrl.length);
-        if (nextSize > 4_500_000) {
-          setError(t("portfolio.errQuota"));
-          return prev;
-        }
-        const item: StoredFileItem = {
-          id: randomId(),
-          name: file.name,
-          mime: file.type || "application/octet-stream",
-          size: file.size,
-          dataUrl,
-          addedAt: Date.now(),
-        };
+        if (nextSize > 4_500_000) { setError(t("portfolio.errQuota")); return prev; }
+        const item: StoredFileItem = { id: randomId(), name: file.name, mime: file.type || "application/octet-stream", size: file.size, dataUrl, addedAt: Date.now() };
         const n = [...prev, item];
         saveUploads(n);
         return n;
@@ -163,43 +107,30 @@ export function PortfolioUploadClient() {
   const onPick = (e: ChangeEvent<HTMLInputElement>) => {
     const list = e.target.files;
     if (!list?.length) return;
-    for (const f of Array.from(list)) {
-      addFile(f);
-    }
+    for (const f of Array.from(list)) addFile(f);
     e.target.value = "";
   };
 
   const remove = (id: string) => {
     setError(null);
-    setFiles((prev) => {
-      const n = prev.filter((f) => f.id !== id);
-      saveUploads(n);
-      return n;
-    });
+    setFiles((prev) => { const n = prev.filter((f) => f.id !== id); saveUploads(n); return n; });
   };
 
   const clearAll = () => {
     setError(null);
     setFiles([]);
-    try {
-      sessionStorage.removeItem(UPLOADS_KEY);
-    } catch {
-      /* */
-    }
+    try { sessionStorage.removeItem(UPLOADS_KEY); } catch { /* */ }
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       <div className="space-y-2">
-        <label
-          className="block text-sm font-semibold text-foreground"
-          htmlFor="portfolio-notes"
-        >
+        <label className="block text-sm font-bold text-foreground" htmlFor="portfolio-notes">
           {t("portfolio.about")}
         </label>
         <textarea
           id="portfolio-notes"
-          className="min-h-32 w-full rounded-2xl border-2 border-pathwise-line bg-pathwise-surface px-3 py-3 text-sm text-foreground"
+          className="min-h-32 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-foreground shadow-sm transition focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
           value={notes}
           onChange={(e) => onNotes(e.target.value)}
           rows={4}
@@ -207,11 +138,8 @@ export function PortfolioUploadClient() {
         />
       </div>
 
-      <div className="space-y-2">
-        <label
-          className="block text-sm font-semibold text-foreground"
-          htmlFor={inputId}
-        >
+      <div className="space-y-3">
+        <label className="block text-sm font-bold text-foreground" htmlFor={inputId}>
           {t("portfolio.uploads")}
         </label>
         <input
@@ -223,78 +151,94 @@ export function PortfolioUploadClient() {
           multiple
           onChange={onPick}
         />
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={busy}
-            className="pw-tap min-h-12 w-full min-w-0 rounded-full bg-pw-primary px-4 text-sm font-semibold text-pw-primary-foreground disabled:opacity-50 sm:max-w-xs"
+            className="pw-btn-primary w-full disabled:opacity-50 sm:max-w-xs"
           >
-            {busy ? t("portfolio.load") : t("portfolio.choose")}
+            {busy ? (
+              <span className="flex items-center gap-2">
+                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                {t("portfolio.load")}
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                </svg>
+                {t("portfolio.choose")}
+              </span>
+            )}
           </button>
-          <span className="text-xs text-pathwise-muted">
+          <span className="text-xs text-slate-400">
             {t("portfolio.limits", { b: byteLabel(MAX_BYTES), n: MAX_FILES })}
           </span>
         </div>
       </div>
 
       {error && (
-        <p className="text-sm text-red-800" role="alert">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
           {error}
-        </p>
+        </div>
       )}
 
       {files.length > 0 && (
         <div>
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <h2 className="text-sm font-bold">{t("portfolio.added")}</h2>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h2 className="text-sm font-bold text-foreground">{t("portfolio.added")}</h2>
             <button
               type="button"
               onClick={clearAll}
-              className="min-h-12 min-w-[3rem] rounded-lg px-2 text-sm font-semibold text-pathwise-muted underline"
+              className="text-sm font-semibold text-red-500 underline decoration-red-200 underline-offset-4 transition hover:text-red-700"
             >
               {t("portfolio.removeAll")}
             </button>
           </div>
-          <ul className="flex list-none flex-col gap-2 p-0" aria-label={t("portfolio.added")}>
+          <ul className="flex list-none flex-col gap-2.5 p-0" aria-label={t("portfolio.added")}>
             {files.map((f) => {
               const isImage = f.mime.startsWith("image/");
               return (
-                <li
-                  key={f.id}
-                  className="flex flex-col gap-2 rounded-2xl border-2 border-pathwise-line bg-pathwise-surface p-3"
-                >
-                  <div className="flex min-h-12 items-center justify-between gap-2">
-                    <span className="min-w-0 break-words font-medium text-foreground">
-                      {f.name}
-                    </span>
-                    <div className="flex shrink-0 items-center gap-1">
-                      <span className="text-xs text-pathwise-muted">
-                        {byteLabel(f.size)}
-                      </span>
+                <li key={f.id} className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-4 transition hover:shadow-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-500">
+                        <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                          <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <span className="min-w-0 truncate text-sm font-medium text-foreground">{f.name}</span>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="text-xs text-slate-400">{byteLabel(f.size)}</span>
                       <button
                         type="button"
-                        className="pw-tap min-h-12 min-w-12 rounded-full border-2 border-red-200 px-2 text-sm font-bold text-red-800"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 text-red-500 transition hover:bg-red-50"
                         onClick={() => remove(f.id)}
                         aria-label={t("portfolio.removeFile", { n: f.name })}
                       >
-                        ×
+                        <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
                       </button>
                     </div>
                   </div>
                   {isImage && (
-                    <img
-                      src={f.dataUrl}
-                      alt=""
-                      className="max-h-48 w-full max-w-sm rounded-lg border border-pathwise-line object-contain"
-                    />
+                    <img src={f.dataUrl} alt="" className="max-h-48 w-full max-w-sm rounded-lg border border-slate-100 object-contain" />
                   )}
                   {!isImage && (
                     <a
-                      className="flex min-h-12 w-fit min-w-12 max-w-full items-center self-start rounded-lg border-2 border-pw-primary px-3 text-sm font-semibold text-pw-primary"
+                      className="pw-btn-secondary self-start !min-h-[2.25rem] !px-4 !text-sm"
                       href={f.dataUrl}
                       download={f.name}
                     >
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="mr-1.5 h-4 w-4">
+                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
                       {t("portfolio.dl")}
                     </a>
                   )}
