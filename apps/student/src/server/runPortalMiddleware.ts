@@ -23,7 +23,7 @@ function headersFromMock(res: ServerResponse): Headers {
 }
 
 /**
- * Runs existing Vite-style Node middleware under Next.js Route Handlers.
+ * Runs existing Node middleware under Next.js Route Handlers.
  * Uses `node-mocks-http` so `readBody(req)` (stream listeners) still works.
  */
 export async function runPortalMiddleware(

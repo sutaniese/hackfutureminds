@@ -18,7 +18,7 @@ const items: NavItem[] = [
     href: "/",
     labelKey: "nav.home",
     isActive: (p) => p === "/" || p === "",
-    icon: (active) => (
+    icon: () => (
       <svg
         viewBox="0 0 24 24"
         className="h-6 w-6"
@@ -33,7 +33,7 @@ const items: NavItem[] = [
     href: "/onboarding",
     labelKey: "nav.onboarding",
     isActive: (p) => p.startsWith("/onboarding"),
-    icon: (active) => (
+    icon: () => (
       <svg
         viewBox="0 0 24 24"
         className="h-6 w-6"
@@ -48,7 +48,7 @@ const items: NavItem[] = [
     href: "/results",
     labelKey: "nav.results",
     isActive: (p) => p.startsWith("/results"),
-    icon: (active) => (
+    icon: () => (
       <svg
         viewBox="0 0 24 24"
         className="h-6 w-6"
@@ -63,7 +63,7 @@ const items: NavItem[] = [
     href: "/grants",
     labelKey: "nav.grants",
     isActive: (p) => p.startsWith("/grants"),
-    icon: (active) => (
+    icon: () => (
       <svg
         viewBox="0 0 24 24"
         className="h-6 w-6"
@@ -78,7 +78,7 @@ const items: NavItem[] = [
     href: "/portfolio",
     labelKey: "nav.portfolio",
     isActive: (p) => p.startsWith("/portfolio"),
-    icon: (active) => (
+    icon: () => (
       <svg
         viewBox="0 0 24 24"
         className="h-6 w-6"

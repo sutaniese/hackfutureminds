@@ -265,7 +265,7 @@ export function TeacherDashboard() {
           </h2>
           <p className="mt-1 text-sm text-pathwise-muted">
             JSON-профиль выбранного ученика отправляется на{' '}
-            <code className="rounded bg-pathwise-accentSoft px-1">/api/recommendation-letter</code> (Gemini, dev через Vite).
+            <code className="rounded bg-pathwise-accentSoft px-1">/api/recommendation-letter</code> (Gemini, Next API route).
           </p>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">

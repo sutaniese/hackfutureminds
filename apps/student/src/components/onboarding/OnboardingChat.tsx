@@ -139,7 +139,7 @@ export function OnboardingChat() {
       </p>
 
       <div
-        className="pw-step-enter will-change-transform"
+        className="pw-card pw-step-enter p-5 will-change-transform md:p-6"
         key={step}
         id="onboarding-step"
       >
@@ -364,7 +364,7 @@ export function OnboardingChat() {
           <button
             type="button"
             onClick={goBack}
-            className="min-h-12 min-w-24 flex-1 rounded-full border-2 border-pathwise-line bg-pathwise-surface text-sm font-semibold text-foreground"
+            className="pw-secondary-btn pw-focus min-w-24 flex-1 text-sm"
           >
             {t("onboard.back")}
           </button>
@@ -373,7 +373,7 @@ export function OnboardingChat() {
           type="button"
           onClick={goNext}
           disabled={!canNext}
-          className="min-h-12 flex-1 rounded-full bg-pw-primary text-sm font-semibold text-pw-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          className="pw-primary-btn pw-focus flex-1 text-sm disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isLast ? t("onboard.finish") : t("onboard.continue")}
         </button>

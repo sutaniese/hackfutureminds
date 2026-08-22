@@ -3,10 +3,10 @@
  *
  * Modules:
  *  - `./generate`      — `POST /api/generate` request/response contract (re-export from `apps/student`).
- *  - `./universities`  — university types used by `apps/portal/vuzy` and student career card.
- *  - `./grants`        — grant record type used by `apps/student` and parent calculator in `apps/portal`.
+ *  - `./universities`  — university types used by `/hub/vuzy` and student career card.
+ *  - `./grants`        — grant record type used by student results and `/hub` parent calculator.
  *  - `./brand`         — single source of truth for product name, tagline and palette.
- *  - `./links`         — cross-app URLs (student core ↔ b2b portal) used by both apps.
+ *  - `./links`         — same-origin URLs between student shell and `/hub`.
  */
 export * from "./brand";
 export * from "./links";

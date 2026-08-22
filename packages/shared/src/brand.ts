@@ -1,6 +1,5 @@
 /**
- * Single source of truth for product brand. Both `apps/student` and `apps/portal`
- * import this so the public name, tagline, and primary colors stay in lockstep.
+ * Single source of truth for product brand across the student shell and `/hub`.
  */
 
 export const BRAND = {
@@ -10,7 +9,7 @@ export const BRAND = {
   brandMark: "teñ",
   /** Visible tagline used in headers, share-cards, and PDF reports. */
   tagline: "AI-навигатор поступления для школьников Казахстана",
-  /** Color palette mirrored in `apps/portal/src/index.css` (`--pw-*`) and `apps/student/src/app/globals.css`. */
+  /** Color palette mirrored in `apps/student/src/app/globals.css` (`--pw-*`). */
   colors: {
     bg: "#FFFFFF",
     surface: "#F5F8FF",

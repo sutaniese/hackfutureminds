@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-/* Hero block aligned with teñ. / hackhack (rounded panel, kicker, title) */
+/* Shared hero block for student + hub pages. */
 type Props = {
   kicker?: string;
   title: string;
@@ -25,29 +25,33 @@ export function PageHero({
     <section
       id={id}
       className={cn(
-        "rounded-[2.2rem] border border-pathwise-line/80 bg-gradient-to-br from-sky-50/95 via-pathwise-surface to-pathwise-surface p-5 shadow-sm md:rounded-[2.5rem] md:p-8",
+        "pw-soft-panel relative overflow-hidden rounded-[2rem] p-5 md:rounded-[2.5rem] md:p-8",
         className,
       )}
       aria-label={aria}
     >
+      <div className="pointer-events-none absolute -right-16 -top-20 h-52 w-52 rounded-full bg-pathwise-accent/10 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 right-8 hidden h-24 w-24 rounded-[2rem] border border-white/80 bg-white/35 rotate-12 md:block" />
+      <div className="relative">
       {kicker ? (
-        <p className="text-[0.7rem] font-bold uppercase leading-none tracking-[0.16em] text-sky-600/90">
+        <p className="inline-flex rounded-full bg-white/70 px-3 py-1 text-[0.68rem] font-bold uppercase leading-none tracking-[0.16em] text-pathwise-accent-strong ring-1 ring-pathwise-line/70">
           {kicker}
         </p>
       ) : null}
-      <h1 className="mt-3 text-2xl font-bold leading-tight tracking-tight text-pathwise-ink md:text-3xl">
+      <h1 className="mt-4 max-w-4xl text-3xl font-black leading-[1.05] tracking-tight text-pathwise-ink md:text-5xl">
         {title}
       </h1>
       {description ? (
-        <p className="mt-3 max-w-3xl text-balance text-sm text-pathwise-muted md:text-base">
+        <p className="mt-4 max-w-3xl text-balance text-sm leading-6 text-pathwise-muted md:text-base md:leading-7">
           {description}
         </p>
       ) : null}
       {children}
+      </div>
     </section>
   );
 }
 
 export function ContentCard({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn("pw-card p-4 md:p-5", className)}>{children}</div>;
+  return <div className={cn("pw-card p-5 md:p-6", className)}>{children}</div>;
 }

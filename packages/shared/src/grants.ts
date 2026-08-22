@@ -1,6 +1,6 @@
 /**
  * Mirrors `apps/student/src/types/grants.ts`. Kept here so the parent calculator
- * in `apps/portal` can show identical fields without re-declaring the type.
+ * in `/hub` can show identical fields without re-declaring the type.
  */
 
 export type GrantType = "monthly" | "full" | "lump" | "one_time";

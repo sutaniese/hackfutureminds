@@ -71,23 +71,38 @@ export function UniversitiesPage() {
 
   return (
     <>
-      <section className="overflow-hidden rounded-3xl border border-pathwise-accentSoft bg-gradient-to-br from-pathwise-accentSoft via-pathwise-surface to-pathwise-surface p-8 md:p-10">
-        <p className="text-xs font-semibold uppercase tracking-widest text-pathwise-accent">
+      <section className="pw-soft-panel relative overflow-hidden rounded-[2rem] p-6 md:rounded-[2.5rem] md:p-8">
+        <div className="pointer-events-none absolute -right-12 -top-16 h-52 w-52 rounded-full bg-pathwise-accent/10 blur-3xl" />
+        <p className="relative inline-flex rounded-full bg-white/70 px-3 py-1 text-[0.68rem] font-bold uppercase leading-none tracking-[0.16em] text-pathwise-accentStrong ring-1 ring-pathwise-line/70">
           Каталог
         </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-pathwise-ink md:text-4xl">
+        <h1 className="relative mt-4 max-w-4xl text-3xl font-black leading-[1.05] tracking-tight text-pathwise-ink md:text-5xl">
           Университеты Казахстана
         </h1>
-        <p className="mt-3 max-w-2xl text-sm text-pathwise-muted md:text-base">
+        <p className="relative mt-4 max-w-3xl text-sm leading-6 text-pathwise-muted md:text-base md:leading-7">
           Изучай лучшие университеты страны, фильтруй по направлению, региону и языку обучения.
           Откликнись на программу, к которой ученик готов поступать в этом году.
         </p>
-        <div className="mt-5 flex flex-wrap items-center gap-3">
+        <div className="relative mt-6 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-pathwise-line/80 bg-white/70 p-4 shadow-sm">
+            <p className="text-2xl font-black text-pathwise-ink">{UNIVERSITIES.length}</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-pathwise-muted">вузов</p>
+          </div>
+          <div className="rounded-2xl border border-pathwise-line/80 bg-white/70 p-4 shadow-sm">
+            <p className="text-2xl font-black text-pathwise-ink">{ALL_REGIONS.length}</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-pathwise-muted">городов</p>
+          </div>
+          <div className="rounded-2xl border border-pathwise-line/80 bg-white/70 p-4 shadow-sm">
+            <p className="text-2xl font-black text-pathwise-ink">{ALL_RANKING_CATEGORIES.length}</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-pathwise-muted">направлений</p>
+          </div>
+        </div>
+        <div className="relative mt-5 flex flex-wrap items-center gap-3">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Поиск по названию, городу или описанию"
-            className="min-h-[44px] w-full max-w-md rounded-full border border-pathwise-line bg-pathwise-surface px-4 py-2 text-sm shadow-sm focus:border-pathwise-accent"
+            className="min-h-[48px] w-full max-w-md rounded-full border border-pathwise-line bg-white/80 px-4 py-2 text-sm shadow-sm focus:border-pathwise-accent"
             aria-label="Поиск университета"
           />
           <span className="text-xs font-medium text-pathwise-muted">

@@ -1,8 +1,8 @@
 # `@pathwise/shared`
 
-Shared TypeScript types, brand tokens, and cross-app URL helpers consumed by both
-`apps/student` (Next.js — student core) and `apps/portal` (Vite — parents,
-teachers, enterprise, universities catalog).
+Shared TypeScript types, brand tokens, and URL helpers consumed by the unified
+`apps/student` Next.js app. The student shell and B2B hub (`/hub/*`) live in the
+same app, while shared types stay here to avoid duplicating contracts.
 
 ## Modules
 
@@ -16,5 +16,5 @@ teachers, enterprise, universities catalog).
 
 ## Why a workspace package
 
-Both apps used to reference the same names locally; the package keeps them in
-sync without bundling either runtime (Next.js or Vite) into the other.
+The student flow, B2B hub, and server routes reference the same shapes. This
+package keeps those contracts in sync without tying feature code to one folder.

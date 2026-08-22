@@ -3,7 +3,7 @@
 import { PORTAL_PATHS, portalHref } from "@pathwise/shared/links";
 
 /**
- * Bridge from the student core (Next.js app) to the B2B portal (Vite app).
+ * Bridge from the student core to the B2B hub inside the same Next.js app.
  * Renders three CTA cards: parents dashboard, teachers room, universities catalog.
  *
  * By default the portal is same-origin under `/hub` (see root README). Set

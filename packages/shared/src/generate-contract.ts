@@ -1,6 +1,6 @@
 /**
- * Mirrors `apps/student/src/types/generate.ts` but kept dependency-free so both apps
- * can import it without dragging Next.js or Vite specifics. When you change the
+ * Mirrors `apps/student/src/types/generate.ts` but kept dependency-free so shared
+ * modules can import it without dragging Next.js specifics. When you change the
  * contract, update both files together.
  */
 

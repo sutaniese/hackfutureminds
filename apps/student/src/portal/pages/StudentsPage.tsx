@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { StudentEditor } from '../components/StudentEditor'
+import { PortalPageHero } from '../components/PortalPageHero'
 import { api } from '../lib/api'
 import { useStudents } from '../state/StudentContext'
 
@@ -18,27 +19,31 @@ export function StudentsPage() {
 
   return (
     <>
-      <div className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm">
-        <h1 className="text-2xl font-bold text-pathwise-ink md:text-3xl">Ученики</h1>
-        <p className="mt-2 max-w-3xl text-sm text-pathwise-muted">
-          Онбординг и редактирование учеников. Данные пишутся в локальный JSON-store и Obsidian-vault.
-        </p>
-      </div>
+      <PortalPageHero
+        kicker="Ученики"
+        title="Профили, планы и заметки в одном месте"
+        description="Создавайте учеников, редактируйте карьерные данные и храните контекст в локальном JSON-store и ten-vault."
+        stats={[
+          { value: String(students.length), label: 'профилей' },
+          { value: activeStudentId ? '1' : '0', label: 'выбран' },
+          { value: 'Vault', label: 'контекст' },
+        ]}
+      />
 
       <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
-        <aside className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-4 shadow-sm">
+        <aside className="pw-card p-4">
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setMode('new')}
-              className="min-h-[40px] flex-1 rounded-xl bg-pathwise-ink px-3 py-2 text-sm font-semibold text-white hover:opacity-90"
+              className="pw-primary-btn pw-focus min-h-[40px] flex-1 px-3 py-2 text-sm"
             >
               + Новый ученик
             </button>
             <button
               type="button"
               onClick={() => setMode('edit')}
-              className="min-h-[40px] rounded-xl border border-pathwise-line px-3 py-2 text-sm font-medium text-pathwise-ink hover:bg-pathwise-accentSoft/50"
+              className="pw-secondary-btn pw-focus min-h-[40px] rounded-xl px-3 py-2 text-sm"
             >
               Редактировать
             </button>
@@ -55,9 +60,9 @@ export function StudentsPage() {
                     setActiveStudentId(s.id)
                     setMode('edit')
                   }}
-                  className={`flex-1 rounded-xl px-3 py-2 text-left text-sm ${
+                  className={`flex-1 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
                     s.id === activeStudentId
-                      ? 'bg-pathwise-accentSoft font-semibold text-pathwise-ink'
+                      ? 'bg-pathwise-accentSoft font-semibold text-pathwise-ink ring-1 ring-pathwise-accent'
                       : 'hover:bg-pathwise-accentSoft/50'
                   }`}
                 >

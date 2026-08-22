@@ -176,7 +176,7 @@ function Hero({
   u: ReturnType<typeof getUniversityWithDefaults>
 }) {
   return (
-    <section className="overflow-hidden rounded-3xl border border-pathwise-line bg-pathwise-surface shadow-sm">
+    <section className="pw-card overflow-hidden">
       <div className="relative h-56 w-full overflow-hidden bg-pathwise-accentSoft">
         <img
           src={u.bannerUrl}
@@ -192,7 +192,7 @@ function Hero({
           #{u.rank} Overall
         </span>
       </div>
-      <div className="space-y-1 p-6">
+      <div className="space-y-1 p-6 md:p-8">
         <p className="text-lg font-semibold text-pathwise-ink">{u.nameRu}</p>
         <h1 className="text-2xl font-bold tracking-tight text-pathwise-ink md:text-3xl">
           {u.nameEn}
@@ -205,8 +205,8 @@ function Hero({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm">
-      <h2 className="mb-4 text-base font-semibold text-pathwise-ink">{title}</h2>
+    <section className="pw-card p-5 md:p-6">
+      <h2 className="mb-4 text-base font-bold text-pathwise-ink">{title}</h2>
       {children}
     </section>
   )

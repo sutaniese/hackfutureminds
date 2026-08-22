@@ -19,7 +19,7 @@ type Props = {
 }
 
 /**
- * Родитель вводит «свою» профессию — сравнение с выбором ребёнка через Gemini API (dev: Vite middleware).
+ * Родитель вводит «свою» профессию — сравнение с выбором ребёнка через Gemini API.
  */
 export function CareerComparison({ childProfession }: Props) {
   const [parentProfession, setParentProfession] = useState('')

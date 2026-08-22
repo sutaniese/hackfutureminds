@@ -10,19 +10,12 @@ AI-навигатор поступления и карьеры для школь
 ```
 issa/
 ├─ apps/
-│  ├─ student/           # Next.js 15 + Tailwind v4 — student core (port :3000)
-│  │                      # /onboarding (7 шагов) → /api/generate → /results
-│  │                      # /grants, /portfolio, /accessibility
-│  │                      # См. apps/student/README.md и student_dev_EN.md
-│  └─ portal/            # Vite + React 18 — B2B портал (dev :5174, base `/hub/`)
-│                        # В «одном сайте» открывается как http://localhost:3000/hub/…
-│                        # /agent (AI-наставник на Gemini + Obsidian-вольт)
-│                        # /vuzy + /vuzy/:id (каталог 30+ вузов)
-│                        # /uchenik (CRUD карточек учеников)
-│                        # /roditeli (дашборд + финкалькулятор + сравнение профессий)
-│                        # /uchitelya (классы + рекомендательные письма)
-│                        # /enterprise (white-label + ROI-трекер + CRM-sync)
-│                        # См. apps/portal/README.md
+│  └─ student/           # Единое Next.js 15 приложение (port :3000)
+│                         # /, /onboarding, /results, /grants, /portfolio
+│                         # /hub/agent, /hub/vuzy, /hub/roditeli,
+│                         # /hub/uchitelya, /hub/enterprise
+│                         # src/portal/ — бывший portal UI, теперь внутри Next
+│                         # src/server/portal-plugins/ — бывшие portal API middleware
 └─ packages/
    └─ shared/            # @pathwise/shared — общие типы и токены
                          #   ./brand   — название продукта, палитра
@@ -32,42 +25,35 @@ issa/
                          #   ./grants  — тип GrantRecord
 ```
 
-## Один сайт (один origin)
+## Один проект, один origin
 
-В разработке **всё открывается с `http://localhost:3000`**: Next.js — основной
-хост, портал Vite смонтирован под префиксом **`/hub`** (например
-`/hub/agent`, `/hub/vuzy`). Next проксирует:
+В разработке **всё открывается с `http://localhost:3000`**. Student и portal
+теперь живут в одной папке `apps/student` и в одном Next-приложении:
 
-- `GET /hub/*` → Vite (`PORTAL_PROXY_URL`, по умолчанию `http://127.0.0.1:5174`)
-- `POST/GET …` портальных API (`/api/career-compare`, `/api/recommendation-letter`,
-  `/api/crm-sync`, `/api/agent/*`, `/api/students*`, `/api/classes*`) → тот же Vite
-
-Студенческие маршруты Next (`/`, `/onboarding`, `/api/generate`, `/api/health`)
-не пересекаются с портальными API.
+- student shell: `/`, `/onboarding`, `/results`, `/grants`, `/portfolio`;
+- portal hub: `/hub/agent`, `/hub/vuzy`, `/hub/uchenik`, `/hub/roditeli`,
+  `/hub/uchitelya`, `/hub/enterprise`;
+- portal API: `/api/career-compare`, `/api/recommendation-letter`,
+  `/api/crm-sync`, `/api/agent/*`, `/api/students*`, `/api/classes*`.
 
 Запуск одной командой из корня:
 
 ```powershell
-npm install   # один раз, подтянет concurrently
-npm run dev   # параллельно student + portal; в браузере только :3000
+npm install
+npm run dev   # одно Next-приложение; в браузере http://localhost:3000
 ```
 
-Прямой заход на `http://localhost:5174/hub/…` по-прежнему возможен для отладки
-Vite (HMR WebSocket идёт на `:5174`).
-
-**Раздельный деплой:** задайте `NEXT_PUBLIC_PORTAL_URL` (абсолютный URL портала)
-в student и `VITE_STUDENT_URL` в portal — тогда ссылки в `@pathwise/shared/links`
-ведут на разные origin’ы.
+Отдельного Vite portal больше нет: все страницы `/hub/*` рендерит Next.
 
 ## Логические связи между приложениями
 
 | Связь | Где живёт | Что делает |
 |-------|-----------|------------|
-| `apps/student → /results` показывает CTA в `apps/portal` | `apps/student/src/components/results/CrossAppPromo.tsx` | Три карточки: Родители · Учителя · Каталог вузов (по умолчанию пути `/hub/…`) |
-| `apps/portal` шапка ведёт обратно на онбординг | `apps/portal/src/components/AppLayout.tsx` | Кнопка «Онбординг ученика →» на тот же origin (`/onboarding`) |
+| `apps/student → /results` показывает CTA в hub | `apps/student/src/components/results/CrossAppPromo.tsx` | Три карточки: Родители · Учителя · Каталог вузов (пути `/hub/…`) |
+| `/hub` шапка ведёт обратно на онбординг | `apps/student/src/portal/components/AppLayout.tsx` | Кнопка «Онбординг ученика →» на тот же origin (`/onboarding`) |
 | Контракт `POST /api/generate` единый для обоих | `packages/shared/src/generate-contract.ts` | Зеркалит `apps/student/src/types/generate.ts` |
-| Каталог вузов из portal доступен student | `packages/shared/src/universities.ts` (типы), `apps/portal/src/data/universities.ts` (данные) | На страницах карьерных карт можно показать «Где учат» |
-| Гранты из student доступны родителям | `packages/shared/src/grants.ts` (тип), `apps/student/api/grants.json` (данные) | Финкалькулятор в `apps/portal/src/components/FinancialCalculator.tsx` |
+| Каталог вузов из hub доступен student | `packages/shared/src/universities.ts` (типы), `apps/student/src/portal/data/universities.ts` (данные) | На страницах карьерных карт можно показать «Где учат» |
+| Гранты из student доступны родителям | `packages/shared/src/grants.ts` (тип), `apps/student/api/grants.json` (данные) | Финкалькулятор в `apps/student/src/portal/components/FinancialCalculator.tsx` |
 | Бренд (название, палитра) общий | `packages/shared/src/brand.ts` | Заголовки, PDF-отчёты, README |
 
 ## Запуск локально
@@ -75,39 +61,24 @@ Vite (HMR WebSocket идёт на `:5174`).
 ```powershell
 cd C:\Users\Alpha\Desktop\issa
 npm install                # ставит зависимости всех workspace-пакетов
-npm run dev                # рекомендуется: оба процесса; в браузере http://localhost:3000 и /hub/…
-# либо по отдельности:
-npm run dev:student        # http://localhost:3000  (Next.js + прокси на portal)
-npm run dev:portal         # http://localhost:5174  (Vite; портал под /hub/)
-npm run build              # build:student && build:portal
+npm run dev                # http://localhost:3000 и /hub/…
+npm run build              # сборка единого Next-приложения
 ```
 
-В каждом приложении свой `.env`. См. `apps/student/.env.example` и
-`apps/portal/.env.example`. Опциональные переменные:
+Переменные окружения лежат в `apps/student/.env`. Опциональные переменные:
 
 | Переменная | Где | Назначение |
 |------------|-----|------------|
-| `PORTAL_PROXY_URL` | `apps/student/.env` (или env процесса) | Куда Next проксирует `/hub` и портальные `/api/*` (по умолчанию `http://127.0.0.1:5174`) |
-| `NEXT_PUBLIC_PORTAL_URL` | `apps/student/.env` | Только для **раздельного** деплоя: абсолютный URL портала вместо путей `/hub/…` |
-| `VITE_STUDENT_URL` | `apps/portal/.env` | Только если student на другом origin; иначе ссылки относительные (`/onboarding`) |
-| `GEMINI_API_KEY` | `apps/portal/.env` | Ключ для AI-наставника и `/api/career-compare` |
+| `NEXT_PUBLIC_PORTAL_URL` | `apps/student/.env` | Обычно не нужен; для внешнего portal origin вместо путей `/hub/…` |
+| `NEXT_PUBLIC_STUDENT_URL` | `apps/student/.env` | Обычно не нужен; для внешнего student origin |
+| `GEMINI_API_KEY` | `apps/student/.env` | Ключ для AI-наставника и `/api/career-compare` |
 | `GROQ_API_KEY` | `apps/student/.env` | Опционально: вместо детерминированного fallback в `/api/generate` |
 
-## Покрытие техзадания (`apps/portal/technical_task.md`)
+## Покрытие техзадания
 
 - §3 Школьник core → `apps/student`
-- §16.1 Родители → `apps/portal/src/pages/ParentsPage.tsx`
-- §16.2 Учителя → `apps/portal/src/pages/TeachersPage.tsx`
-- §16.3 Enterprise / ЕНТ-центры → `apps/portal/src/pages/EnterprisePage.tsx`
-- Каталог вузов и страница вуза → `apps/portal/src/pages/Universities*.tsx`
-- AI-наставник (RAG над Obsidian-вольтом) → `apps/portal/src/pages/AgentPage.tsx`
-
-## Известные ограничения
-
-`apps/student` в текущем состоянии падает на `next build` при prerender
-страниц `/404`/`/500` с минифицированной React-ошибкой #31 (объект как нода).
-Ошибка пришла с upstream-обновлением `sutaniese` и не связана с миграцией в
-монорепо. На dev-сервере и в runtime приложение работает корректно. Полный
-билд `apps/portal` проходит успешно. Чинить нужно в client-компонентах
-`A11yTopBar`, `MobileAppShell` или конфигурации `next/font` (требует отдельной
-итерации).
+- §16.1 Родители → `apps/student/src/portal/pages/ParentsPage.tsx`
+- §16.2 Учителя → `apps/student/src/portal/pages/TeachersPage.tsx`
+- §16.3 Enterprise / ЕНТ-центры → `apps/student/src/portal/pages/EnterprisePage.tsx`
+- Каталог вузов и страница вуза → `apps/student/src/portal/pages/Universities*.tsx`
+- AI-наставник (RAG над Obsidian-вольтом) → `apps/student/src/portal/pages/AgentPage.tsx`

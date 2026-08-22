@@ -78,7 +78,7 @@ export function A11yTopBar() {
       style={{ minHeight: "var(--pw-a11y-top)" }}
     >
       <div
-        className={`${SHELL_PX} flex flex-wrap items-center gap-x-3 gap-y-2 py-2.5`}
+        className={`${SHELL_PX} mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 py-2.5`}
       >
         <Link
           href="/"

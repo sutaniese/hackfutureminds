@@ -1,8 +1,8 @@
 /**
- * University types shared by `apps/portal/vuzy` (catalog + detail page) and
- * `apps/student` career card (where to study). The actual dataset still lives
- * in `apps/portal/src/data/universities.ts` and can be lazy-imported by student
- * via a small fetch when needed; this file only fixes the common shape.
+ * University types shared by `/hub/vuzy` (catalog + detail page) and student
+ * career cards (where to study). The actual dataset lives in
+ * `apps/student/src/portal/data/universities.ts`; this file fixes the common
+ * shape.
  */
 
 export type UniRanking =

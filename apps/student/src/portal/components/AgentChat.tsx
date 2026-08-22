@@ -62,7 +62,7 @@ export function AgentChat() {
   }
 
   return (
-    <section className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm" aria-labelledby="agent-title">
+    <section className="pw-card p-5 md:p-6" aria-labelledby="agent-title">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-pathwise-line pb-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-pathwise-accent">AI-наставник</p>
@@ -82,7 +82,7 @@ export function AgentChat() {
             id="agent-student"
             value={activeStudentId ?? ''}
             onChange={(e) => setActiveStudentId(e.target.value || null)}
-            className="rounded-xl border border-pathwise-line px-3 py-2 text-sm focus:border-pathwise-accent"
+            className="rounded-xl border border-pathwise-line bg-white/80 px-3 py-2 text-sm shadow-sm focus:border-pathwise-accent"
           >
             <option value="">— ученик не выбран —</option>
             {students.map((s) => (
@@ -95,7 +95,7 @@ export function AgentChat() {
             type="button"
             onClick={handleClear}
             disabled={!activeStudentId || messages.length === 0}
-            className="min-h-[40px] rounded-xl border border-pathwise-line px-3 py-2 text-xs font-medium text-pathwise-muted hover:bg-pathwise-accentSoft/50 disabled:opacity-50"
+            className="min-h-[40px] rounded-xl border border-pathwise-line bg-white/80 px-3 py-2 text-xs font-semibold text-pathwise-muted hover:bg-pathwise-accentSoft/50 disabled:opacity-50"
           >
             Очистить чат
           </button>
@@ -110,7 +110,7 @@ export function AgentChat() {
         <>
           <div
             ref={listRef}
-            className="mt-4 flex h-[420px] flex-col gap-3 overflow-y-auto rounded-xl bg-pathwise-surface/60 p-4"
+            className="mt-4 flex h-[420px] flex-col gap-3 overflow-y-auto rounded-[1.4rem] border border-pathwise-line/80 bg-gradient-to-b from-white/75 to-pathwise-accentSoft/25 p-4"
             role="log"
             aria-live="polite"
           >
@@ -134,14 +134,14 @@ export function AgentChat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Спросите: «расскажи про мой план», «сохрани заметку: …»"
-              className="min-h-[44px] flex-1 rounded-xl border border-pathwise-line px-3 py-2 text-sm focus:border-pathwise-accent"
+              className="min-h-[44px] flex-1 rounded-xl border border-pathwise-line bg-white/90 px-3 py-2 text-sm shadow-sm focus:border-pathwise-accent"
               disabled={busy}
               aria-label="Сообщение агенту"
             />
             <button
               type="submit"
               disabled={busy || !input.trim()}
-              className="min-h-[44px] rounded-xl bg-pathwise-accent px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              className="pw-primary-btn pw-focus px-5 py-2 text-sm disabled:opacity-50"
             >
               Отправить
             </button>

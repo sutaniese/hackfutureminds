@@ -1,16 +1,21 @@
 'use client'
 
 import { EnterpriseHub } from '../components/EnterpriseHub'
+import { PortalPageHero } from '../components/PortalPageHero'
 
 export function EnterprisePage() {
   return (
     <>
-      <div className="rounded-2xl border border-pathwise-line bg-pathwise-surface p-6 shadow-sm">
-        <h1 className="text-2xl font-bold text-pathwise-ink md:text-3xl">Enterprise / ЕНТ-центры</h1>
-        <p className="mt-2 max-w-3xl text-sm text-pathwise-muted">
-          White-label бренд, грантовый ROI, CRM sync (мок), массовые отчёты для родителей.
-        </p>
-      </div>
+      <PortalPageHero
+        kicker="Enterprise"
+        title="White-label платформа для ЕНТ-центров"
+        description="Брендинг, грантовый ROI, CRM sync и массовые отчёты для родителей в одном аккуратном интерфейсе."
+        stats={[
+          { value: '500+', label: 'учеников' },
+          { value: 'ROI', label: 'аналитика' },
+          { value: 'CRM', label: 'интеграция' },
+        ]}
+      />
       <EnterpriseHub />
     </>
   )

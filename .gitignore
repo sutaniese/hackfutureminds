@@ -24,4 +24,4 @@ node_modules/
 .idea/
 
 # Generated runtime data
-apps/portal/ten-vault/
+apps/student/ten-vault/
