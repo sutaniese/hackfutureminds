@@ -8,6 +8,7 @@ import {
   useState,
   type ChangeEvent,
 } from "react";
+import { useUserProgress } from "@/components/gamification/UserProgressProvider";
 import { useI18n } from "@/i18n/I18nProvider";
 
 const NOTES_KEY = "pathwise-portfolio-notes";
@@ -61,6 +62,7 @@ function randomId() {
 
 export function PortfolioUploadClient() {
   const { t } = useI18n();
+  const { setProfileCompletion } = useUserProgress();
   const [notes, setNotes] = useState("");
   const [files, setFiles] = useState<StoredFileItem[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +72,11 @@ export function PortfolioUploadClient() {
 
   useEffect(() => { setNotes(loadNotes()); setFiles(loadUploads()); }, []);
 
-  const onNotes = (v: string) => { setNotes(v); saveNotes(v); };
+  const onNotes = (v: string) => {
+    setNotes(v);
+    saveNotes(v);
+    if (v.trim().length > 0) setProfileCompletion(files.length > 0 ? 100 : 95);
+  };
 
   const totalSize = useCallback(
     (list: StoredFileItem[], extra: number) => list.reduce((a, f) => a + f.dataUrl.length, 0) + extra,
@@ -98,6 +104,7 @@ export function PortfolioUploadClient() {
         const item: StoredFileItem = { id: randomId(), name: file.name, mime: file.type || "application/octet-stream", size: file.size, dataUrl, addedAt: Date.now() };
         const n = [...prev, item];
         saveUploads(n);
+        setProfileCompletion(notes.trim().length > 0 ? 100 : 95);
         return n;
       });
     };
@@ -130,7 +137,7 @@ export function PortfolioUploadClient() {
         </label>
         <textarea
           id="portfolio-notes"
-          className="min-h-32 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-foreground shadow-sm transition focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
+          className="min-h-32 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-foreground shadow-sm transition focus:border-[#6C63FF] focus:bg-white focus:outline-none focus:ring-2 focus:shadow-[var(--focus-ring)]"
           value={notes}
           onChange={(e) => onNotes(e.target.value)}
           rows={4}
@@ -175,14 +182,14 @@ export function PortfolioUploadClient() {
               </span>
             )}
           </button>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-pathwise-muted">
             {t("portfolio.limits", { b: byteLabel(MAX_BYTES), n: MAX_FILES })}
           </span>
         </div>
       </div>
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+        <div className="rounded-xl border border-[#FF6B6B]/30 bg-[#FF6B6B]/10 px-4 py-3 text-sm text-red-100" role="alert">
           {error}
         </div>
       )}
@@ -194,7 +201,7 @@ export function PortfolioUploadClient() {
             <button
               type="button"
               onClick={clearAll}
-              className="text-sm font-semibold text-red-500 underline decoration-red-200 underline-offset-4 transition hover:text-red-700"
+              className="text-sm font-semibold text-red-500 underline decoration-red-200 underline-offset-4 transition hover:text-red-100"
             >
               {t("portfolio.removeAll")}
             </button>
@@ -203,10 +210,10 @@ export function PortfolioUploadClient() {
             {files.map((f) => {
               const isImage = f.mime.startsWith("image/");
               return (
-                <li key={f.id} className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-4 transition hover:shadow-sm">
+                <li key={f.id} className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 transition hover:shadow-sm">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-500">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#6C63FF]/10 text-pathwise-accent-strong">
                         <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                           <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
                         </svg>
@@ -214,10 +221,10 @@ export function PortfolioUploadClient() {
                       <span className="min-w-0 truncate text-sm font-medium text-foreground">{f.name}</span>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
-                      <span className="text-xs text-slate-400">{byteLabel(f.size)}</span>
+                      <span className="text-xs text-pathwise-muted">{byteLabel(f.size)}</span>
                       <button
                         type="button"
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 text-red-500 transition hover:bg-red-50"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#FF6B6B]/30 text-red-500 transition hover:bg-[#FF6B6B]/10"
                         onClick={() => remove(f.id)}
                         aria-label={t("portfolio.removeFile", { n: f.name })}
                       >
@@ -228,7 +235,7 @@ export function PortfolioUploadClient() {
                     </div>
                   </div>
                   {isImage && (
-                    <img src={f.dataUrl} alt="" className="max-h-48 w-full max-w-sm rounded-lg border border-slate-100 object-contain" />
+                    <img src={f.dataUrl} alt="" className="max-h-48 w-full max-w-sm rounded-lg border border-slate-200 object-contain" />
                   )}
                   {!isImage && (
                     <a

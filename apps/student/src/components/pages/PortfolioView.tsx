@@ -1,5 +1,6 @@
 "use client";
 
+import { ProfileCompletionRing } from "@/components/gamification/ProfileCompletionRing";
 import { PortfolioUploadClient } from "@/components/portfolio/PortfolioUploadClient";
 import { ContentCard, PageHero } from "@/components/ui/PageHero";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -14,6 +15,7 @@ export function PortfolioView() {
         className="from-amber-500 via-orange-500 to-rose-500 shadow-amber-500/15"
       />
       <p className="text-sm leading-relaxed text-pathwise-muted">{t("portfolio.intro")}</p>
+      <ProfileCompletionRing />
       <ContentCard>
         <PortfolioUploadClient />
       </ContentCard>
