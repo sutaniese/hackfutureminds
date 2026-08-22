@@ -16,7 +16,7 @@ import {
   weakSpots,
 } from "@/lib/learning/recommend";
 import { recordAttempt, upsertRosterEntry } from "@/lib/learning/store";
-import { attemptsLabel, tasksLabel } from "@/lib/learning/plural";
+import { attemptsLabel, ofTasksLabel, tasksLabel } from "@/lib/learning/plural";
 import { MATERIAL_KIND_LABELS, isAnswerCorrect, taskCorrectLabel } from "@/lib/learning/types";
 import type { Task } from "@/lib/learning/types";
 import { AnswerField } from "./AnswerField";
@@ -218,7 +218,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
           <StatTile
             label="Освоено"
             value={`${mastery}%`}
-            hint={`${solvedCount} из ${tasksLabel(topic.tasks.length)}`}
+            hint={`${solvedCount} из ${ofTasksLabel(topic.tasks.length)}`}
             tone="accent"
           />
           <StatTile

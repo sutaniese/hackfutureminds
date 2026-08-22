@@ -14,6 +14,9 @@ export function withPlural(count: number, one: string, few: string, many: string
 
 export const attemptsLabel = (count: number) => withPlural(count, "попытка", "попытки", "попыток");
 export const tasksLabel = (count: number) => withPlural(count, "задание", "задания", "заданий");
+/** Родительный падеж после «из N»: из 1 задания, из 5 заданий. */
+export const ofTasksLabel = (count: number) =>
+  `${count} ${count % 10 === 1 && count % 100 !== 11 ? "задания" : "заданий"}`;
 export const topicsLabel = (count: number) => withPlural(count, "тема", "темы", "тем");
 export const studentsLabel = (count: number) => withPlural(count, "ученик", "ученика", "учеников");
 export const daysLabel = (count: number) => withPlural(count, "день", "дня", "дней");

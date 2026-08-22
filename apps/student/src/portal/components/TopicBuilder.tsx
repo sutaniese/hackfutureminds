@@ -7,6 +7,7 @@ import {
   saveCustomTopic,
   subscribeLearning,
 } from '@/lib/learning/store'
+import { plural, tasksLabel } from '@/lib/learning/plural'
 import type { Difficulty, Grade, Task, Topic } from '@/lib/learning/types'
 
 const GRADES: Grade[] = [7, 8, 9, 10, 11, 12]
@@ -33,10 +34,22 @@ function emptyTask(index: number): DraftTask {
   }
 }
 
+const TRANSLIT: Record<string, string> = {
+  а: 'a', б: 'b', в: 'v', г: 'g', ғ: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z',
+  и: 'i', й: 'i', к: 'k', қ: 'q', л: 'l', м: 'm', н: 'n', ң: 'n', о: 'o', ө: 'o',
+  п: 'p', р: 'r', с: 's', т: 't', у: 'u', ұ: 'u', ү: 'u', ф: 'f', х: 'h', һ: 'h',
+  ц: 'c', ч: 'ch', ш: 'sh', щ: 'sch', ъ: '', ы: 'y', і: 'i', ь: '', э: 'e',
+  ю: 'yu', я: 'ya',
+}
+
+/** ASCII-слаг: id темы попадает в URL, поэтому кириллицу транслитерируем. */
 function slugify(value: string): string {
   const base = value
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .split('')
+    .map((char) => TRANSLIT[char] ?? char)
+    .join('')
+    .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 40)
   return base || 'topic'
@@ -150,7 +163,9 @@ export function TopicBuilder() {
       }
 
       saveCustomTopic(topic)
-      setMessage(`Тема «${topic.title}» опубликована: ${builtTasks.length} заданий доступны ученикам.`)
+      setMessage(
+        `Тема «${topic.title}» опубликована: ${tasksLabel(builtTasks.length)} ${plural(builtTasks.length, "доступно", "доступны", "доступны")} ученикам.`,
+      )
       resetForm()
     },
     [grades, resetForm, skills, subjectId, summary, tasks, theory, title],
@@ -404,7 +419,7 @@ export function TopicBuilder() {
                 </div>
                 <p className="mt-2 text-xs leading-5 text-pathwise-muted">{topic.summary}</p>
                 <p className="mt-2 text-xs font-semibold text-pathwise-muted">
-                  Классы: {topic.grades.join(', ')} · заданий: {topic.tasks.length}
+                  Классы: {topic.grades.join(', ')} · {tasksLabel(topic.tasks.length)}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-3">
                   <Link

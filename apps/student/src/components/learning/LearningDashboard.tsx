@@ -16,7 +16,7 @@ import {
   weakSpots,
 } from "@/lib/learning/recommend";
 import { LEVEL_LABELS } from "@/lib/learning/store";
-import { attemptsLabel, daysLabel, tasksLabel } from "@/lib/learning/plural";
+import { attemptsLabel, daysLabel, ofTasksLabel, tasksLabel } from "@/lib/learning/plural";
 import { LEARNING_GOALS } from "@/lib/learning/types";
 import { EmptyState, Pill, ProgressBar, StatTile } from "./LearningUI";
 import { useLearning } from "./useLearning";
@@ -167,7 +167,7 @@ export function LearningDashboard() {
           <StatTile
             label="Освоено"
             value={`${summary.mastery}%`}
-            hint={`${summary.solvedTasks} из ${tasksLabel(summary.totalTasks)}`}
+            hint={`${summary.solvedTasks} из ${ofTasksLabel(summary.totalTasks)}`}
             tone="accent"
           />
           <StatTile
