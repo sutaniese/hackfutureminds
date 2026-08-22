@@ -1,8 +1,22 @@
 @import "tailwindcss";
 
+/* PathWise student app — design tokens (mobile-first, 48px tap baseline) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --pw-tap: 3rem; /* 48px */
+  --pw-radius-card: 0.875rem;
+  --pw-radius-pill: 9999px;
+  --pw-nav: 3.5rem; /* 56px bar + safe area */
+  --pw-a11y-top: 2.75rem;
+  --background: #f4f6fb;
+  --foreground: #0f172a;
+  --pw-primary: #1d4ed8;
+  --pw-primary-foreground: #f8fafc;
+  --pw-surface: #ffffff;
+  --pw-muted: #64748b;
+  --pw-border: #e2e8f0;
+  --pw-shadow: 0 1px 3px rgb(15 23 42 / 0.08);
+  --transition-ui: 200ms ease;
+  --focus-ring: 0 0 0 3px var(--pw-primary);
 }
 
 @theme inline {
@@ -10,17 +24,60 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-pw-primary: var(--pw-primary);
+  --color-pw-surface: var(--pw-surface);
+  --color-pw-muted: var(--pw-muted);
+  --color-pw-border: var(--pw-border);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* High contrast — toggled via .high-contrast on html (see ThemeInit) */
+html.high-contrast {
+  --background: #fffef8;
+  --foreground: #000;
+  --pw-surface: #fff;
+  --pw-primary: #0000c4;
+  --pw-muted: #1a1a1a;
+  --pw-border: #000;
+  --pw-shadow: 0 2px 0 #000;
+}
+
+html.high-contrast *:focus-visible {
+  outline: 3px solid #000;
+  outline-offset: 2px;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Safe area + main scroll area padding for bottom nav ( shell adds pb ) */
+@supports (padding: max(0px)) {
+  .pw-pb-nav {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 4.5rem);
+  }
+  .pw-pt-safe {
+    padding-top: max(env(safe-area-inset-top, 0px), 0.5rem);
+  }
+}
+
+.pw-tap {
+  min-height: var(--pw-tap);
+  min-width: var(--pw-tap);
+}
+
+.pw-card {
+  border-radius: var(--pw-radius-card);
+  background: var(--pw-surface);
+  box-shadow: var(--pw-shadow);
+  border: 1px solid var(--pw-border);
+  transition: box-shadow var(--transition-ui), transform var(--transition-ui);
 }
