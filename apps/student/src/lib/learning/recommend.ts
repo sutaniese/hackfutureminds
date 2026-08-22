@@ -17,12 +17,30 @@ export const DIAGNOSTIC_SIZE = 8;
 
 /* ------------------------------ диагностика ----------------------------- */
 
-/** Пул заданий для диагностики: предмет + класс, с запасом по соседним классам. */
+/** Насколько тема далека от класса ученика — 0, если класс входит в тему. */
+function gradeDistance(topic: Topic, grade: Grade): number {
+  return Math.min(...topic.grades.map((item) => Math.abs(item - grade)));
+}
+
+/**
+ * Пул заданий для диагностики: сначала темы своего класса. Если их не хватает
+ * на весь тест (например, у 11 класса по предмету одна профильная тема),
+ * добираем ближайшими классами — база прошлых лет тоже входит в ЕНТ.
+ */
 export function diagnosticPool(topics: readonly Topic[], subjectId: string, grade: Grade): Task[] {
   const subjectTopics = topicsForSubject(topics, subjectId);
-  const exact = subjectTopics.filter((topic) => topic.grades.includes(grade));
-  const source = exact.length > 0 ? exact : subjectTopics;
-  return source.flatMap((topic) => topic.tasks);
+  const primary = subjectTopics
+    .filter((topic) => topic.grades.includes(grade))
+    .flatMap((topic) => topic.tasks);
+
+  if (primary.length >= DIAGNOSTIC_SIZE) return primary;
+
+  const extra = subjectTopics
+    .filter((topic) => !topic.grades.includes(grade))
+    .sort((a, b) => gradeDistance(a, grade) - gradeDistance(b, grade))
+    .flatMap((topic) => topic.tasks);
+
+  return [...primary, ...extra];
 }
 
 /** Следующий уровень сложности по правилу «верно — сложнее, неверно — легче». */
