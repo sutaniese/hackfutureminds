@@ -36,7 +36,7 @@ type Stage = "profile" | "test" | "result";
 export function DiagnosticsFlow() {
   const router = useRouter();
   const { user } = useAuth();
-  const { awardXp, setProfileCompletion } = useUserProgress();
+  const { awardXp, earnBadge, setProfileCompletion } = useUserProgress();
 
   const [stage, setStage] = useState<Stage>("profile");
   const [grade, setGrade] = useState<Grade>(9);
@@ -91,6 +91,7 @@ export function DiagnosticsFlow() {
       setResult(evaluated);
       setStage("result");
       awardXp(40, `learning_diagnostic_${subjectId}`);
+      earnBadge("level_checked");
       setProfileCompletion(60);
 
       if (user?.email) {
@@ -113,7 +114,7 @@ export function DiagnosticsFlow() {
         });
       }
     },
-    [awardXp, goals, grade, setProfileCompletion, subjectId, user?.email, user?.name],
+    [awardXp, earnBadge, goals, grade, setProfileCompletion, subjectId, user?.email, user?.name],
   );
 
   const submitAnswer = useCallback(() => {

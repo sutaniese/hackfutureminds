@@ -8,7 +8,11 @@ export type BadgeId =
   | "grant_hunter"
   | "fully_funded"
   | "packaged"
-  | "all_done";
+  | "all_done"
+  | "level_checked"
+  | "topic_master"
+  | "task_marathon"
+  | "gap_closed";
 
 export type UserProgress = {
   xp: number;
@@ -63,6 +67,30 @@ export const BADGES: Record<BadgeId, BadgeInfo> = {
     icon: "★",
     name: "Готов к мечте",
     description: "Все три артефакта завершены.",
+  },
+  level_checked: {
+    id: "level_checked",
+    icon: "◉",
+    name: "Уровень определён",
+    description: "Диагностика знаний пройдена.",
+  },
+  topic_master: {
+    id: "topic_master",
+    icon: "◆",
+    name: "Тема закрыта",
+    description: "Все задания темы решены верно.",
+  },
+  task_marathon: {
+    id: "task_marathon",
+    icon: "▲",
+    name: "Марафон",
+    description: "Решено 10 заданий.",
+  },
+  gap_closed: {
+    id: "gap_closed",
+    icon: "✚",
+    name: "Пробел закрыт",
+    description: "Слабый навык поднят выше 70%.",
   },
 };
 

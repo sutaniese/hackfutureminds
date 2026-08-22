@@ -8,6 +8,7 @@ import { useUserProgress } from "@/components/gamification/UserProgressProvider"
 import { readJsonResponse } from "@/lib/http-json";
 import { findSubject, subjectTitle, topicsForSubject } from "@/lib/learning/catalog";
 import {
+  isTopicComplete,
   learningSummary,
   nextTask,
   topicAccuracy,
@@ -43,7 +44,7 @@ const TABS: { id: Tab; label: string }[] = [
 export function TopicPractice({ topicId }: { topicId: string }) {
   const { profile, state, topics, ready } = useLearning();
   const { user } = useAuth();
-  const { awardXp } = useUserProgress();
+  const { awardXp, earnBadge } = useUserProgress();
 
   const [tab, setTab] = useState<Tab>("practice");
   const [answer, setAnswer] = useState("");
@@ -91,7 +92,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
           ? current.options[Number(answer)] ?? answer
           : answer;
 
-      recordAttempt({
+      const nextState = recordAttempt({
         taskId: current.id,
         topicId: current.topicId,
         skill: current.skill,
@@ -102,6 +103,21 @@ export function TopicPractice({ topicId }: { topicId: string }) {
 
       if (correct) {
         awardXp(current.difficulty * 10, `learning_task_${current.id}`);
+
+        if (isTopicComplete(topic, nextState)) earnBadge("topic_master");
+
+        const solvedTotal = Object.values(nextState.topics).reduce(
+          (sum, item) => sum + item.solved.length,
+          0,
+        );
+        if (solvedTotal >= 10) earnBadge("task_marathon");
+
+        // Навык считается закрытым, когда он ушёл из списка слабых мест.
+        const wasWeak = weakSpots(topics, state, 20).some((spot) => spot.skill === current.skill);
+        const stillWeak = weakSpots(topics, nextState, 20).some(
+          (spot) => spot.skill === current.skill,
+        );
+        if (wasWeak && !stillWeak) earnBadge("gap_closed");
       }
 
       // Локальный разбор показываем сразу, AI-версию подставляем при успехе запроса.
@@ -156,7 +172,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
         syncRoster();
       }
     },
-    [answer, awardXp, profile?.grade, syncRoster, topic],
+    [answer, awardXp, earnBadge, profile?.grade, state, syncRoster, topic, topics],
   );
 
   const goNext = useCallback(() => {
