@@ -81,3 +81,28 @@ body {
   border: 1px solid var(--pw-border);
   transition: box-shadow var(--transition-ui), transform var(--transition-ui);
 }
+
+.pw-skip {
+  position: fixed;
+  z-index: 200;
+  top: 0.5rem;
+  left: 0.5rem;
+  min-height: var(--pw-tap);
+  min-width: 10rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pw-surface);
+  color: var(--foreground);
+  border: 2px solid var(--pw-primary);
+  border-radius: 0.5rem;
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateX(-200vw);
+  transition: transform var(--transition-ui);
+}
+.pw-skip:focus,
+.pw-skip:focus-visible {
+  transform: translateX(0);
+  outline: none;
+}
