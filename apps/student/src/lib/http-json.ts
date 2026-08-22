@@ -5,7 +5,6 @@ export function looksLikeHttpHtmlFailureMessage(message: string): boolean {
     u.includes("<!doctype") ||
     u.includes("unexpected token") ||
     u.includes("not valid json") ||
-    u.includes("instead of json") ||
     u.includes("response was html") ||
     (u.includes("html") && u.includes("not json")) ||
     (u.includes("request failed") && /\b(4\d\d|5\d\d)\b/.test(u))

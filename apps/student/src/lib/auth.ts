@@ -293,8 +293,16 @@ export function isStrongEnoughPassword(password: string): boolean {
 export function getCurrentUser(): PublicUser | null {
   const email = readSessionEmail();
   if (!email) return null;
+  return getPublicUserByEmail(email);
+}
+
+/** Public card for an account stored in this browser (same as `getCurrentUser` when session matches). */
+export function getPublicUserByEmail(email: string): PublicUser | null {
+  if (!hasWindow()) return null;
+  const key = normalizeEmail(email);
+  if (!key) return null;
   const users = readUsers();
-  const user = users[email];
+  const user = users[key];
   if (!user) return null;
   return toPublic(user);
 }

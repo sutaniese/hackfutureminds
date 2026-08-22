@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { tryGenerateWithGroq } from "@/lib/generate/groq-optional";
 import { generateDeterministic } from "@/lib/generate/deterministic";
 import { parseGenerateRequest } from "@/lib/generate/parse-request";
+import { queryLiveGrants, type LiveGrantRow } from "@/lib/grants-live-query";
 import type {
   GenerateLanguage,
   GenerateRequest,
@@ -10,17 +11,10 @@ import type {
 } from "@/types/generate";
 
 export const runtime = "nodejs";
+/** Vercel: allow enough time for Groq + internal grants fetch (ignored outside Vercel). */
+export const maxDuration = 60;
 
-type LiveGrant = {
-  id: string;
-  name: string;
-  amount_kzt: number | null;
-  amount_usd: number | null;
-  level: string;
-  fields: string[];
-  gpa_min: number | null;
-  deadline_month: string | null;
-};
+type LiveGrant = LiveGrantRow;
 
 function inferField(payload: GenerateRequest) {
   const text = [
@@ -48,27 +42,16 @@ function inferGpa(payload: GenerateRequest) {
   return match ? Number(match[1].replace(",", ".")) : 0;
 }
 
-async function loadRelevantGrants(request: Request, payload: GenerateRequest) {
-  const origin = new URL(request.url).origin;
+async function loadRelevantGrants(payload: GenerateRequest) {
   const field = inferField(payload);
   const level = inferLevel(payload);
   const gpa = inferGpa(payload);
-  const url = new URL("/api/v1/grants", origin);
-  url.searchParams.set("field", field);
-  url.searchParams.set("level", level);
-
-  const response = await fetch(url, { cache: "no-store" });
-  if (!response.ok) return [];
-  const raw = await response.text().catch(() => "");
-  const trimmed = raw.trim();
-  if (!trimmed || trimmed.startsWith("<")) return [];
-  let json: { data?: LiveGrant[] };
-  try {
-    json = JSON.parse(raw) as { data?: LiveGrant[] };
-  } catch {
-    return [];
-  }
-  const grants = Array.isArray(json.data) ? json.data : [];
+  const { data: grants } = await queryLiveGrants({
+    field,
+    level,
+    type: null,
+    country: null,
+  });
   return grants.filter((grant) => {
     const fieldMatch = grant.fields.includes("any") || grant.fields.includes(field);
     const levelMatch = grant.level === "any" || grant.level === level;
@@ -210,6 +193,7 @@ function withLiveGrants(
  * deterministic local logic (demo-safe, no key required).
  */
 export async function POST(request: Request) {
+  let payload: GenerateRequest | undefined;
   try {
     let json: unknown;
     try {
@@ -221,7 +205,6 @@ export async function POST(request: Request) {
       );
     }
 
-    let payload;
     try {
       payload = parseGenerateRequest(json);
     } catch (e) {
@@ -231,7 +214,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const relevantGrants = await loadRelevantGrants(request, payload);
+    const relevantGrants = await loadRelevantGrants(payload);
     const payloadWithGrants = {
       ...payload,
       available_grants: relevantGrants,
@@ -248,9 +231,26 @@ export async function POST(request: Request) {
       withLiveGrants(generateDeterministic(payloadWithGrants), relevantGrants, payload),
     );
   } catch (e) {
+    console.error("[generate]", e);
+    if (payload) {
+      try {
+        const minimal = {
+          ...payload,
+          available_grants: [] as LiveGrant[],
+        } as GenerateRequest & { available_grants: LiveGrant[] };
+        return NextResponse.json(
+          withLiveGrants(generateDeterministic(minimal), [], payload),
+        );
+      } catch (e2) {
+        console.error("[generate] deterministic recovery failed", e2);
+      }
+    }
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : "Generate route failed" },
-      { status: 500 }
+      {
+        error: e instanceof Error ? e.message : "Generate route failed",
+        hint: "recovery_failed",
+      },
+      { status: 200 },
     );
   }
 }

@@ -35,6 +35,12 @@ const matchColor: Record<string, string> = {
   low: "border-slate-200 bg-white text-pathwise-muted",
 };
 
+function apiUrl(path: string) {
+  return typeof window !== "undefined"
+    ? new URL(path, window.location.origin).toString()
+    : path;
+}
+
 function mapSubjectLabel(t: (k: string) => string, id: string): string {
   return t(`onboard.subjects.${id}` as "onboard.subjects.math");
 }
@@ -50,7 +56,7 @@ async function fetchProgramRecommendations(
   language: "en" | "kk" | "ru",
   careerTitles: string[] = [],
 ): Promise<UniversityProgramRecommendation[]> {
-  const res = await fetch("/api/recommend-programs", {
+  const res = await fetch(apiUrl("/api/recommend-programs"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ onboarding, language, careerTitles }),
@@ -109,18 +115,32 @@ export function ResultsGenerateClient() {
       mapSubjectId: (id) => mapSubjectLabel(t, id),
     });
     try {
-      const res = await fetch("/api/generate", {
+      const res = await fetch(apiUrl("/api/generate"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const json = await readJsonResponse<GenerateResponse>(res);
+      const json = await readJsonResponse<GenerateResponse & { error?: string; hint?: string }>(res);
       if (!res.ok) {
         const apiMsg = (json as { error?: string }).error || "";
         setError(
           looksLikeHttpHtmlFailureMessage(apiMsg)
             ? t("results.errHtml")
             : apiMsg || t("results.errApi", { e: String(res.status) }),
+        );
+        return;
+      }
+      if (
+        json &&
+        typeof json === "object" &&
+        "error" in (json as object) &&
+        !("career_map" in (json as object))
+      ) {
+        const apiMsg = (json as { error?: string }).error || "";
+        setError(
+          looksLikeHttpHtmlFailureMessage(apiMsg)
+            ? t("results.errHtml")
+            : apiMsg || t("results.errApi", { e: "generate" }),
         );
         return;
       }

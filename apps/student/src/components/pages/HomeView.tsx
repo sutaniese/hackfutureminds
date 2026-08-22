@@ -11,6 +11,7 @@ import {
 import { useSelectedRole } from "@/components/shell/useSelectedRole";
 import { useAuth } from "@/components/shell/useAuth";
 import { useI18n } from "@/i18n/I18nProvider";
+import { profileHref } from "@/lib/profile-slug";
 
 type EntryCard = {
   role: UserRole;
@@ -118,7 +119,7 @@ export function HomeView() {
               {t("home.landing.subtitle")}
             </p>
 
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link
                 href={isAuthed ? ROLE_ENTRY_PATHS[user?.role ?? "student"] : "/register"}
                 className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#111827] px-6 text-sm font-black text-white no-underline shadow-sm transition hover:-translate-y-0.5 hover:bg-[#6C63FF]"
@@ -131,6 +132,14 @@ export function HomeView() {
               >
                 {t("home.landing.ctaSecondary")}
               </Link>
+              {isAuthed && user?.email ? (
+                <Link
+                  href={profileHref(user.email)}
+                  className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#6C63FF]/35 bg-[#6C63FF]/10 px-6 text-sm font-black text-[#554dd6] no-underline shadow-sm transition hover:-translate-y-0.5 hover:bg-[#6C63FF]/15"
+                >
+                  {t("home.profileCta")}
+                </Link>
+              ) : null}
             </div>
 
             <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
