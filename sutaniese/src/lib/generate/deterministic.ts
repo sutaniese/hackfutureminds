@@ -1,4 +1,5 @@
 import { allGrants } from "@/lib/grants-data";
+import { buildGenerateRequest } from "@/lib/build-generate-request";
 import type { GenerateRequest, GenerateResponse } from "@/types/generate";
 import type { GrantRecord } from "@/types/grants";
 import { ONBOARDING_SUBJECT_OPTIONS } from "@/lib/onboarding-constants";
@@ -276,9 +277,10 @@ function portfolioBlock(
   return `Standout: ${cleaned} — phrased for KZ and international applications (PathWise — demo).`;
 }
 
-export function generateDeterministic(
-  request: GenerateRequest
-): GenerateResponse {
+function normalizeForGenerateRequest(request: GenerateRequest): {
+  reqNorm: GenerateRequest;
+  onboarding: OnboardingAnswers | null;
+} {
   const onboarding = request.onboarding ?? null;
   const interests =
     request.interests?.length
@@ -304,6 +306,31 @@ export function generateDeterministic(
       request.target_university ||
       (onboarding ? `Target based on city: ${onboarding.city || "KZ"}` : ""),
   };
+  return { reqNorm, onboarding };
+}
+
+/**
+ * Ranks all grants from `api/grants.json` the same way as `POST /api/generate` financial matching.
+ * For UI lists (e.g. /grants). If onboarding is null, every row is a neutral "low" match, sorted A–Z.
+ */
+export function getRankedGrantsForOnboarding(
+  onboarding: OnboardingAnswers | null
+): { g: GrantRecord; score: number; match: "low" | "medium" | "high" }[] {
+  if (!onboarding) {
+    return allGrants()
+      .map((g) => ({ g, score: 0, match: "low" as const }))
+      .sort((a, b) => a.g.name.localeCompare(b.g.name));
+  }
+  const request = buildGenerateRequest(onboarding, { language: "en" });
+  const { reqNorm, onboarding: ob } = normalizeForGenerateRequest(request);
+  const blob = textBlob(reqNorm, ob);
+  return pickGrants(reqNorm, blob, ob).sorted;
+}
+
+export function generateDeterministic(
+  request: GenerateRequest
+): GenerateResponse {
+  const { reqNorm, onboarding } = normalizeForGenerateRequest(request);
 
   const blob = textBlob(reqNorm, onboarding);
   const three = pickThreeCareers(blob);
