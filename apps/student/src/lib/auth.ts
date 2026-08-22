@@ -108,11 +108,20 @@ function bytesToB64(bytes: ArrayBuffer | Uint8Array): string {
   const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   let bin = "";
   for (let i = 0; i < view.length; i++) bin += String.fromCharCode(view[i]);
-  return typeof btoa === "function" ? btoa(bin) : Buffer.from(bin, "binary").toString("base64");
+  if (typeof btoa === "function") return btoa(bin);
+  if (typeof Buffer !== "undefined") return Buffer.from(bin, "binary").toString("base64");
+  throw new AuthFailure("no-crypto", "Base64 is not available in this environment.");
 }
 
 function b64ToBytes(b64: string): Uint8Array {
-  const bin = typeof atob === "function" ? atob(b64) : Buffer.from(b64, "base64").toString("binary");
+  let bin: string;
+  if (typeof atob === "function") {
+    bin = atob(b64);
+  } else if (typeof Buffer !== "undefined") {
+    bin = Buffer.from(b64, "base64").toString("binary");
+  } else {
+    throw new AuthFailure("no-crypto", "Base64 decode is not available in this environment.");
+  }
   const out = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
   return out;

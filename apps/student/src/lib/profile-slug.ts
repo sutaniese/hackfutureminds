@@ -3,9 +3,13 @@
  * Data stays browser-local — the same slug on another device shows “not found”
  * unless that browser has the same account.
  *
- * Uses `Buffer` when available (Node / Next SSR) so we never rely on `atob`/`btoa`
- * during server render — those globals are missing in some Node runtimes.
+ * Server (no `window`): use Node `Buffer` — `atob`/`btoa` are missing on some Node runtimes.
+ * Browser: always use `btoa`/`atob` — never touch `Buffer` (Next client bundles may not polyfill it).
  */
+
+function canUseNodeBuffer(): boolean {
+  return typeof window === "undefined" && typeof Buffer !== "undefined";
+}
 
 function utf8Encode(s: string): Uint8Array {
   return new TextEncoder().encode(s);
@@ -41,7 +45,7 @@ function base64UrlToBytesBrowser(slug: string): Uint8Array | null {
 
 export function emailToProfileSlug(email: string): string {
   const norm = email.trim().toLowerCase();
-  if (typeof Buffer !== "undefined") {
+  if (canUseNodeBuffer()) {
     return Buffer.from(norm, "utf8").toString("base64url");
   }
   return bytesToBase64UrlBrowser(utf8Encode(norm));
@@ -56,7 +60,7 @@ export function profileSlugToEmail(slug: string): string | null {
     return null;
   }
 
-  if (typeof Buffer !== "undefined") {
+  if (canUseNodeBuffer()) {
     try {
       const buf = Buffer.from(raw, "base64url");
       if (!buf.length) return null;
