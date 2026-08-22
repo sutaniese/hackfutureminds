@@ -11,6 +11,10 @@ Next.js (App Router) frontend with Tailwind CSS. API-style generation is impleme
 | `api/` | Server-side data (e.g. hardcoded grant JSON) — to be filled in a later step |
 | `student_dev_EN.md` | Product and API spec for the student experience |
 
+## Mobile shell (in-app)
+
+All primary UI is under the `(mobile)` route group with a `max-w-md` column, a **fixed bottom navigation** (min ~48px targets), a **top bar** (high contrast, voice preference, and link to help), a **skip link** to `#main`, and shared `pw-` design tokens in `src/app/globals.css` (placeholders: onboarding, results, grants, portfolio; full flows come in later steps).
+
 ## Scripts
 
 | Command | Description |
