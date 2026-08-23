@@ -61,43 +61,43 @@ function professionTrack(answers: OnboardingAnswers, careerTitles: string[] = []
   const text = subjectText(answers, careerTitles);
   if (/software|developer|data|ai|computer|cs|it|информ|код|python|math|матем/.test(text)) {
     return {
-      label: "Software, AI and data",
+      label: "Разработка, AI и данные",
       keywords: ["computer", "software", "data", "mathematics", "information", "engineering", "physics", "electrical"],
-      reason: "Your answers point to math, informatics, coding, data, or analytical work.",
+      reason: "Ваши ответы указывают на математику, информатику, программирование и работу с данными.",
     };
   }
   if (/medicine|medical|doctor|health|bio|chem|мед|био|хим/.test(text)) {
     return {
-      label: "Medicine, health and biotechnology",
+      label: "Медицина, здоровье и биотехнологии",
       keywords: ["medicine", "medical", "health", "biology", "chemical", "biomedical", "pharmacy"],
-      reason: "Your interests connect to biology, chemistry, health, or medical careers.",
+      reason: "Ваши интересы связаны с биологией, химией и медицинскими профессиями.",
     };
   }
   if (/business|finance|econom|management|entrepreneur|маркет|бизнес|эконом/.test(text)) {
     return {
-      label: "Business, economics and management",
+      label: "Бизнес, экономика и управление",
       keywords: ["business", "finance", "economics", "management", "accounting", "marketing"],
-      reason: "Your future vision fits business, finance, management, or entrepreneurship.",
+      reason: "Ваши цели ближе к бизнесу, финансам, управлению и предпринимательству.",
     };
   }
   if (/law|policy|politic|international|history|debate|прав|истор|межд/.test(text)) {
     return {
-      label: "Law, policy and international relations",
+      label: "Право, политика и международные отношения",
       keywords: ["law", "political", "international", "relations", "history", "policy"],
-      reason: "Your profile shows interest in society, law, history, debate, or international work.",
+      reason: "В профиле виден интерес к обществу, праву, истории, дебатам и международной работе.",
     };
   }
   if (/design|art|media|creative|writing|литера|дизайн|твор/.test(text)) {
     return {
-      label: "Creative industries and communication",
+      label: "Креативные индустрии и коммуникации",
       keywords: ["media", "design", "communication", "languages", "literature", "culture", "journalism"],
-      reason: "Your answers suggest creative, communication, language, or media work.",
+      reason: "Ваши ответы указывают на творческие профессии, языки и медиа.",
     };
   }
   return {
-    label: "Interdisciplinary high-fit programs",
+    label: "Междисциплинарные программы",
     keywords: ["engineering", "business", "computer", "mathematics", "international", "economics"],
-    reason: "Your answers are broad, so the matcher prioritizes flexible programs with strong outcomes.",
+    reason: "Ответы охватывают разные области, поэтому подбираем гибкие программы с сильным результатом.",
   };
 }
 

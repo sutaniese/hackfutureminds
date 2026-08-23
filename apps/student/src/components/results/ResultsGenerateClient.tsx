@@ -29,6 +29,19 @@ function readOnboarding(): OnboardingAnswers | null {
   } catch { return null; }
 }
 
+const UNIVERSITY_TYPE_RU: Record<string, string> = {
+  public: "государственный",
+  private: "частный",
+};
+
+/** 1 год · 2 года · 5 лет */
+function yearsLabel(count: number): string {
+  const abs = Math.abs(count) % 100;
+  const last = abs % 10;
+  const word = abs > 10 && abs < 20 ? "лет" : last === 1 ? "год" : last > 1 && last < 5 ? "года" : "лет";
+  return `${count} ${word}`;
+}
+
 const matchColor: Record<string, string> = {
   high: "border-[#d7d3ff] bg-[#f1efff] text-[#554dd6]",
   medium: "border-amber-300/50 bg-amber-100/60 text-amber-900",
@@ -279,25 +292,25 @@ export function ResultsGenerateClient() {
                     <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-bold text-slate-600">
                       {typeof item.rank === "number" ? (
                         <span className="rounded-full bg-[#6C63FF]/10 px-2.5 py-1 text-[#554dd6]">
-                          Rank #{item.rank}
+                          №{item.rank} в рейтинге
                         </span>
                       ) : null}
                       <span className="rounded-full bg-slate-100 px-2.5 py-1">
                         {item.language}
                       </span>
                       <span className="rounded-full bg-slate-100 px-2.5 py-1">
-                        {item.durationYears} years
+                        {yearsLabel(item.durationYears)}
                       </span>
                       {item.universityType ? (
                         <span className="rounded-full bg-slate-100 px-2.5 py-1">
-                          {item.universityType}
+                          {UNIVERSITY_TYPE_RU[item.universityType] ?? item.universityType}
                         </span>
                       ) : null}
                     </div>
                     {item.matchSummary ? (
                       <div className="mt-3 rounded-2xl border border-[#6C63FF]/15 bg-[#6C63FF]/5 p-3">
                         <p className="text-[11px] font-black uppercase tracking-[0.14em] text-pathwise-accent-strong">
-                          Profession fit
+Почему подходит
                         </p>
                         <p className="mt-1 text-xs leading-5 text-slate-700">{item.matchSummary}</p>
                       </div>

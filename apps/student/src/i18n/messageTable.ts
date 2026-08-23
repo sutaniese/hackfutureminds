@@ -416,7 +416,7 @@ const T = {
 
   "gam.profileOk": TR("Профиль заполнен", "Profile complete", "Профиль толық"),
   "gam.fill": TR("Портфолио", "Portfolio fill", "Портфолио"),
-  "gam.grantsN": TR("+{{n}} грант(а) вам", "+{{n}} grant(s) for you", "+{{n}} грант(тар)"),
+  "gam.grantsN": TR("Подобрано грантов: {{n}}", "Grants matched: {{n}}", "Табылған гранттар: {{n}}"),
   "gam.onboard": TR("Заполните анкету — и профиль соберётся", "Fill in the profile form to build your profile", "Анкетаны толтырыңыз — профиль жиналады"),
 
   "portfolio.title": TR("Портфолио", "Portfolio", "Портфолио"),
