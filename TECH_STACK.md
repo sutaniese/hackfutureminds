@@ -1,8 +1,20 @@
 # Технологический стек PathWise (teñ)
 
-Документ описывает фактический стек монорепозитория: единое Next.js-приложение
-для школьника, родителя, учителя и Enterprise, плюс вспомогательный пайплайн
-грантов. Источник правды — `package.json`, конфиги и код, а не внешние планы.
+## Для слайда
+
+**Стек**
+
+- Frontend: Next.js 15, React, TypeScript, Tailwind CSS
+- Backend: Next.js API Routes
+- AI: Groq, Google Gemini
+- Данные: localStorage, Supabase
+- Mobile: Capacitor (Android)
+- Deploy: Vercel
+
+---
+
+Документ ниже — расширенная версия по репозиторию. Источник правды —
+`package.json`, конфиги и код, а не внешние планы.
 
 ## Обзор
 
