@@ -1,10 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { LIVE_GRANTS_FALLBACK } from "@/data/live-grants-fallback-data";
-import { formatGrantAmountLine } from "@/lib/format-grant";
+import { formatDeadlineRu, formatGrantAmountLine } from "@/lib/format-grant";
 import { looksLikeHttpHtmlFailureMessage, readJsonResponse } from "@/lib/http-json";
 import { useI18n } from "@/i18n/I18nProvider";
 import type { GrantRecord, GrantType } from "@/types/grants";
@@ -88,6 +87,13 @@ function staticFallbackRows(): GrantRecord[] {
   return Array.isArray(arr) ? arr.map(toGrantRecord) : [];
 }
 
+const LEVEL_RU: Record<string, string> = {
+  bachelor: "бакалавриат",
+  master: "магистратура",
+  phd: "докторантура",
+  any: "любой",
+};
+
 function toGrantRecord(grant: LiveGrant): GrantRecord {
   const type: GrantType = grant.type === "one-time" ? "one_time" : grant.type;
   const amountKzt = grant.amount_kzt ?? (grant.amount_usd ? grant.amount_usd * 450 : null);
@@ -107,19 +113,19 @@ function toGrantRecord(grant: LiveGrant): GrantRecord {
     amountUsd: grant.amount_usd,
     amountEur: null,
     amountNarrative: grant.amount_label,
-    deadline: grant.deadline_label ?? grant.deadline_month ?? "Check official source",
+    deadline: grant.deadline_label ?? grant.deadline_month ?? "Уточните на сайте",
     url: grant.url,
     eligibilityTags: Array.from(new Set(tags)),
     kazakhstanRelevance: [
-      `Official source: ${grant.source}.`,
-      grant.country ? `Country: ${grant.country}.` : "",
-      grant.level !== "any" ? `Level: ${grant.level}.` : "Level: any.",
-      grant.gpa_min ? `Minimum GPA: ${grant.gpa_min}.` : "",
-      grant.language_req ? `Language: ${grant.language_req}.` : "",
+      grant.country ? `Страна: ${grant.country}.` : "",
+      `Уровень: ${LEVEL_RU[grant.level] ?? grant.level}.`,
+      grant.gpa_min ? `Минимальный GPA: ${grant.gpa_min}.` : "",
+      grant.language_req ? `Язык: ${grant.language_req}.` : "",
+      `Источник: ${grant.source}.`,
     ].filter(Boolean).join(" "),
     suggestedMatchBlurb: grant.eligible.length
-      ? `Eligibility: ${grant.eligible.map((item) => item.replaceAll("_", " ")).join(", ")}.`
-      : "Eligibility details are available on the official source page.",
+      ? `Кому подходит: ${grant.eligible.map((item) => item.replaceAll("_", " ")).join(", ")}.`
+      : "Условия участия — на странице официального источника.",
     coverageContributionKzt: amountKzt ?? 0,
   };
 }
@@ -178,7 +184,7 @@ export function GrantsListClient() {
   const [matchP, setMatchP] = useState<MatchPill>("all");
   const [sort, setSort] = useState<SortKey>("match");
   const [rows, setRows] = useState<GrantRecord[]>([]);
-  const [source, setSource] = useState<"live" | "fallback" | "loading">("loading");
+  const [, setSource] = useState<"live" | "fallback" | "loading">("loading");
   const [error, setError] = useState<string | null>(null);
 
   const sync = useCallback(() => { setOnboarding(readOnboarding()); }, []);
@@ -318,18 +324,15 @@ export function GrantsListClient() {
     <div className="flex w-full min-w-0 flex-col gap-6 pb-2">
       {/* Hero */}
       <section
-        className="pw-soft-panel relative overflow-hidden rounded-[2rem] p-6 text-white md:p-10"
+        className="pw-soft-panel pw-reveal relative overflow-hidden rounded-[2rem] p-6 md:p-10"
         aria-labelledby="grants-hero-title"
       >
-        <div className="absolute inset-0 opacity-[0.12]" style={{
-          backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)",
-          backgroundSize: "40px 40px, 60px 60px",
-        }} />
+        <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-[#6C63FF]/[0.07] blur-2xl" />
         <div className="relative z-10">
           <p className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-[0.7rem] font-bold uppercase tracking-[0.2em] text-slate-700 ">
             {t("grants.kicker")}
           </p>
-          <h1 id="grants-hero-title" className="mt-4 text-[2.5rem] font-black leading-none tracking-[-0.04em] md:text-5xl">
+          <h1 id="grants-hero-title" className="mt-4 text-[2rem] font-black leading-[1.05] tracking-[-0.04em] text-pathwise-ink md:text-[2.5rem]">
             {t("grants.title")}
           </h1>
           <p className="mt-3 max-w-xl text-balance text-sm leading-relaxed text-slate-600 md:text-base">
@@ -338,7 +341,7 @@ export function GrantsListClient() {
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             <label className="relative min-w-0 flex-1">
               <span className="sr-only">{t("grants.searchLabel")}</span>
-              <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/50">
+              <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
                 <SearchIcon className="h-5 w-5" />
               </span>
               <input
@@ -349,7 +352,7 @@ export function GrantsListClient() {
               />
             </label>
             <p className="shrink-0 text-sm text-slate-500" aria-live="polite">
-              {t("grants.found", { n: sorted.length })} · {source === "live" ? "Supabase" : "Vesper fallback"}
+              {t("grants.found", { n: sorted.length })}
             </p>
           </div>
         </div>
@@ -502,7 +505,7 @@ function CatalogGrantCard({
   const matchColor = match === "high"
     ? "text-[#6C63FF]"
     : match === "medium"
-      ? "text-amber-300"
+      ? "text-amber-600"
       : "text-pathwise-muted";
 
   const pct = hasOnboarding
@@ -512,27 +515,37 @@ function CatalogGrantCard({
 
   return (
     <article className="group pw-card flex h-full min-h-0 flex-col overflow-hidden transition-all duration-300">
-      <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-50">
-        <Image
-          src={`https://picsum.photos/seed/${encodeURIComponent(g.id)}/640/400`}
-          alt=""
-          width={640}
-          height={400}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="(max-width: 640px) 100vw, 33vw"
-        />
-        <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-white shadow-md ">
-          <MatchArc percent={pct} stroke={stroke} />
-          <span className={hasOnboarding ? matchColor : "text-pathwise-muted"}>{badge}</span>
+      {/* Обложка из данных гранта: случайные стоковые фото ничего не сообщали. */}
+      <div
+        className="relative w-full overflow-hidden px-5 py-6"
+        style={{ background: coverGradient(g.id) }}
+      >
+        <div className="flex items-start justify-between gap-3">
+          {hasOnboarding ? (
+            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold shadow-sm">
+              <MatchArc percent={pct} stroke={stroke} />
+              <span className={matchColor}>{badge}</span>
+            </div>
+          ) : (
+            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-pathwise-muted shadow-sm">
+              {t("grants.badgeNoProfile")}
+            </span>
+          )}
+          <span className="rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.1em] text-pathwise-accent-strong">
+            {coverLabel(g)}
+          </span>
         </div>
+        <p className="mt-4 text-[2rem] font-black leading-none tracking-[-0.04em] text-white/90 drop-shadow-sm">
+          {grantInitials(g.name)}
+        </p>
       </div>
       <div className="flex flex-1 flex-col p-4 sm:p-5">
-        <h2 className="line-clamp-2 text-lg font-semibold leading-tight text-white">
+        <h2 className="line-clamp-2 text-lg font-black leading-tight text-pathwise-ink">
           {g.name}
         </h2>
         <p className="mt-2 flex flex-wrap gap-2 text-xs font-medium text-pathwise-accent-strong">
           <span>{formatGrantAmountLine(g)}</span>
-          <span className="rounded-full border border-[#FF6B6B]/30 bg-[#FF6B6B]/10 px-2 py-0.5 text-red-100">{g.deadline}</span>
+          <span className="rounded-full border border-[#FF6B6B]/25 bg-[#FF6B6B]/10 px-2 py-0.5 font-bold text-[#c63d3d]">{formatDeadlineRu(g.deadline)}</span>
         </p>
         <p className="mt-2.5 line-clamp-2 flex-1 text-sm leading-relaxed text-pathwise-muted">
           {g.kazakhstanRelevance}
@@ -562,13 +575,48 @@ function CatalogGrantCard({
   );
 }
 
+const COVER_GRADIENTS = [
+  "linear-gradient(135deg, #6C63FF 0%, #8b7bff 100%)",
+  "linear-gradient(135deg, #43D19E 0%, #2fb985 100%)",
+  "linear-gradient(135deg, #0EA5E9 0%, #6C63FF 100%)",
+  "linear-gradient(135deg, #F59E0B 0%, #FF6B6B 100%)",
+  "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)",
+] as const;
+
+/** Стабильный цвет обложки по id — одна и та же карточка всегда одного цвета. */
+function coverGradient(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i += 1) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return COVER_GRADIENTS[hash % COVER_GRADIENTS.length];
+}
+
+/** Инициалы программы вместо картинки — сразу видно, что это за грант. */
+function grantInitials(name: string): string {
+  const words = name.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  if (words.length === 0) return "★";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+const COVER_LEVEL_LABELS: Record<string, string> = {
+  bachelor: "Бакалавриат",
+  master: "Магистратура",
+  phd: "Докторантура",
+  any: "Любой уровень",
+};
+
+function coverLabel(g: GrantRecord): string {
+  const level = g.eligibilityTags.find((tag) => tag in COVER_LEVEL_LABELS);
+  return level ? COVER_LEVEL_LABELS[level] : "Грант";
+}
+
 function MatchArc({ percent, stroke }: { percent: number; stroke: string }) {
   const radius = 14;
   const length = 2 * Math.PI * radius;
   const offset = length * (1 - percent / 100);
   return (
     <svg className="h-8 w-8 -rotate-90" viewBox="0 0 36 36" aria-hidden style={{ "--arc-length": length, "--arc-offset": offset } as CSSProperties}>
-      <circle cx="18" cy="18" r={radius} fill="none" stroke="rgb(255 255 255 / 0.16)" strokeWidth="4" />
+      <circle cx="18" cy="18" r={radius} fill="none" stroke="rgb(15 23 42 / 0.10)" strokeWidth="4" />
       <circle
         className="pw-match-arc"
         cx="18"

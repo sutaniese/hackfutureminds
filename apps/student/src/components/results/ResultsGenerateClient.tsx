@@ -31,7 +31,7 @@ function readOnboarding(): OnboardingAnswers | null {
 
 const matchColor: Record<string, string> = {
   high: "border-[#d7d3ff] bg-[#f1efff] text-[#554dd6]",
-  medium: "border-amber-300/40 bg-amber-300/15 text-amber-100",
+  medium: "border-amber-300/50 bg-amber-100/60 text-amber-900",
   low: "border-slate-200 bg-white text-pathwise-muted",
 };
 
@@ -202,30 +202,42 @@ export function ResultsGenerateClient() {
       )}
 
       {hasOnboarding ? (
-        <p className="text-sm leading-relaxed text-pathwise-muted">{t("results.hint")}</p>
+        <>
+          <p className="text-sm leading-relaxed text-pathwise-muted">{t("results.hint")}</p>
+          <button
+            type="button"
+            onClick={run}
+            disabled={loading}
+            className="pw-btn-primary pw-press w-full max-w-sm disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? (
+              <span className="pw-shimmer rounded-full px-3 py-1">{t("results.runLoading")}</span>
+            ) : (
+              t("results.run")
+            )}
+          </button>
+        </>
       ) : (
-        <div className="rounded-2xl border border-amber-300/30 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">
-          {t("results.noOnboard")}{" "}
-          <a className="font-semibold underline" href="/onboarding">{t("nav.onboarding")}</a>{" "}
-          {t("results.andFinish")}
+        /* Без анкеты план собрать нечем — объясняем это и ведём в анкету,
+           вместо неактивной кнопки без причины. */
+        <div className="pw-reveal rounded-[1.5rem] border border-dashed border-slate-300 bg-white p-8 text-center">
+          <p className="text-base font-black text-pathwise-ink">План появится после анкеты</p>
+          <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-pathwise-muted">
+            {t("results.noOnboard")} {t("results.andFinish")}
+          </p>
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <a href="/onboarding" className="pw-btn-primary pw-press text-sm no-underline">
+              Заполнить анкету
+            </a>
+            <a href="/learning" className="pw-btn-secondary pw-press text-sm no-underline">
+              Перейти к обучению
+            </a>
+          </div>
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={run}
-        disabled={loading || !hasOnboarding}
-        className="pw-btn-primary w-full max-w-sm disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
-      >
-        {loading ? (
-          <span className="pw-shimmer rounded-full px-3 py-1">
-            {t("results.runLoading")}
-          </span>
-        ) : t("results.run")}
-      </button>
-
       {error && (
-        <div className="rounded-2xl border border-[#FF6B6B]/30 bg-[#FF6B6B]/10 px-4 py-3 text-sm text-red-100" role="alert">
+        <div className="rounded-2xl border border-[#FF6B6B]/30 bg-[#FF6B6B]/10 px-4 py-3 text-sm font-semibold text-[#c63d3d]" role="alert">
           {error}
         </div>
       )}
@@ -236,14 +248,13 @@ export function ResultsGenerateClient() {
             <section className="pw-slide-up pw-card overflow-hidden border-t-4 border-t-[#6C63FF] xl:col-span-3">
               <div className="px-5 py-4">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-pathwise-accent-strong">
-                  Groq university fit
+                  Подбор вузов
                 </p>
                 <h2 className="mt-2 text-xl font-black tracking-tight text-pathwise-ink">
-                  Recommended universities and programs
+Рекомендованные вузы и программы
                 </h2>
                 <p className="mt-1 text-sm leading-6 text-pathwise-muted">
-                  Real Kazakhstan university data matched to your generated profession path,
-                  interests, city, budget context and admission signals.
+Реальные данные вузов Казахстана, сопоставленные с вашим направлением, интересами, городом и бюджетом.
                 </p>
               </div>
               <div className="grid gap-4 p-5 pt-0 md:grid-cols-2 xl:grid-cols-3">
@@ -343,7 +354,7 @@ export function ResultsGenerateClient() {
 
           {/* Career Map */}
           <section className="pw-slide-up pw-card overflow-hidden border-t-4 border-t-[#6C63FF]" style={{ animationDelay: "0ms" }}>
-            <div className="px-5 py-4 text-white">
+            <div className="px-5 py-4">
               <h2 className="flex items-center gap-2 text-lg font-bold">
                 <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="3 11 22 2 13 21 11 13 3 11" />
@@ -356,7 +367,7 @@ export function ResultsGenerateClient() {
               {data.career_map.map((c, i) => (
                 <li key={c.title} className="rounded-2xl border border-slate-200 bg-white p-4">
                   <div className="flex flex-col gap-2">
-                    <strong className="w-fit rounded-full bg-[#6C63FF]/20 px-3 py-1 text-sm text-white ring-1 ring-[#6C63FF]/30">{i + 1}. {c.title}</strong>
+                    <strong className="w-fit rounded-full bg-[#6C63FF]/10 px-3 py-1 text-sm font-black text-[#554dd6] ring-1 ring-[#6C63FF]/25">{i + 1}. {c.title}</strong>
                     <span className="w-fit rounded-full bg-white px-3 py-1 text-xs font-bold text-[#6C63FF]">
                       {c.salary_kzt}
                     </span>
@@ -376,7 +387,7 @@ export function ResultsGenerateClient() {
 
           {/* Financial Route */}
           <section className="pw-slide-up pw-card overflow-hidden border-t-4 border-t-[#FF6B6B]" style={{ animationDelay: "0.1s" }}>
-            <div className="px-5 py-4 text-white">
+            <div className="px-5 py-4">
               <h2 className="flex items-center gap-2 text-lg font-bold">
                 <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
@@ -434,7 +445,7 @@ export function ResultsGenerateClient() {
 
           {/* Resume */}
           <section className="pw-slide-up pw-card overflow-hidden border-t-4 border-t-[#6C63FF]" style={{ animationDelay: "0.2s" }}>
-            <div className="px-5 py-4 text-white">
+            <div className="px-5 py-4">
               <h2 className="flex items-center gap-2 text-lg font-bold">
                 <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" />

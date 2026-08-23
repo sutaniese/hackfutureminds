@@ -8,8 +8,8 @@ export function ResultsView() {
   const { t } = useI18n();
   return (
     <div className="flex flex-col gap-5">
-      <PageHero kicker="План" title={t("results.title")} description={t("results.sub")}>
-        <div className="mt-6 flex flex-wrap gap-2">
+      <PageHero compact kicker="Карьера" title="Карьерный план" description={t("results.sub")}>
+        <div className="mt-5 flex flex-wrap gap-2">
           {["карьера", "финансы", "гранты", "резюме"].map((item) => (
             <span
               key={item}
