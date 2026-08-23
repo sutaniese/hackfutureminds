@@ -95,7 +95,7 @@ const T = {
     "Map, money plan, and portfolio for ages 15–18, mobile first — teñ-style layout.",
     "15–18 жас: бағыт, қаражат, портфолио, алдымен мобилді — teñ стилі.",
   ),
-  "home.cta": TR("Перейти к онбордингу", "Go to onboarding", "Онбордингке өту"),
+  "home.cta": TR("Заполнить анкету", "Fill in the profile", "Анкетаны толтыру"),
   "home.portal": TR(
     "Портал: AI-наставник, вузы, родители и учителя",
     "Portal: AI mentor, universities, parents & teachers",
@@ -179,7 +179,7 @@ const T = {
   "home.landing.step1.label": TR("ШАГ 01", "STEP 01", "ҚАДАМ 01"),
   "home.landing.step1.title": TR("Один профиль", "One profile", "Бір профиль"),
   "home.landing.step1.body": TR(
-    "Ученик проходит короткий онбординг: предметы, достижения, бюджет и город.",
+    "Ученик заполняет короткую анкету: предметы, достижения, бюджет и город.",
     "The student completes a short onboarding: subjects, achievements, budget and city.",
     "Оқушы қысқа онбордингтен өтеді: пәндер, жетістіктер, бюджет және қала.",
   ),
@@ -277,7 +277,7 @@ const T = {
   "home.landing.logout": TR("Выйти из аккаунта", "Log out", "Шығу"),
   "home.landing.register": TR("Зарегистрироваться →", "Register →", "Тіркелу →"),
   "onboard.kicker": TR("СТАРТ", "START", "БАСТАУ"),
-  "onboard.pageTitle": TR("Онбординг", "Onboarding", "Онбординг"),
+  "onboard.pageTitle": TR("Анкета ученика", "Student profile", "Оқушы анкетасы"),
   "onboard.pageSubtitle": TR(
     "Семь коротких вопросов, по одному шагу — дальше ответы используются в плане и API.",
     "Seven short questions, one step at a time — your answers power the next steps and API.",
@@ -336,7 +336,7 @@ const T = {
   "onboard.finish": TR("Готово", "Finish", "Аяқтау"),
   "onboard.ariaStep": TR("Шаг {{a}} из {{b}}. {{c}}", "Step {{a}} of {{b}}. {{c}}", "{{a}} / {{b}} қадам. {{c}}"),
   "onboard.srOnlyStep": TR(
-    "Прогресс онбординга",
+    "Прогресс анкеты",
     "Onboarding progress",
     "Онбординг барысы",
   ),
@@ -405,7 +405,7 @@ const T = {
   "results.m.high": TR("сильно", "high", "күшті"),
   "results.m.medium": TR("средне", "medium", "орта"),
   "results.m.low": TR("слабее", "low", "төмен"),
-  "results.errOnboard": TR("Сначала завершите онбординг.", "Finish onboarding first.", "Алдымен онбордингті бітіріңіз."),
+  "results.errOnboard": TR("Сначала заполните анкету.", "Fill in the profile form first.", "Алдымен анкетаны толтырыңыз."),
   "results.errApi": TR("{{e}}", "{{e}}", "{{e}}"),
   "results.errHtml": TR(
     "Сервер вернул страницу ошибки вместо данных. Попробуйте позже или обновите страницу.",
@@ -417,7 +417,7 @@ const T = {
   "gam.profileOk": TR("Профиль заполнен", "Profile complete", "Профиль толық"),
   "gam.fill": TR("Портфолио", "Portfolio fill", "Портфолио"),
   "gam.grantsN": TR("+{{n}} грант(а) вам", "+{{n}} grant(s) for you", "+{{n}} грант(тар)"),
-  "gam.onboard": TR("Завершите онбординг для оценки профиля", "Finish onboarding to build your profile", "Профиль үшін онбордингті бітіріңіз"),
+  "gam.onboard": TR("Заполните анкету — и профиль соберётся", "Fill in the profile form to build your profile", "Анкетаны толтырыңыз — профиль жиналады"),
 
   "portfolio.title": TR("Портфолио", "Portfolio", "Портфолио"),
   "portfolio.sub": TR(
@@ -512,13 +512,13 @@ const T = {
     " and we will highlight the grants that fit you.",
     "— сізге сәйкес гранттарды белгілейміз.",
   ),
-  "grants.tipOnboard": TR("онбординг", "onboarding", "онбординг"),
+  "grants.tipOnboard": TR("анкету", "the profile form", "анкетаны"),
   "grants.f.rank": TR("РЕЙТИНГ", "RANK", "РЕЙТИҢ"),
   "grants.f.mAll": TR("Все", "All", "Барлығы"),
   "grants.f.strong": TR("Сильное", "Strong", "Күшті"),
   "grants.f.mid": TR("Средне", "Mid", "Орта"),
   "grants.f.light": TR("Мягко", "Light", "Жұмсақ"),
-  "grants.f.tipR": TR("Полезнее после онбординга", "Meaningful after onboarding", "Онбординг соңы мағына",
+  "grants.f.tipR": TR("Точнее после анкеты", "More accurate after the profile form", "Анкетадан кейін дәлірек",
   ),
   "grants.f.region": TR("РЕГИОН", "REGION", "АЙМАҚ"),
   "grants.f.type": TR("ТИП", "TYPE", "ТҮР"),
@@ -595,7 +595,7 @@ const T = {
   "profile.copyUrl": TR("Скопировать ссылку", "Copy link", "Сілтемені көшіру"),
   "profile.copied": TR("Скопировано", "Copied", "Көшірілді"),
   "profile.localOnly": TR(
-    "Данные аккаунта и онбординга хранятся локально в браузере (демо без сервера).",
+    "Данные аккаунта и анкеты хранятся локально в браузере (демо без сервера).",
     "Account and onboarding data stay in this browser (demo, no backend yet).",
     "Аккаунт деректері осы браузерде сақталады (демо, сервер жоқ).",
   ),
@@ -606,7 +606,7 @@ const T = {
   "profile.locKz": TR("Казахстан", "Kazakhstan", "Қазақстан"),
   "profile.locAbroad": TR("За рубежом", "Abroad", "Шетел"),
   "profile.noSnapshot": TR(
-    "Черновик онбординга ещё не сохранён в профиль.",
+    "Черновик анкеты ещё не сохранён в профиль.",
     "Onboarding has not been saved to this profile yet.",
     "Онбординг әлі профильге сақталмаған.",
   ),

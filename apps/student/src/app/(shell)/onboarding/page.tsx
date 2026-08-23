@@ -2,7 +2,7 @@ import { OnboardingView } from "@/components/pages/OnboardingView";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Онбординг",
+  title: "Анкета ученика",
   description: "Семь вопросов, один шаг (teñ.)",
 };
 

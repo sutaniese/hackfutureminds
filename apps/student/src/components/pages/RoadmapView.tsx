@@ -211,12 +211,12 @@ export function RoadmapView() {
 
       {!answers ? (
         <ContentCard className="border-l-4 border-l-[#6C63FF]">
-          <p className="text-sm font-semibold text-pathwise-ink">Roadmap станет точнее после онбординга.</p>
+          <p className="text-sm font-semibold text-pathwise-ink">Дорожная карта станет точнее после анкеты.</p>
           <p className="mt-1 text-sm text-pathwise-muted">
             Сейчас показан базовый красивый маршрут. Ответьте на 7 вопросов, чтобы граф перестроился под ваше видение.
           </p>
           <Link href="/onboarding" className="pw-btn-primary mt-4 inline-flex !min-h-12 !px-5">
-            Пройти онбординг
+            Заполнить анкету
           </Link>
         </ContentCard>
       ) : null}

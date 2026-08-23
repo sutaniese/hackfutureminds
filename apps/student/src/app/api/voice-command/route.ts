@@ -84,7 +84,7 @@ function fallbackIntent(command: string): VoiceAction {
     return { action: "navigate", path: "/support", speak: "Открываю страницу поддержки." };
   }
   if (/start|onboard|старт|онборд/.test(text)) {
-    return { action: "navigate", path: "/onboarding", speak: "Открываю онбординг." };
+    return { action: "navigate", path: "/onboarding", speak: "Открываю анкету." };
   }
   return {
     action: "explain",

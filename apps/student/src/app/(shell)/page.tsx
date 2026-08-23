@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Главная",
-  description: "teñ. — старт, онбординг, карта направлений (RU/KK/EN).",
+  description: "teñ. — персональное обучение, диагностика и карьерный план для школьников Казахстана.",
 };
 
 export default function HomePage() {
