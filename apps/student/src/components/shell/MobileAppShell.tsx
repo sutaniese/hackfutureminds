@@ -9,6 +9,7 @@ import { SHELL_PX } from "@/lib/shell-layout";
 import { useI18n } from "@/i18n/I18nProvider";
 import Link from "next/link";
 import { A11yTopBar } from "./A11yTopBar";
+import { RouteTransition } from "./RouteTransition";
 import { BottomNav } from "./BottomNav";
 import { ThemeInit } from "./ThemeInit";
 
@@ -28,10 +29,10 @@ export function MobileAppShell({ children }: { children: React.ReactNode }) {
       </div>
       <main
         id="main"
-        className={`pw-route-in pw-pb-nav ${SHELL_PX} flex-1 overflow-y-auto py-6 md:py-10`}
+        className={`pw-pb-nav ${SHELL_PX} flex-1 overflow-y-auto py-6 md:py-10`}
         style={{ minHeight: "0" }}
       >
-        {children}
+        <RouteTransition>{children}</RouteTransition>
       </main>
       <footer className="border-t border-pathwise-line/50 bg-white ">
         <div

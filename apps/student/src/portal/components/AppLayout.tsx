@@ -9,6 +9,7 @@ import {
   isSiteNavActive,
 } from '@/lib/site-nav'
 import { RoleRouteGuard } from '@/components/shell/RoleRouteGuard'
+import { RouteTransition } from '@/components/shell/RouteTransition'
 import { useSelectedRole } from '@/components/shell/useSelectedRole'
 import { useAuth } from '@/components/shell/useAuth'
 import { withAssetBase } from '../lib/publicUrl'
@@ -163,8 +164,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="pw-route-in mx-auto w-full max-w-7xl space-y-6 px-4 py-6 md:px-6 md:py-8">
-        <RoleRouteGuard>{children}</RoleRouteGuard>
+      <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 md:px-6 md:py-8">
+        <RouteTransition>
+          <div className="space-y-6">
+            <RoleRouteGuard>{children}</RoleRouteGuard>
+          </div>
+        </RouteTransition>
       </main>
 
       <footer className="mt-10 border-t border-pathwise-line bg-white">
