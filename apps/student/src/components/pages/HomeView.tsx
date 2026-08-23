@@ -12,6 +12,7 @@ import { useSelectedRole } from "@/components/shell/useSelectedRole";
 import { useAuth } from "@/components/shell/useAuth";
 import { useI18n } from "@/i18n/I18nProvider";
 import { profileHref } from "@/lib/profile-slug";
+import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 
 type EntryCard = {
   role: UserRole;
@@ -163,12 +164,25 @@ export function HomeView() {
             </div>
 
             <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {stats.map(([value, label]) => (
-                <div key={label} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-                  <p className="text-2xl font-black tracking-tight text-[#6C63FF]">{value}</p>
-                  <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">{label}</p>
-                </div>
-              ))}
+              {stats.map(([value, label], index) => {
+                const numeric = Number(value);
+                return (
+                  <div
+                    key={label}
+                    style={{ "--d": `${index * 90 + 120}ms` } as React.CSSProperties}
+                    className="pw-reveal rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 transition duration-300 hover:-translate-y-1 hover:ring-[#6C63FF]/40"
+                  >
+                    <p className="text-2xl font-black tracking-tight text-[#6C63FF]">
+                      {Number.isFinite(numeric) && value.trim() !== "" ? (
+                        <AnimatedNumber value={numeric} delay={index * 90 + 300} duration={1000} />
+                      ) : (
+                        value
+                      )}
+                    </p>
+                    <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">{label}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -239,7 +253,8 @@ export function HomeView() {
           {learnSteps.map((item) => (
             <article
               key={item.step}
-              className="relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-[#f8fafc] p-5"
+              style={{ "--d": `${(item.step - 1) * 100}ms` } as React.CSSProperties}
+              className="pw-reveal relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white p-5 transition duration-300 hover:-translate-y-1 hover:border-[#6C63FF]/40 hover:shadow-lg"
             >
               <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#6C63FF] text-base font-black text-white">
                 {item.step}
@@ -252,8 +267,12 @@ export function HomeView() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
-        {steps.map((step) => (
-          <article key={step.label} className="rounded-[2rem] border border-slate-200 bg-white p-6 text-[#111827] shadow-sm">
+        {steps.map((step, index) => (
+          <article
+            key={step.label}
+            style={{ "--d": `${index * 100}ms` } as React.CSSProperties}
+            className="pw-reveal rounded-[2rem] border border-slate-200 bg-white p-6 text-[#111827] shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#6C63FF]/40 hover:shadow-lg"
+          >
             <p className="text-[0.68rem] font-black uppercase tracking-[0.22em] text-[#6C63FF]">{step.label}</p>
             <h2 className="mt-4 text-2xl font-black tracking-tight">{step.title}</h2>
             <p className="mt-3 text-sm leading-7 text-slate-600">{step.body}</p>
@@ -284,14 +303,15 @@ export function HomeView() {
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-3">
-          {entryCards.map((entry) => {
+          {entryCards.map((entry, index) => {
             const isCurrent = isAuthed && user?.role === entry.role;
             return (
               <button
                 key={entry.role}
                 type="button"
                 onClick={() => handleEntryClick(entry)}
-                className={`group relative overflow-hidden rounded-[1.75rem] border bg-white p-5 text-left no-underline shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${
+                style={{ "--d": `${index * 100}ms` } as React.CSSProperties}
+                className={`pw-reveal pw-press group relative overflow-hidden rounded-[1.75rem] border bg-white p-5 text-left no-underline shadow-sm hover:-translate-y-1 hover:shadow-xl ${
                   isCurrent
                     ? "border-[#6C63FF] ring-4 ring-[#6C63FF]/10"
                     : "border-slate-200 hover:border-[#6C63FF]/50"

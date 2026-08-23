@@ -106,7 +106,7 @@ const T = {
     "Top bar: contrast, voice, help. Bottom: home, onboarding, results, grants, portfolio.",
     "Жолақ: контраст, дауыстық, анықтама. Төмен: басты, онбординг, нәтиже, гранттар, портфолио.",
   ),
-  "home.landing.kicker": TR("PATHWISE ДЛЯ КАЗАХСТАНА", "PATHWISE FOR KAZAKHSTAN", "PATHWISE ҚАЗАҚСТАН ҮШІН"),
+  "home.landing.kicker": TR("AI-ПЛАТФОРМА ОБУЧЕНИЯ · КАЗАХСТАН", "AI LEARNING PLATFORM · KAZAKHSTAN", "AI ОҚУ ПЛАТФОРМАСЫ · ҚАЗАҚСТАН"),
   "home.landing.title": TR(
     "Персональное обучение для каждого школьника Казахстана",
     "Personalised learning for every student in Kazakhstan",
