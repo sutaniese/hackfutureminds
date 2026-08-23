@@ -10,11 +10,14 @@ export function StatTile({
   value,
   hint,
   tone = "default",
+  delay = 0,
 }: {
   label: string;
-  value: string;
+  /** ReactNode — чтобы передавать счётчик <AnimatedNumber/>. */
+  value: ReactNode;
   hint?: string;
   tone?: "default" | "accent" | "warn" | "good";
+  delay?: number;
 }) {
   const toneClass =
     tone === "accent"
@@ -26,7 +29,10 @@ export function StatTile({
           : "text-pathwise-ink";
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div
+      className="pw-reveal rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-[#6C63FF]/40 hover:shadow-md"
+      style={{ "--d": `${delay}ms` } as React.CSSProperties}
+    >
       <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-pathwise-muted">{label}</p>
       <p className={cn("mt-1 text-2xl font-black tracking-tight", toneClass)}>{value}</p>
       {hint ? <p className="mt-1 text-xs font-semibold leading-5 text-pathwise-muted">{hint}</p> : null}
@@ -38,10 +44,13 @@ export function ProgressBar({
   value,
   color = "#6C63FF",
   label,
+  delay = 120,
 }: {
   value: number;
   color?: string;
   label?: string;
+  /** Задержка старта заливки — для каскада в списках. */
+  delay?: number;
 }) {
   const safe = Math.max(0, Math.min(100, Math.round(value)));
   return (
@@ -54,8 +63,10 @@ export function ProgressBar({
       aria-label={label ?? `Прогресс ${safe}%`}
     >
       <div
-        className="h-full rounded-full transition-all duration-700"
-        style={{ width: `${safe}%`, backgroundColor: color }}
+        className="pw-fill h-full rounded-full transition-[width] duration-700 ease-out"
+        style={
+          { width: `${safe}%`, backgroundColor: color, "--d": `${delay}ms` } as React.CSSProperties
+        }
       />
     </div>
   );
@@ -78,7 +89,12 @@ export function Pill({
           : "bg-slate-100 text-slate-600";
 
   return (
-    <span className={cn("inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold", toneClass)}>
+    <span
+      className={cn(
+        "inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors duration-200",
+        toneClass,
+      )}
+    >
       {children}
     </span>
   );
@@ -103,7 +119,7 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white p-6 text-center">
+    <div className="pw-reveal rounded-[1.5rem] border border-dashed border-slate-300 bg-white p-8 text-center">
       <p className="text-base font-black text-pathwise-ink">{title}</p>
       <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-pathwise-muted">{description}</p>
       {action ? <div className="mt-5 flex justify-center">{action}</div> : null}

@@ -277,7 +277,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
       {tab === "practice" ? (
         <ContentCard>
           {feedback ? (
-            <div>
+            <div className="pw-reveal">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p
                   className={`text-lg font-black ${
@@ -335,7 +335,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
               </div>
             </div>
           ) : task ? (
-            <div>
+            <div key={task.id} className="pw-reveal">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-pathwise-accent-strong">
                   Задание {solvedCount + 1} из {topic.tasks.length}
@@ -366,7 +366,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
                   type="button"
                   onClick={() => void check(task)}
                   disabled={answer === "" || checking}
-                  className="pw-btn-primary text-sm disabled:opacity-50"
+                  className="pw-btn-primary pw-press text-sm transition disabled:opacity-50"
                 >
                   {checking ? "Проверяем…" : "Проверить ответ"}
                 </button>

@@ -10,7 +10,7 @@
   /* Минимальная высота шапки; смещение XP-полосы считается версткой. */
   --pw-a11y-top: 3.75rem;
 
-  --background: #ffffff;
+  --background: #fafaff;
   --foreground: #111827;
   --pw-ink: #111827;
   --pw-primary: #6c63ff;
@@ -25,8 +25,8 @@
   --pw-surface-strong: #f8fafc;
   --pw-muted: #64748b;
   --pw-border: #e5e7eb;
-  --pw-shadow: 0 10px 30px rgb(15 23 42 / 0.06);
-  --pw-shadow-lg: 0 16px 45px rgb(15 23 42 / 0.10);
+  --pw-shadow: 0 6px 24px rgb(15 23 42 / 0.05);
+  --pw-shadow-lg: 0 18px 45px rgb(15 23 42 / 0.09);
   --pw-shadow-xl: 0 24px 70px rgb(15 23 42 / 0.12);
   --transition-ui: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-bounce: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -131,9 +131,9 @@ body::before {
 }
 
 .pw-card:hover {
-  box-shadow: var(--pw-shadow-lg);
+  box-shadow: 0 20px 50px rgb(108 99 255 / 0.13);
   border-color: #d7d3ff;
-  transform: translateY(-4px);
+  transform: translateY(-3px);
 }
 
 .pw-card-glass {
@@ -502,22 +502,6 @@ body::before {
     animation-delay: var(--d, 0ms);
   }
 
-  /* Появление по скроллу: до входа в кадр блок скрыт, класс добавляет observer. */
-  .pw-inview {
-    opacity: 0;
-    transform: translateY(1.5rem);
-    transition:
-      opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
-      transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
-    transition-delay: var(--d, 0ms);
-    will-change: opacity, transform;
-  }
-
-  .pw-inview.is-visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
   /* Плавная заливка прогресса от нуля */
   @keyframes pw-fill {
     from { transform: scaleX(0); }
@@ -554,10 +538,3 @@ body::before {
   }
 }
 
-/* Без анимаций содержимое обязано остаться видимым. */
-@media (prefers-reduced-motion: reduce) {
-  .pw-inview {
-    opacity: 1;
-    transform: none;
-  }
-}

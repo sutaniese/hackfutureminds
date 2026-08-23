@@ -8,11 +8,12 @@ export function LearningView() {
   return (
     <div className="flex flex-col gap-5">
       <PageHero
+        compact
         kicker="Обучение"
         title="Личный кабинет ученика"
-        description="Прогресс по темам, слабые места, ближайшие дедлайны и план подготовки, который пересобирается после каждого решённого задания."
+        description="Прогресс по темам, слабые места и план, который пересобирается после каждого задания."
       >
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-5 flex flex-wrap gap-3">
           <Link href="/learning/diagnostics" className="pw-btn-primary text-sm">
             Пройти диагностику
           </Link>

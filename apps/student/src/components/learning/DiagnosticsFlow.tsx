@@ -317,7 +317,7 @@ export function DiagnosticsFlow() {
           </p>
         </ContentCard>
 
-        <ContentCard>
+        <ContentCard key={current.id} className="pw-reveal">
           {current.passage ? (
             <p className="mb-4 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700 ring-1 ring-slate-200">
               {current.passage}
@@ -330,7 +330,7 @@ export function DiagnosticsFlow() {
               type="button"
               onClick={submitAnswer}
               disabled={answer === ""}
-              className="pw-btn-primary text-sm disabled:opacity-50"
+              className="pw-btn-primary pw-press text-sm transition disabled:opacity-50"
             >
               {answered + 1 === DIAGNOSTIC_SIZE ? "Завершить" : "Ответить"}
             </button>

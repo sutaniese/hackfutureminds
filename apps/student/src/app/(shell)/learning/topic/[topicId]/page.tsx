@@ -22,9 +22,10 @@ export default function LearningTopicPage() {
   return (
     <div className="flex flex-col gap-5">
       <PageHero
+        compact
         kicker="Тема"
         title="Задания и обратная связь"
-        description="Конспект, адаптивные задания и AI-репетитор в одном месте. После каждого ответа система объясняет ошибку и подбирает следующий уровень сложности."
+        description="Конспект, адаптивные задания и AI-репетитор. После каждого ответа система объясняет ошибку и подбирает следующий уровень."
       />
       <TopicPractice topicId={topicId} />
     </div>

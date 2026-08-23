@@ -19,6 +19,8 @@ import {
 import { LEVEL_LABELS } from "@/lib/learning/store";
 import { attemptsLabel, daysLabel, ofTasksLabel, tasksLabel } from "@/lib/learning/plural";
 import { LEARNING_GOALS } from "@/lib/learning/types";
+import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
+import { ProgressRing } from "@/components/motion/ProgressRing";
 import { EmptyState, Pill, ProgressBar, StatTile } from "./LearningUI";
 import { ReminderBanner } from "./ReminderBanner";
 import { useLearning } from "./useLearning";
@@ -133,73 +135,93 @@ export function LearningDashboard() {
     <div className="flex flex-col gap-5">
       <ReminderBanner days={days} reviews={reviews} />
 
-      <ContentCard>
-        <div className="flex flex-wrap items-start justify-between gap-4">
+      <ContentCard className="overflow-hidden">
+        <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="min-w-0">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-pathwise-accent-strong">
-              Профиль ученика
-            </p>
-            <h2 className="mt-2 flex flex-wrap items-center gap-3 text-2xl font-black tracking-tight text-pathwise-ink">
-              {subject ? (
-                <span
-                  className="flex h-9 w-9 items-center justify-center rounded-xl text-base font-black text-white"
-                  style={{ backgroundColor: subject.accent }}
-                  aria-hidden
-                >
-                  {subject.mark}
-                </span>
-              ) : null}
-              {subjectTitle(profile.subjectId)} · {profile.grade} класс
-            </h2>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {profile.goals.map((goal) => (
-                <Pill key={goal} tone="accent">
-                  {goalTitle(goal)}
-                </Pill>
-              ))}
-              <Pill>{profile.minutesPerDay} мин в день</Pill>
-              {state.diagnostic ? (
-                <Pill tone="good">Уровень: {LEVEL_LABELS[state.diagnostic.level]}</Pill>
-              ) : null}
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-pathwise-accent-strong">
+                  Профиль ученика
+                </p>
+                <h2 className="mt-2 flex flex-wrap items-center gap-3 text-2xl font-black tracking-tight text-pathwise-ink">
+                  {subject ? (
+                    <span
+                      className="flex h-10 w-10 items-center justify-center rounded-2xl text-lg font-black text-white shadow-sm transition duration-300 hover:scale-105"
+                      style={{ backgroundColor: subject.accent }}
+                      aria-hidden
+                    >
+                      {subject.mark}
+                    </span>
+                  ) : null}
+                  {subjectTitle(profile.subjectId)} · {profile.grade} класс
+                </h2>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {profile.goals.map((goal) => (
+                    <Pill key={goal} tone="accent">
+                      {goalTitle(goal)}
+                    </Pill>
+                  ))}
+                  <Pill>{profile.minutesPerDay} мин в день</Pill>
+                  {state.diagnostic ? (
+                    <Pill tone="good">Уровень: {LEVEL_LABELS[state.diagnostic.level]}</Pill>
+                  ) : null}
+                </div>
+              </div>
+              <Link
+                href="/learning/diagnostics"
+                className="pw-btn-secondary pw-press shrink-0 text-sm"
+              >
+                Изменить профиль
+              </Link>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <StatTile
+                label="Точность"
+                delay={60}
+                value={
+                  summary.accuracy === null ? (
+                    "—"
+                  ) : (
+                    <AnimatedNumber value={summary.accuracy} suffix="%" delay={200} />
+                  )
+                }
+                hint={attemptsLabel(summary.attempts)}
+                tone={summary.accuracy !== null && summary.accuracy >= 70 ? "good" : "warn"}
+              />
+              <StatTile
+                label="Темы в работе"
+                delay={120}
+                value={<AnimatedNumber value={summary.activeTopics} delay={260} />}
+                hint={`завершено ${summary.completedTopics}`}
+              />
+              <StatTile
+                label={profile.examDate ? "До цели" : "Дедлайн"}
+                delay={180}
+                value={
+                  days !== null && days >= 0
+                    ? daysLabel(days)
+                    : profile.examDate
+                      ? "прошёл"
+                      : "не задан"
+                }
+                hint={profile.examDate || "укажите дату в профиле"}
+                tone={deadlineTone(days)}
+              />
             </div>
           </div>
-          <Link href="/learning/diagnostics" className="pw-btn-secondary shrink-0 text-sm">
-            Изменить профиль
-          </Link>
-        </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <StatTile
-            label="Освоено"
-            value={`${summary.mastery}%`}
-            hint={`${summary.solvedTasks} из ${ofTasksLabel(summary.totalTasks)}`}
-            tone="accent"
-          />
-          <StatTile
-            label="Точность"
-            value={summary.accuracy === null ? "—" : `${summary.accuracy}%`}
-            hint={attemptsLabel(summary.attempts)}
-            tone={summary.accuracy !== null && summary.accuracy >= 70 ? "good" : "warn"}
-          />
-          <StatTile
-            label="Темы в работе"
-            value={String(summary.activeTopics)}
-            hint={`завершено ${summary.completedTopics}`}
-          />
-          <StatTile
-            label={profile.examDate ? "До цели" : "Дедлайн"}
-            value={days !== null && days >= 0 ? daysLabel(days) : profile.examDate ? "прошёл" : "не задан"}
-            hint={profile.examDate || "укажите дату в профиле"}
-            tone={deadlineTone(days)}
-          />
-        </div>
-
-        <div className="mt-5">
-          <ProgressBar value={summary.mastery} label={`Освоено ${summary.mastery}%`} />
+          <div className="pw-reveal flex justify-center lg:pl-4" style={{ "--d": "220ms" } as React.CSSProperties}>
+            <ProgressRing
+              value={summary.mastery}
+              label="Освоено"
+              caption={`${summary.solvedTasks} из ${ofTasksLabel(summary.totalTasks)}`}
+            />
+          </div>
         </div>
       </ContentCard>
 
-      <section className="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
+      <section className="grid items-start gap-5 xl:grid-cols-[1.35fr_0.65fr]">
         <ContentCard>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -219,17 +241,20 @@ export function LearningDashboard() {
             </p>
           ) : (
             <div className="mt-5 grid gap-3">
-              {recommendations.map((item) => {
+              {recommendations.map((item, index) => {
                 const mastery = topicMastery(item.topic, state);
                 const topicState = topicStateOf(state, item.topic.id);
                 return (
                   <Link
                     key={item.topic.id}
                     href={`/learning/topic/${item.topic.id}`}
-                    className="group rounded-2xl border border-slate-200 bg-white p-4 no-underline transition hover:-translate-y-0.5 hover:border-[#6C63FF]/50 hover:shadow-lg"
+                    style={{ "--d": `${index * 90}ms` } as React.CSSProperties}
+                    className="pw-reveal pw-press group block rounded-2xl border border-slate-200 bg-white p-4 no-underline hover:-translate-y-1 hover:border-[#6C63FF]/50 hover:shadow-[0_18px_40px_rgb(108_99_255_/_0.15)]"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-base font-black text-pathwise-ink">{item.topic.title}</p>
+                      <p className="text-base font-black text-pathwise-ink transition-colors duration-200 group-hover:text-[#554dd6]">
+                        {item.topic.title}
+                      </p>
                       <Pill tone={item.priority === "high" ? "warn" : item.priority === "medium" ? "accent" : "muted"}>
                         {priorityLabel(item.priority)}
                       </Pill>
@@ -238,7 +263,7 @@ export function LearningDashboard() {
                       Почему сейчас: {item.reason}.
                     </p>
                     <div className="mt-3">
-                      <ProgressBar value={mastery} />
+                      <ProgressBar value={mastery} delay={index * 90 + 200} />
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-pathwise-muted">
                       <span>{tasksLabel(item.topic.tasks.length)}</span>
@@ -253,8 +278,14 @@ export function LearningDashboard() {
                         </>
                       ) : null}
                     </div>
-                    <span className="mt-4 inline-flex text-sm font-black text-[#6C63FF]">
-                      Перейти к теме →
+                    <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-black text-[#6C63FF]">
+                      Перейти к теме
+                      <span
+                        aria-hidden
+                        className="transition-transform duration-300 group-hover:translate-x-1"
+                      >
+                        →
+                      </span>
                     </span>
                   </Link>
                 );
