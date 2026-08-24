@@ -14,6 +14,10 @@ function normalizeApiKey(raw: string | undefined): string | undefined {
     s = s.slice(1, -1).trim();
   }
   if (!s) return undefined;
+  if (s.toLowerCase().startsWith("bearer ")) {
+    s = s.slice(7).trim();
+  }
+  if (!s) return undefined;
   const lower = s.toLowerCase();
   if (
     lower.includes("replace-me") ||
