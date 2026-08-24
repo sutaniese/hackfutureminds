@@ -1,4 +1,4 @@
-import { getGroqApiKey } from "@/lib/groq-env";
+import { getGroqApiKey, resolveGroqChatModel } from "@/lib/groq-env";
 import type { GenerateRequest, GenerateResponse } from "@/types/generate";
 
 /** Groq OpenAI-compatible base URL */
@@ -14,8 +14,7 @@ export async function tryGenerateWithGroq(
   const key = getGroqApiKey();
   if (!key) return null;
 
-  const model =
-    process.env.GROQ_MODEL?.trim() || "llama-3.3-70b-versatile";
+  const model = resolveGroqChatModel();
 
   const userContent = `You are a JSON API. Given this student input, output ONLY a valid JSON object (no markdown, no backticks) with this exact shape:
 {"career_map": [{"title": string, "salary_kzt": string, "description": string, "vacancies": [{"title": string, "company": string, "url": string}] }],

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGroqApiKey, getGroqChatModel } from "@/lib/groq-env";
+import { getGroqApiKey, resolveGroqChatModel } from "@/lib/groq-env";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,7 +9,7 @@ export const maxDuration = 60;
 const GROQ_FETCH_MS = 25_000;
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const DEFAULT_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
+const DEFAULT_MODEL = resolveGroqChatModel();
 
 type VoiceAction =
   | {
@@ -215,7 +215,7 @@ export async function POST(request: Request) {
       },
       signal: AbortSignal.timeout(GROQ_FETCH_MS),
       body: JSON.stringify({
-        model: getGroqChatModel(DEFAULT_MODEL),
+        model: resolveGroqChatModel(),
         temperature: 0,
         response_format: { type: "json_object" },
         messages: [
