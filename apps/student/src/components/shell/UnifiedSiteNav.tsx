@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ROLE_ENTRY_PATHS,
   ROLE_LABELS,
   ROLE_NAV_SECTIONS,
   isSiteNavActive,
@@ -21,7 +22,7 @@ function navClass(active: boolean) {
 
 export function UnifiedSiteNav() {
   const pathname = usePathname() || "/";
-  const { role, ready, clearRole } = useSelectedRole();
+  const { role, ready } = useSelectedRole();
   const { user, status, logout } = useAuth();
   const sections = role ? ROLE_NAV_SECTIONS[role] : [];
 
@@ -78,13 +79,12 @@ export function UnifiedSiteNav() {
             </div>
 
             <div className="flex shrink-0 flex-wrap items-center gap-2">
-              {role && status === "authed" ? (
+              {status === "authed" && user ? (
                 <Link
-                  href="/"
-                  onClick={clearRole}
+                  href={ROLE_ENTRY_PATHS[user.role]}
                   className="inline-flex min-h-11 items-center justify-center rounded-full border border-pathwise-line bg-white/80 px-3.5 py-2 text-sm font-semibold text-pathwise-muted no-underline transition hover:bg-[#f1efff]"
                 >
-                  Сменить роль
+                  Кабинет
                 </Link>
               ) : null}
               {status === "authed" ? (

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, type ReactNode } from 'react'
 import {
+  ROLE_ENTRY_PATHS,
   ROLE_LABELS,
   ROLE_NAV_SECTIONS,
   isSiteNavActive,
@@ -39,7 +40,7 @@ function navClass(active: boolean) {
 export function AppLayout({ children }: { children: ReactNode }) {
   const { tenant } = useTenantTheme()
   const pathname = usePathname() || '/'
-  const { role, ready, clearRole } = useSelectedRole()
+  const { role, ready } = useSelectedRole()
   const { user, status, logout } = useAuth()
   const sections = role ? ROLE_NAV_SECTIONS[role] : []
   const accountLabel = user?.name?.trim() || user?.email || ''
@@ -91,14 +92,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              {role && status === 'authed' ? (
+              {status === 'authed' && user ? (
                 <Link
-                  href="/"
-                  onClick={clearRole}
+                  href={ROLE_ENTRY_PATHS[user.role]}
                   className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-pathwise-muted no-underline transition hover:bg-white hover:text-slate-900"
-                  aria-label="Сменить роль"
                 >
-                  Сменить роль
+                  Кабинет
                 </Link>
               ) : null}
               {status === 'authed' ? (

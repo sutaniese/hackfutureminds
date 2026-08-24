@@ -227,10 +227,18 @@ export function AuthForm({ mode }: { mode: Mode }) {
         });
       }
 
+      const roleHome = ROLE_ENTRY_PATHS[user.role];
+      const redirectIsGeneric = !redirect || redirect === "/";
+      const redirectWrongRole =
+        Boolean(redirect) &&
+        user.role !== "student" &&
+        roleForPath(redirect ?? "") === "student";
       const target =
         !isLogin && user.role === "student" && user.accessibilitySupport?.enabled
           ? "/support"
-          : redirect ?? ROLE_ENTRY_PATHS[user.role];
+          : redirectIsGeneric || redirectWrongRole
+            ? roleHome
+            : (redirect ?? roleHome);
       router.replace(target);
       router.refresh();
     } catch (err) {

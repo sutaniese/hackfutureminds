@@ -105,11 +105,10 @@ export function StudentNotesPanel({ studentId }: Props) {
     >
       <header className="border-b border-pathwise-line pb-4">
         <h3 id="notes-panel-title" className="text-lg font-semibold text-pathwise-ink">
-          Obsidian-заметки ученика
+          Заметки по ученику
         </h3>
         <p className="text-xs text-pathwise-muted">
-          Файлы сохраняются в <code className="rounded bg-pathwise-accent-soft px-1">ten-vault/students/{studentId}/notes/</code>.
-          Их видит и AI-агент.
+          Заметки попадают в память AI-наставника: прогресс, результаты и договорённости с учеником.
         </p>
       </header>
 

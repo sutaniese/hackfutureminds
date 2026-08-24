@@ -1,8 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
+import { useAuth } from '@/components/shell/useAuth'
+import { saveTargetUniversity } from '../lib/targetUniversity'
 import {
   findUniversity,
   getUniversityWithDefaults,
@@ -130,6 +132,9 @@ export function UniversityDetailPage() {
 
         <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
           <YourFitCard
+            universityId={data.id}
+            universityName={data.nameEn || data.name}
+            universityCity={data.city}
             languageRequirement={data.requirements.languageRequirement}
             scoringSystem={data.requirements.scoringSystem}
             requiredDocs={data.requirements.requiredDocs}
@@ -280,18 +285,51 @@ function DocRow({ d }: { d: RequiredDoc }) {
 }
 
 function YourFitCard({
+  universityId,
+  universityName,
+  universityCity,
   languageRequirement,
   scoringSystem,
   requiredDocs,
 }: {
+  universityId: string
+  universityName: string
+  universityCity: string
   languageRequirement: string
   scoringSystem: string
   requiredDocs: RequiredDoc[]
 }) {
+  const router = useRouter()
+  const { user, status } = useAuth()
+
+  function handleGetStarted() {
+    saveTargetUniversity({ id: universityId, name: universityName, city: universityCity })
+    if (status !== 'authed' || !user) {
+      router.push(`/register?redirect=${encodeURIComponent('/onboarding')}`)
+      return
+    }
+    if (user.role === 'student') {
+      router.push('/onboarding')
+      return
+    }
+    router.push('/hub/agent')
+  }
+
+  const cta =
+    status !== 'authed' || !user
+      ? 'Get Started'
+      : user.role === 'student'
+        ? 'Continue to plan'
+        : 'Ask AI about this university'
+
   return (
     <div className="rounded-2xl border border-pathwise-accent bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-pathwise-ink">Your Fit</h3>
-      <p className="mt-1 text-xs text-pathwise-muted">Sign in to see your eligibility</p>
+      <p className="mt-1 text-xs text-pathwise-muted">
+        {status === 'authed' && user
+          ? 'Save this university as a target and continue in your cabinet.'
+          : 'Sign in to see your eligibility'}
+      </p>
       <dl className="mt-4 space-y-2 text-sm">
         <div>
           <dt className="text-[10px] font-semibold uppercase tracking-wider text-pathwise-muted">
@@ -326,9 +364,10 @@ function YourFitCard({
       </dl>
       <button
         type="button"
+        onClick={handleGetStarted}
         className="mt-4 w-full rounded-full bg-pathwise-accent px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-pathwise-accent-strong"
       >
-        Get Started
+        {cta}
       </button>
     </div>
   )

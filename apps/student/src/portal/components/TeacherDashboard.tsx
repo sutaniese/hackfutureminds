@@ -164,7 +164,7 @@ export function TeacherDashboard() {
                 Создать класс и сгенерировать код
               </button>
               <p className="mt-2 text-xs text-pathwise-muted">
-                Класс сохраняется на сервере (vault: <code>ten-vault/classes/&lt;id&gt;.md</code>).
+                Класс получает код приглашения. Ученики видятся в сводке, AI помнит их результаты.
               </p>
             </form>
 
