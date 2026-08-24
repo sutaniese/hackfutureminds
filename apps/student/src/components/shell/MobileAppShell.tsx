@@ -9,12 +9,17 @@ import { SHELL_PX } from "@/lib/shell-layout";
 import { useI18n } from "@/i18n/I18nProvider";
 import Link from "next/link";
 import { A11yTopBar } from "./A11yTopBar";
+import { UnifiedSiteNav } from "./UnifiedSiteNav";
+import { RoleRouteGuard } from "./RoleRouteGuard";
+import { useAuth } from "./useAuth";
 import { RouteTransition } from "./RouteTransition";
 import { BottomNav } from "./BottomNav";
 import { ThemeInit } from "./ThemeInit";
 
 export function MobileAppShell({ children }: { children: React.ReactNode }) {
   const { t } = useI18n();
+  const { user } = useAuth();
+  const showStudentNav = !user || user.role === "student";
   return (
     <div className="flex min-h-dvh w-full min-w-0 flex-col bg-pathwise-page text-foreground">
       <a href="#main" className="pw-skip">
@@ -25,14 +30,17 @@ export function MobileAppShell({ children }: { children: React.ReactNode }) {
           поэтому полоса не может уехать под шапку на устройствах с вырезом. */}
       <div className="sticky top-0 z-30 shrink-0">
         <A11yTopBar />
+        <UnifiedSiteNav />
         <XPBar />
       </div>
       <main
         id="main"
-        className={`pw-pb-nav ${SHELL_PX} flex-1 overflow-y-auto py-6 md:py-10`}
+        className={`${showStudentNav ? "pw-pb-nav" : ""} ${SHELL_PX} flex-1 overflow-y-auto py-6 md:py-10`}
         style={{ minHeight: "0" }}
       >
-        <RouteTransition>{children}</RouteTransition>
+        <RouteTransition>
+          <RoleRouteGuard>{children}</RoleRouteGuard>
+        </RouteTransition>
       </main>
       <footer className="border-t border-pathwise-line/50 bg-white ">
         <div
@@ -48,7 +56,7 @@ export function MobileAppShell({ children }: { children: React.ReactNode }) {
           <span className="opacity-70">{t("footer.line")}</span>
         </div>
       </footer>
-      <BottomNav />
+      {showStudentNav ? <BottomNav /> : null}
       <VoiceAssistant />
       <BadgeToast />
       <LevelUpModal />

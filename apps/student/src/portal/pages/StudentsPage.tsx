@@ -11,7 +11,7 @@ export function StudentsPage() {
   const [mode, setMode] = useState<'edit' | 'new'>('edit')
 
   async function handleDelete(id: string) {
-    if (!confirm('Удалить ученика и его vault-папку?')) return
+    if (!confirm('Удалить ученика и его заметки?')) return
     await api.deleteStudent(id)
     removeLocal(id)
     await reload()
@@ -22,11 +22,11 @@ export function StudentsPage() {
       <PortalPageHero
         kicker="Ученики"
         title="Профили, планы и заметки в одном месте"
-        description="Создавайте учеников, редактируйте карьерные данные и храните контекст в локальном JSON-store и ten-vault."
+        description="Создавайте учеников, редактируйте карьерные данные и храните контекст, который видит AI-наставник."
         stats={[
           { value: String(students.length), label: 'профилей' },
           { value: activeStudentId ? '1' : '0', label: 'выбран' },
-          { value: 'Vault', label: 'контекст' },
+          { value: 'AI', label: 'память прогресса' },
         ]}
       />
 

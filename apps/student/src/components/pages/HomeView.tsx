@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   ROLE_ENTRY_PATHS,
   ROLE_LABELS,
   type UserRole,
 } from "@/lib/site-nav";
-import { useSelectedRole } from "@/components/shell/useSelectedRole";
 import { useAuth } from "@/components/shell/useAuth";
 import { useI18n } from "@/i18n/I18nProvider";
 import { profileHref } from "@/lib/profile-slug";
@@ -38,7 +37,6 @@ function buildEntryCards(t: (key: string) => string): ReadonlyArray<EntryCard> {
 export function HomeView() {
   const router = useRouter();
   const { t } = useI18n();
-  const { setRole } = useSelectedRole();
   const { user, status, logout } = useAuth();
   const isAuthed = status === "authed" && Boolean(user);
 
@@ -102,16 +100,24 @@ export function HomeView() {
     [t],
   );
 
+  useEffect(() => {
+    if (!isAuthed || !user) return;
+    if (user.role === "student") return;
+    router.replace(ROLE_ENTRY_PATHS[user.role]);
+  }, [isAuthed, router, user]);
+
   function handleEntryClick(card: EntryCard) {
     if (isAuthed && user) {
-      setRole(card.role);
-      router.push(ROLE_ENTRY_PATHS[card.role]);
+      // Stay on the account role — do not silently become a student.
+      router.push(ROLE_ENTRY_PATHS[user.role === card.role ? card.role : user.role]);
       return;
     }
     router.push(
       `/register?redirect=${encodeURIComponent(ROLE_ENTRY_PATHS[card.role])}`,
     );
   }
+
+  const authedHome = isAuthed && user ? ROLE_ENTRY_PATHS[user.role] : null;
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 text-[#111827]">
@@ -132,16 +138,14 @@ export function HomeView() {
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link
-                href={isAuthed ? "/learning" : "/register?redirect=%2Flearning"}
+                href={authedHome ?? "/register?redirect=%2Flearning"}
                 className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#111827] px-6 text-sm font-black text-white no-underline shadow-sm transition hover:-translate-y-0.5 hover:bg-[#6C63FF]"
               >
                 {t("home.landing.ctaPrimary")}
               </Link>
               <Link
                 href={
-                  isAuthed
-                    ? "/learning/diagnostics"
-                    : "/register?redirect=%2Flearning%2Fdiagnostics"
+                  authedHome ?? "/register?redirect=%2Flearning%2Fdiagnostics"
                 }
                 className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#6C63FF] bg-[#6C63FF]/10 px-6 text-sm font-black text-[#554dd6] no-underline shadow-sm transition hover:-translate-y-0.5 hover:bg-[#6C63FF]/15"
               >

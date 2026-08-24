@@ -107,7 +107,7 @@ export function StudentEditor({ studentId, onSaved }: Props) {
           setInfo(`Сохранено, но в класс не добавили: ${err instanceof Error ? err.message : 'ошибка'}`)
         }
       } else {
-        setInfo('Сохранено в vault.')
+        setInfo('Сохранено. AI-наставник увидит эти данные.')
       }
       onSaved?.(saved)
     } catch (err) {
@@ -127,7 +127,7 @@ export function StudentEditor({ studentId, onSaved }: Props) {
         {initial ? `Редактировать: ${initial.displayName}` : 'Добавить нового ученика'}
       </h2>
       <p className="mt-1 text-xs text-pathwise-muted">
-        Поля попадают в Obsidian-vault и становятся памятью AI-агента.
+        Поля сохраняются в профиле ученика и становятся памятью AI-наставника.
       </p>
 
       <div className="mt-5 grid gap-4 md:grid-cols-2">

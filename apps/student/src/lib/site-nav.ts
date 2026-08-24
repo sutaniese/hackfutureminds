@@ -30,7 +30,7 @@ export const ROLE_NAV_SECTIONS: Record<UserRole, SiteNavSection[]> = {
     {
       title: "Студент",
       links: [
-        { href: "/", label: "Вход", end: true },
+        { href: "/", label: "Главная", end: true },
         { href: "/onboarding", label: "Старт" },
         { href: "/learning", label: "Обучение" },
         { href: "/results", label: "План" },
@@ -46,7 +46,6 @@ export const ROLE_NAV_SECTIONS: Record<UserRole, SiteNavSection[]> = {
     {
       title: "Родитель",
       links: [
-        { href: "/", label: "Вход", end: true },
         { href: "/hub/roditeli", label: "Кабинет" },
         { href: "/hub/agent", label: "AI-наставник", end: true },
         { href: "/hub/vuzy", label: "Университеты" },
@@ -57,8 +56,7 @@ export const ROLE_NAV_SECTIONS: Record<UserRole, SiteNavSection[]> = {
     {
       title: "Учитель",
       links: [
-        { href: "/", label: "Вход", end: true },
-        { href: "/hub/uchitelya", label: "Класс" },
+        { href: "/hub/uchitelya", label: "Кабинет" },
         { href: "/hub/obuchenie", label: "Обучение" },
         { href: "/hub/uchenik", label: "Ученики" },
         { href: "/hub/agent", label: "AI-наставник", end: true },
@@ -67,6 +65,15 @@ export const ROLE_NAV_SECTIONS: Record<UserRole, SiteNavSection[]> = {
     },
   ],
 };
+
+/** Home for a signed-in account — never the marketing landing for teacher/parent. */
+export function cabinetPathForRole(role: UserRole): string {
+  return ROLE_ENTRY_PATHS[role];
+}
+
+export function isStudentOnlyPath(pathname: string): boolean {
+  return roleForPath(pathname) === "student";
+}
 
 export function isSiteNavActive(pathname: string, link: SiteNavLink) {
   if (link.end) return pathname === link.href;
@@ -116,6 +123,10 @@ export function roleForPath(pathname: string): UserRole | null {
 
 export function isPathAllowedForRole(pathname: string, role: UserRole): boolean {
   if (pathname === "/" || pathname === "/accessibility" || pathname.startsWith("/accessibility/")) {
+    return true;
+  }
+  // University catalog is shared — Get Started must work for every role.
+  if (pathname === "/hub/vuzy" || pathname.startsWith("/hub/vuzy/")) {
     return true;
   }
   if (role === "student" && (pathname === "/profile" || pathname.startsWith("/profile/"))) {

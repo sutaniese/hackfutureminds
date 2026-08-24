@@ -2,13 +2,13 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, unlink
 import { dirname, join, resolve } from 'path'
 
 /**
- * Persistent JSON-store + Obsidian-style markdown vault on disk.
+ * Persistent JSON-store + optional markdown snapshots on disk (memory fallback on serverless).
  * Local-only, dev-friendly: ten-vault/ next to project root.
  *
  * Layout:
  *   ten-vault/
  *     db.json                  — all entities (students, classes, conversations)
- *     students/<id>/profile.md — Obsidian-готовый MD по студенту (источник памяти агента)
+ *     students/<id>/profile.md — markdown snapshot of the student (AI memory source)
  *     students/<id>/notes/*.md — заметки/мемоарка пользователя (writable)
  *     classes/<id>.md          — обзор класса
  */
@@ -87,36 +87,84 @@ export type DBShape = {
   conversations: Record<string, Conversation>
 }
 
-const ROOT = resolve(process.cwd(), 'ten-vault')
+function emptyDb(): DBShape {
+  return { students: {}, classes: {}, conversations: {} }
+}
+
+function isServerlessFs(): boolean {
+  return Boolean(
+    process.env.VERCEL ||
+      process.env.AWS_LAMBDA_FUNCTION_NAME ||
+      process.cwd().startsWith('/var/task'),
+  )
+}
+
+function resolveVaultRoot(): string {
+  const serverless = isServerlessFs()
+  const fromEnv = process.env.VAULT_ROOT?.trim()
+  // Never mkdir under the read-only Lambda bundle even if VAULT_ROOT points there.
+  if (fromEnv && (!serverless || fromEnv.startsWith('/tmp'))) return fromEnv
+  return serverless ? join('/tmp', 'ten-vault') : resolve(process.cwd(), 'ten-vault')
+}
+
+const ROOT = resolveVaultRoot()
 const DB_PATH = join(ROOT, 'db.json')
 
-function ensureDir(p: string) {
-  if (!existsSync(p)) mkdirSync(p, { recursive: true })
+let memoryDb: DBShape | null = null
+let diskEnabled = true
+const notesMemory: Record<string, StudentNote[]> = {}
+
+function ensureDir(p: string): boolean {
+  if (!diskEnabled) return false
+  try {
+    if (!existsSync(p)) mkdirSync(p, { recursive: true })
+    return true
+  } catch {
+    diskEnabled = false
+    return false
+  }
 }
 
 function readDb(): DBShape {
-  ensureDir(ROOT)
+  if (memoryDb && !diskEnabled) return memoryDb
+  if (!ensureDir(ROOT)) {
+    memoryDb = memoryDb ?? emptyDb()
+    return memoryDb
+  }
   if (!existsSync(DB_PATH)) {
-    const empty: DBShape = { students: {}, classes: {}, conversations: {} }
-    writeFileSync(DB_PATH, JSON.stringify(empty, null, 2), 'utf8')
+    const empty = emptyDb()
+    try {
+      writeFileSync(DB_PATH, JSON.stringify(empty, null, 2), 'utf8')
+    } catch {
+      diskEnabled = false
+    }
+    memoryDb = empty
     return empty
   }
   try {
     const raw = readFileSync(DB_PATH, 'utf8')
     const parsed = JSON.parse(raw) as DBShape
-    return {
+    const db: DBShape = {
       students: parsed.students ?? {},
       classes: parsed.classes ?? {},
       conversations: parsed.conversations ?? {},
     }
+    memoryDb = db
+    return db
   } catch {
-    return { students: {}, classes: {}, conversations: {} }
+    memoryDb = memoryDb ?? emptyDb()
+    return memoryDb
   }
 }
 
 function writeDb(db: DBShape) {
-  ensureDir(ROOT)
-  writeFileSync(DB_PATH, JSON.stringify(db, null, 2), 'utf8')
+  memoryDb = db
+  if (!ensureDir(ROOT)) return
+  try {
+    writeFileSync(DB_PATH, JSON.stringify(db, null, 2), 'utf8')
+  } catch {
+    diskEnabled = false
+  }
 }
 
 function studentDir(id: string) {
@@ -197,7 +245,7 @@ function formatStudentMarkdown(s: StudentProfile, classCtx?: TeacherClass): stri
 
   return `${fm}# ${s.displayName}
 
-> Этот файл — память AI-ассистента **ten** для конкретного ученика. Vault-стиль (Obsidian).
+> Этот файл — память AI-ассистента **ten** для конкретного ученика.
 > Свободно редактируй, добавляй заметки в \`notes/\`. Все изменения видны агенту.
 
 ## Профиль
@@ -263,16 +311,24 @@ ${lines || '_никого_'}
 }
 
 function persistStudentMarkdown(s: StudentProfile, db: DBShape) {
-  ensureDir(studentDir(s.id))
-  ensureDir(studentNotesDir(s.id))
-  const cls = s.classId ? db.classes[s.classId] : undefined
-  writeFileSync(studentProfilePath(s.id), formatStudentMarkdown(s, cls), 'utf8')
+  try {
+    if (!ensureDir(studentDir(s.id))) return
+    ensureDir(studentNotesDir(s.id))
+    const cls = s.classId ? db.classes[s.classId] : undefined
+    writeFileSync(studentProfilePath(s.id), formatStudentMarkdown(s, cls), 'utf8')
+  } catch {
+    diskEnabled = false
+  }
 }
 
 function persistClassMarkdown(c: TeacherClass, db: DBShape) {
-  ensureDir(dirname(classMdPath(c.id)))
-  const ss = c.studentIds.map((id) => db.students[id]).filter(Boolean) as StudentProfile[]
-  writeFileSync(classMdPath(c.id), formatClassMarkdown(c, ss), 'utf8')
+  try {
+    if (!ensureDir(dirname(classMdPath(c.id)))) return
+    const ss = c.studentIds.map((id) => db.students[id]).filter(Boolean) as StudentProfile[]
+    writeFileSync(classMdPath(c.id), formatClassMarkdown(c, ss), 'utf8')
+  } catch {
+    diskEnabled = false
+  }
 }
 
 /* ─────────────────────────  Public API  ───────────────────────── */
@@ -382,7 +438,7 @@ export function deleteClass(id: string): boolean {
   return true
 }
 
-/* ─── Notes (Obsidian writable) ─── */
+/* ─── Notes ─── */
 
 export type StudentNote = {
   fileName: string
@@ -392,46 +448,81 @@ export type StudentNote = {
 }
 
 export function listStudentNotes(studentId: string): StudentNote[] {
+  if (!diskEnabled) return notesMemory[studentId] ?? []
   const dir = studentNotesDir(studentId)
-  if (!existsSync(dir)) return []
-  const files = readdirSync(dir).filter((f) => f.endsWith('.md'))
-  return files.map((fileName) => {
-    const full = join(dir, fileName)
-    const content = readFileSync(full, 'utf8')
-    const titleLine = content.split(/\r?\n/).find((l) => l.startsWith('# '))
-    return {
-      fileName,
-      title: titleLine ? titleLine.replace(/^#\s+/, '') : fileName.replace(/\.md$/, ''),
-      content,
-      updatedAt: '', // быстрая выдача без stat
-    }
-  })
+  try {
+    if (!existsSync(dir)) return notesMemory[studentId] ?? []
+    const files = readdirSync(dir).filter((f) => f.endsWith('.md'))
+    const notes = files.map((fileName) => {
+      const full = join(dir, fileName)
+      const content = readFileSync(full, 'utf8')
+      const titleLine = content.split(/\r?\n/).find((l) => l.startsWith('# '))
+      return {
+        fileName,
+        title: titleLine ? titleLine.replace(/^#\s+/, '') : fileName.replace(/\.md$/, ''),
+        content,
+        updatedAt: '',
+      }
+    })
+    notesMemory[studentId] = notes
+    return notes
+  } catch {
+    diskEnabled = false
+    return notesMemory[studentId] ?? []
+  }
 }
 
 export function readStudentNote(studentId: string, fileName: string): string | null {
   const safe = sanitizeFileName(fileName)
   if (!safe) return null
-  const full = join(studentNotesDir(studentId), safe)
-  if (!existsSync(full)) return null
-  return readFileSync(full, 'utf8')
+  const mem = notesMemory[studentId]?.find((n) => n.fileName === safe)
+  try {
+    const full = join(studentNotesDir(studentId), safe)
+    if (!existsSync(full)) return mem?.content ?? null
+    return readFileSync(full, 'utf8')
+  } catch {
+    diskEnabled = false
+    return mem?.content ?? null
+  }
 }
 
 export function saveStudentNote(studentId: string, title: string, content: string, fileName?: string): StudentNote {
-  ensureDir(studentNotesDir(studentId))
   const name = sanitizeFileName(fileName ?? `${title || 'note'}.md`) || `note-${Date.now()}.md`
-  const full = join(studentNotesDir(studentId), name)
   const body = content.startsWith('# ') ? content : `# ${title || name}\n\n${content}\n`
-  writeFileSync(full, body, 'utf8')
-  return { fileName: name, title: title || name.replace(/\.md$/, ''), content: body, updatedAt: nowIso() }
+  const note: StudentNote = {
+    fileName: name,
+    title: title || name.replace(/\.md$/, ''),
+    content: body,
+    updatedAt: nowIso(),
+  }
+  notesMemory[studentId] = [
+    ...(notesMemory[studentId] ?? []).filter((n) => n.fileName !== name),
+    note,
+  ]
+  try {
+    if (ensureDir(studentNotesDir(studentId))) {
+      writeFileSync(join(studentNotesDir(studentId), name), body, 'utf8')
+    }
+  } catch {
+    diskEnabled = false
+  }
+  return note
 }
 
 export function deleteStudentNote(studentId: string, fileName: string): boolean {
   const safe = sanitizeFileName(fileName)
   if (!safe) return false
+  const mem = notesMemory[studentId]
+  if (mem) notesMemory[studentId] = mem.filter((n) => n.fileName !== safe)
   const full = join(studentNotesDir(studentId), safe)
-  if (!existsSync(full)) return false
-  unlinkSync(full)
-  return true
+  try {
+    if (!existsSync(full)) return Boolean(mem?.some((n) => n.fileName === safe))
+    unlinkSync(full)
+    return true
+  } catch {
+    diskEnabled = false
+    return true
+  }
 }
 
 function sanitizeFileName(input: string): string {
@@ -490,9 +581,14 @@ export function getStudentVaultMarkdown(studentId: string): {
 } | null {
   const s = getStudent(studentId)
   if (!s) return null
-  const profile = existsSync(studentProfilePath(s.id))
-    ? readFileSync(studentProfilePath(s.id), 'utf8')
-    : formatStudentMarkdown(s, s.classId ? readDb().classes[s.classId] : undefined)
+  let profile = formatStudentMarkdown(s, s.classId ? readDb().classes[s.classId] : undefined)
+  try {
+    if (existsSync(studentProfilePath(s.id))) {
+      profile = readFileSync(studentProfilePath(s.id), 'utf8')
+    }
+  } catch {
+    diskEnabled = false
+  }
   const notes = listStudentNotes(s.id)
   return { profile, notes }
 }

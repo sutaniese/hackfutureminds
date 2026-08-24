@@ -11,7 +11,6 @@ import {
 import {
   getCurrentUser,
   subscribeAuth,
-  updateCurrentUserRole,
 } from "@/lib/auth";
 
 /**
@@ -70,13 +69,24 @@ export function useSelectedRole() {
   }, [pathname]);
 
   const setRole = useCallback((next: UserRole) => {
+    const signedIn = getCurrentUser();
+    // Account role is fixed at registration. Switching cards must not turn a
+    // teacher/parent into a student (that sent people back to the student home).
+    if (signedIn) {
+      setRoleState(signedIn.role);
+      try {
+        localStorage.setItem(ROLE_STORAGE_KEY, signedIn.role);
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
     setRoleState(next);
     try {
       localStorage.setItem(ROLE_STORAGE_KEY, next);
     } catch {
       /* ignore */
     }
-    updateCurrentUserRole(next);
   }, []);
 
   const clearRole = useCallback(() => {

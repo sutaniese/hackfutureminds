@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import {
+  ROLE_ENTRY_PATHS,
   ROLE_LABELS,
   isPathAllowedForRole,
   roleForPath,
@@ -119,8 +120,8 @@ export function RoleRouteGuard({ children }: { children: React.ReactNode }) {
         title="Эта страница недоступна для выбранной роли"
         description="Чтобы не смешивать кабинеты, навигация и страницы разделены по ролям. Вернитесь на главный экран и выберите подходящий вход."
         currentRole={effectiveRole}
-        primaryHref="/"
-        primaryLabel="На главную"
+        primaryHref={ROLE_ENTRY_PATHS[effectiveRole]}
+        primaryLabel="В кабинет"
       />
     );
   }

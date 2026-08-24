@@ -67,11 +67,11 @@ export function AgentChat() {
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-pathwise-accent-strong">AI-наставник</p>
           <h2 id="agent-title" className="mt-1 text-2xl font-bold text-pathwise-ink">
-            Чат с агентом по Obsidian-vault
+            Чат с AI-наставником
           </h2>
           <p className="text-xs text-pathwise-muted">
-            Память агента — папка <code className="rounded bg-pathwise-accent-soft px-1">ten-vault/students/&lt;id&gt;</code>.
-            Файлы можно открыть в Obsidian.
+            Агент помнит профиль ученика, результаты диагностики и заметки по прогрессу.
+            Учитель может спросить, где пробелы и что делать дальше.
           </p>
         </div>
         <div className="flex flex-wrap items-end gap-2">
@@ -103,7 +103,7 @@ export function AgentChat() {
       </header>
 
       {!activeStudent && (
-        <p className="mt-4 text-sm text-pathwise-muted">Выберите ученика — память грузится из его vault-файла.</p>
+        <p className="mt-4 text-sm text-pathwise-muted">Выберите ученика — наставник подгрузит его профиль и результаты.</p>
       )}
 
       {activeStudent && (
