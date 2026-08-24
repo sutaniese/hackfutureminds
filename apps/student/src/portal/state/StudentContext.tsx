@@ -127,6 +127,44 @@ function mergeStudents(serverStudents: ServerStudent[], localStudents: ServerStu
   return [...byId.values()]
 }
 
+/** Push browser-local student profiles into the server vault (required for AI coach API). */
+async function syncLocalStudentsToServer(
+  serverStudents: ServerStudent[],
+  localStudents: ServerStudent[],
+): Promise<ServerStudent[]> {
+  const serverById = new Map(serverStudents.map((s) => [s.id, s]))
+  const synced = [...serverStudents]
+
+  for (const local of localStudents) {
+    const existing = serverById.get(local.id)
+    if (!existing) {
+      try {
+        const saved = await api.upsertStudent(local)
+        serverById.set(saved.id, saved)
+        synced.push(saved)
+      } catch {
+        /* keep local-only in UI if vault write fails */
+      }
+      continue
+    }
+
+    const localTs = Date.parse(local.updatedAt ?? '')
+    const serverTs = Date.parse(existing.updatedAt ?? '')
+    if (Number.isFinite(localTs) && (!Number.isFinite(serverTs) || localTs > serverTs)) {
+      try {
+        const saved = await api.upsertStudent({ ...existing, ...local, id: local.id })
+        serverById.set(saved.id, saved)
+        const idx = synced.findIndex((s) => s.id === saved.id)
+        if (idx >= 0) synced[idx] = saved
+      } catch {
+        /* keep server copy */
+      }
+    }
+  }
+
+  return mergeStudents(synced, localStudents)
+}
+
 export function StudentProvider({ children }: { children: ReactNode }) {
   const [students, setStudents] = useState<ServerStudent[]>([])
   const [loading, setLoading] = useState(true)
@@ -154,7 +192,8 @@ export function StudentProvider({ children }: { children: ReactNode }) {
     setError(null)
     const localList = localStudentProfiles()
     try {
-      const list = mergeStudents(await api.listStudents(), localList)
+      const serverList = await api.listStudents()
+      const list = await syncLocalStudentsToServer(serverList, localList)
       setStudents(list)
       if (!activeStudentId && list[0]) setActiveStudentId(list[0].id)
       else if (activeStudentId && !list.find((s) => s.id === activeStudentId) && list[0]) {

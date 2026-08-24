@@ -12,13 +12,14 @@ export function AgentChat() {
   const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!activeStudentId) {
+    if (!activeStudentId || !activeStudent) {
       setMessages([])
       return
     }
     let cancelled = false
     void (async () => {
       try {
+        await api.upsertStudent(activeStudent)
         const conv = await api.chatHistory(activeStudentId)
         if (!cancelled) setMessages(conv.messages)
       } catch (err) {
@@ -28,7 +29,7 @@ export function AgentChat() {
     return () => {
       cancelled = true
     }
-  }, [activeStudentId])
+  }, [activeStudentId, activeStudent])
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' })
@@ -36,7 +37,7 @@ export function AgentChat() {
 
   async function handleSend(e: FormEvent) {
     e.preventDefault()
-    if (!activeStudentId || !input.trim() || busy) return
+    if (!activeStudentId || !activeStudent || !input.trim() || busy) return
     const text = input.trim()
     setInput('')
     setError(null)
@@ -44,6 +45,7 @@ export function AgentChat() {
     setMessages((prev) => [...prev, userMsg])
     setBusy(true)
     try {
+      await api.upsertStudent(activeStudent)
       const r = await api.chat(activeStudentId, text)
       setSource(r.source)
       const reply: ChatMessage = { role: 'assistant', text: r.reply, ts: new Date().toISOString() }
