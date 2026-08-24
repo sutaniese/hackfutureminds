@@ -7,11 +7,15 @@ import { TenWordmark } from "@/components/brand/TenWordmark";
 import { SHELL_PX } from "@/lib/shell-layout";
 import { useI18n } from "@/i18n/I18nProvider";
 import { LS_HIGH_CONTRAST, LS_VOICE } from "@/lib/pw-storage";
+import { ROLE_ENTRY_PATHS } from "@/lib/site-nav";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useAuth } from "./useAuth";
 
 export function A11yTopBar() {
   const { t } = useI18n();
   const pathname = usePathname() || "/";
+  const { user, status, logout } = useAuth();
+  const showSessionActions = !user || user.role === "student";
   const [contrast, setContrast] = useState(false);
   const [voice, setVoice] = useState(false);
   const helpActive = pathname.startsWith("/accessibility");
@@ -64,7 +68,7 @@ export function A11yTopBar() {
       className="pw-pt-safe relative z-30 border-b border-pathwise-line/70 bg-white/95"
       style={{ minHeight: "var(--pw-a11y-top)" }}
     >
-      <div className={`${SHELL_PX} flex items-center gap-3 py-2.5`}>
+      <div className={`${SHELL_PX} flex flex-wrap items-center gap-3 py-2.5`}>
         <Link
           href="/"
           className="flex shrink-0 items-baseline no-underline"
@@ -76,7 +80,7 @@ export function A11yTopBar() {
         <LanguageSwitcher />
 
         <div
-          className="ml-auto flex items-center gap-1.5"
+          className="ml-auto flex max-w-full items-center gap-1.5 overflow-x-auto"
           role="group"
           aria-label={t("a11y.group")}
         >
@@ -118,6 +122,38 @@ export function A11yTopBar() {
             <span className="sr-only">{t("a11y.help")}</span>
             <span className="pointer-events-none absolute top-full mt-2 hidden rounded-lg bg-slate-900 px-2 py-1 text-[11px] text-white group-hover:block">{t("a11y.help")}</span>
           </Link>
+          {showSessionActions && status === "authed" && user ? (
+            <>
+              <Link
+                href={ROLE_ENTRY_PATHS[user.role]}
+                className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-pathwise-muted no-underline hover:bg-slate-50 hover:text-slate-900"
+              >
+                Кабинет
+              </Link>
+              <button
+                type="button"
+                onClick={logout}
+                className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-[#6C63FF] px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#5b53e6]"
+              >
+                Выйти
+              </button>
+            </>
+          ) : showSessionActions && status === "guest" ? (
+            <>
+              <Link
+                href="/login"
+                className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-foreground no-underline hover:bg-slate-50"
+              >
+                Войти
+              </Link>
+              <Link
+                href="/register"
+                className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-[#6C63FF] px-3 py-2 text-xs font-semibold text-white no-underline shadow-sm hover:bg-[#5b53e6]"
+              >
+                Регистрация
+              </Link>
+            </>
+          ) : null}
         </div>
       </div>
     </header>

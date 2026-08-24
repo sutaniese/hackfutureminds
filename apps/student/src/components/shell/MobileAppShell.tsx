@@ -30,7 +30,8 @@ export function MobileAppShell({ children }: { children: React.ReactNode }) {
           поэтому полоса не может уехать под шапку на устройствах с вырезом. */}
       <div className="sticky top-0 z-30 shrink-0">
         <A11yTopBar />
-        <UnifiedSiteNav />
+        {/* Students already have BottomNav; keep this bar for teacher/parent on student-shell routes. */}
+        {showStudentNav ? null : <UnifiedSiteNav />}
         <XPBar />
       </div>
       <main
