@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
+import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { ContentCard } from "@/components/ui/PageHero";
 import { useAuth } from "@/components/shell/useAuth";
 import { useUserProgress } from "@/components/gamification/UserProgressProvider";
@@ -234,13 +235,15 @@ export function TopicPractice({ topicId }: { topicId: string }) {
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <StatTile
             label="Освоено"
-            value={`${mastery}%`}
+            value={<AnimatedNumber value={mastery} suffix="%" duration={700} />}
             hint={`${solvedCount} из ${ofTasksLabel(topic.tasks.length)}`}
             tone="accent"
           />
           <StatTile
             label="Точность по теме"
-            value={accuracy === null ? "—" : `${accuracy}%`}
+            value={
+              accuracy === null ? "—" : <AnimatedNumber value={accuracy} suffix="%" duration={700} />
+            }
             hint={attemptsLabel(topicState?.attempts ?? 0)}
             tone={accuracy !== null && accuracy >= 70 ? "good" : "warn"}
           />

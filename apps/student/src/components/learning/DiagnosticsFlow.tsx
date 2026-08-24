@@ -19,6 +19,7 @@ import {
   LEVEL_LABELS,
   readAllTopics,
   saveDiagnostic,
+  seedDueReview,
   upsertRosterEntry,
   writeLearningProfile,
 } from "@/lib/learning/store";
@@ -26,12 +27,28 @@ import { topicsLabel } from "@/lib/learning/plural";
 import { LEARNING_GOALS, isAnswerCorrect, taskCorrectLabel } from "@/lib/learning/types";
 import type { Difficulty, Grade, LearningGoalId, Task } from "@/lib/learning/types";
 import { AnswerField } from "./AnswerField";
-import { Pill, ProgressBar, StatTile } from "./LearningUI";
+import { DifficultyBadge, Pill, ProgressBar, StatTile } from "./LearningUI";
 
 const GRADES: Grade[] = [7, 8, 9, 10, 11, 12];
 const MINUTES_OPTIONS = [15, 30, 45, 60];
 
 type Stage = "profile" | "test" | "result";
+type ProfileStep = "grade" | "subject" | "goal";
+
+const PROFILE_STEPS: ProfileStep[] = ["grade", "subject", "goal"];
+
+function defaultExamDate(daysAhead = 21): string {
+  const date = new Date();
+  date.setDate(date.getDate() + daysAhead);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function profileStepIndex(step: ProfileStep): number {
+  return PROFILE_STEPS.indexOf(step) + 1;
+}
 
 export function DiagnosticsFlow() {
   const router = useRouter();
@@ -42,8 +59,9 @@ export function DiagnosticsFlow() {
   const [grade, setGrade] = useState<Grade>(9);
   const [subjectId, setSubjectId] = useState<string>("math");
   const [goals, setGoals] = useState<LearningGoalId[]>(["ent"]);
-  const [examDate, setExamDate] = useState("");
+  const [examDate, setExamDate] = useState(defaultExamDate);
   const [minutesPerDay, setMinutesPerDay] = useState(30);
+  const [profileStep, setProfileStep] = useState<ProfileStep>("grade");
 
   const [pool, setPool] = useState<Task[]>([]);
   const [current, setCurrent] = useState<Task | null>(null);
@@ -71,7 +89,7 @@ export function DiagnosticsFlow() {
       grade,
       subjectId,
       goals: goals.length > 0 ? goals : ["school"],
-      examDate: examDate || undefined,
+      examDate: examDate || defaultExamDate(),
       minutesPerDay,
     });
 
@@ -88,6 +106,10 @@ export function DiagnosticsFlow() {
     (finalRecords: DiagnosticRecord[]) => {
       const evaluated = evaluateDiagnostic(subjectId, grade, finalRecords);
       saveDiagnostic(evaluated);
+      const weakTopicId = Object.entries(evaluated.byTopic)
+        .filter(([, score]) => score.total > 0 && score.correct / score.total < 0.6)
+        .map(([topicId]) => topicId)[0] ?? Object.keys(evaluated.byTopic)[0];
+      if (weakTopicId) seedDueReview(weakTopicId);
       setResult(evaluated);
       setStage("result");
       awardXp(40, `learning_diagnostic_${subjectId}`);
@@ -145,147 +167,201 @@ export function DiagnosticsFlow() {
   /* ------------------------------ шаг 1: профиль ------------------------------ */
 
   if (stage === "profile") {
+    const stepNumber = profileStepIndex(profileStep);
+    const selectedSubject = SUBJECTS.find((item) => item.id === subjectId);
+
     return (
       <div className="flex flex-col gap-5">
-        <ContentCard>
+        <ContentCard key={profileStep} className="pw-reveal">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-pathwise-accent-strong">
-            Шаг 1 из 3
+            Шаг 1 из 3 · {stepNumber} / 3
           </p>
           <h2 className="mt-3 text-2xl font-black tracking-tight text-pathwise-ink">
-            Расскажи о себе
+            {profileStep === "grade"
+              ? "Какой у тебя класс?"
+              : profileStep === "subject"
+                ? "Какой предмет подтянуть?"
+                : "Какая цель обучения?"}
           </h2>
           <p className="mt-2 text-sm leading-6 text-pathwise-muted">
-            Класс, предмет и цель определяют, какие задания подберёт система и с какого уровня
-            начнётся диагностика.
+            {profileStep === "grade"
+              ? "Карточка сменится — дальше выберешь предмет. Класс задаёт пул заданий диагностики."
+              : profileStep === "subject"
+                ? "От предмета зависит каталог тем и стартовая сложность вопросов."
+                : "Цель и дата экзамена собирают план и напоминания в кабинете."}
           </p>
 
-          <div className="mt-6">
-            <p className="text-sm font-black text-pathwise-ink">Класс</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {GRADES.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setGrade(item)}
-                  aria-pressed={grade === item}
-                  className={`min-h-12 min-w-14 rounded-full border px-4 text-sm font-black transition ${
-                    grade === item
-                      ? "border-[#6C63FF] bg-[#6C63FF] text-white shadow-sm"
-                      : "border-slate-200 bg-white text-pathwise-ink hover:border-[#6C63FF]/50"
-                  }`}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-7">
-            <p className="text-sm font-black text-pathwise-ink">Предмет</p>
-            <div className="mt-3 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-              {SUBJECTS.map((subject) => {
-                const active = subject.id === subjectId;
-                return (
-                  <button
-                    key={subject.id}
-                    type="button"
-                    onClick={() => setSubjectId(subject.id)}
-                    aria-pressed={active}
-                    className={`flex min-h-20 items-start gap-3 rounded-2xl border p-4 text-left transition ${
-                      active
-                        ? "border-[#6C63FF] bg-[#6C63FF]/5 shadow-sm"
-                        : "border-slate-200 bg-white hover:border-[#6C63FF]/50"
-                    }`}
-                  >
-                    <span
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base font-black text-white"
-                      style={{ backgroundColor: subject.accent }}
-                      aria-hidden
-                    >
-                      {subject.mark}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-black text-pathwise-ink">{subject.title}</span>
-                      <span className="mt-1 block text-xs leading-5 text-pathwise-muted">
-                        {subject.description}
-                      </span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="mt-7">
-            <p className="text-sm font-black text-pathwise-ink">Цель обучения</p>
-            <p className="mt-1 text-xs text-pathwise-muted">Можно выбрать несколько.</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {LEARNING_GOALS.map((goal) => {
-                const active = goals.includes(goal.id);
-                return (
-                  <button
-                    key={goal.id}
-                    type="button"
-                    onClick={() => toggleGoal(goal.id)}
-                    aria-pressed={active}
-                    title={goal.hint}
-                    className={`min-h-12 rounded-full border px-4 text-sm font-bold transition ${
-                      active
-                        ? "border-[#6C63FF] bg-[#6C63FF]/10 text-[#554dd6]"
-                        : "border-slate-200 bg-white text-pathwise-ink hover:border-[#6C63FF]/50"
-                    }`}
-                  >
-                    {goal.title}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="mt-7 grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="exam-date" className="text-sm font-black text-pathwise-ink">
-                Дата экзамена или дедлайна
-              </label>
-              <p className="mt-1 text-xs text-pathwise-muted">Необязательно — влияет на длину плана.</p>
-              <input
-                id="exam-date"
-                type="date"
-                value={examDate}
-                onChange={(event) => setExamDate(event.target.value)}
-                className="pw-input mt-2 w-full px-4 py-3 text-sm font-semibold"
-              />
-            </div>
-            <div>
-              <p className="text-sm font-black text-pathwise-ink">Сколько минут в день готов заниматься</p>
+          {profileStep === "grade" ? (
+            <div className="mt-6">
+              <p className="text-sm font-black text-pathwise-ink">Класс</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {MINUTES_OPTIONS.map((value) => (
+                {GRADES.map((item) => (
                   <button
-                    key={value}
+                    key={item}
                     type="button"
-                    onClick={() => setMinutesPerDay(value)}
-                    aria-pressed={minutesPerDay === value}
-                    className={`min-h-12 rounded-full border px-4 text-sm font-bold transition ${
-                      minutesPerDay === value
-                        ? "border-[#6C63FF] bg-[#6C63FF] text-white"
+                    onClick={() => setGrade(item)}
+                    aria-pressed={grade === item}
+                    className={`min-h-12 min-w-14 rounded-full border px-4 text-sm font-black transition ${
+                      grade === item
+                        ? "border-[#6C63FF] bg-[#6C63FF] text-white shadow-sm"
                         : "border-slate-200 bg-white text-pathwise-ink hover:border-[#6C63FF]/50"
                     }`}
                   >
-                    {value} мин
+                    {item}
                   </button>
                 ))}
               </div>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setProfileStep("subject")}
+                  className="pw-btn-primary text-sm"
+                >
+                  Дальше: предмет
+                </button>
+                <p className="text-xs font-semibold text-pathwise-muted">Выбран {grade} класс</p>
+              </div>
             </div>
-          </div>
+          ) : null}
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <button type="button" onClick={startTest} className="pw-btn-primary text-sm">
-              Начать диагностику
-            </button>
-            <p className="text-xs font-semibold text-pathwise-muted">
-              {DIAGNOSTIC_SIZE} вопросов · {topicsLabel(subjectTopicCount)} по предмету «{subjectTitle(subjectId)}»
-            </p>
-          </div>
+          {profileStep === "subject" ? (
+            <div className="mt-6">
+              <p className="text-sm font-black text-pathwise-ink">Предмет</p>
+              <div className="mt-3 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                {SUBJECTS.map((subject) => {
+                  const active = subject.id === subjectId;
+                  return (
+                    <button
+                      key={subject.id}
+                      type="button"
+                      onClick={() => setSubjectId(subject.id)}
+                      aria-pressed={active}
+                      className={`flex min-h-20 items-start gap-3 rounded-2xl border p-4 text-left transition ${
+                        active
+                          ? "border-[#6C63FF] bg-[#6C63FF]/5 shadow-sm"
+                          : "border-slate-200 bg-white hover:border-[#6C63FF]/50"
+                      }`}
+                    >
+                      <span
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base font-black text-white"
+                        style={{ backgroundColor: subject.accent }}
+                        aria-hidden
+                      >
+                        {subject.mark}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-sm font-black text-pathwise-ink">{subject.title}</span>
+                        <span className="mt-1 block text-xs leading-5 text-pathwise-muted">
+                          {subject.description}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setProfileStep("grade")}
+                  className="pw-btn-secondary text-sm"
+                >
+                  Назад
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProfileStep("goal")}
+                  className="pw-btn-primary text-sm"
+                >
+                  Дальше: цель
+                </button>
+                <p className="text-xs font-semibold text-pathwise-muted">
+                  {topicsLabel(subjectTopicCount)} · {selectedSubject?.title ?? subjectTitle(subjectId)}
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          {profileStep === "goal" ? (
+            <div className="mt-6">
+              <p className="text-sm font-black text-pathwise-ink">Цель обучения</p>
+              <p className="mt-1 text-xs text-pathwise-muted">Можно выбрать несколько.</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {LEARNING_GOALS.map((goal) => {
+                  const active = goals.includes(goal.id);
+                  return (
+                    <button
+                      key={goal.id}
+                      type="button"
+                      onClick={() => toggleGoal(goal.id)}
+                      aria-pressed={active}
+                      title={goal.hint}
+                      className={`min-h-12 rounded-full border px-4 text-sm font-bold transition ${
+                        active
+                          ? "border-[#6C63FF] bg-[#6C63FF]/10 text-[#554dd6]"
+                          : "border-slate-200 bg-white text-pathwise-ink hover:border-[#6C63FF]/50"
+                      }`}
+                    >
+                      {goal.title}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-7 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="exam-date" className="text-sm font-black text-pathwise-ink">
+                    Дата экзамена или дедлайна
+                  </label>
+                  <p className="mt-1 text-xs text-pathwise-muted">
+                    По умолчанию — через 3 недели, чтобы в кабинете сразу появились напоминания.
+                  </p>
+                  <input
+                    id="exam-date"
+                    type="date"
+                    value={examDate}
+                    onChange={(event) => setExamDate(event.target.value)}
+                    className="pw-input mt-2 w-full px-4 py-3 text-sm font-semibold"
+                  />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-pathwise-ink">Сколько минут в день готов заниматься</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {MINUTES_OPTIONS.map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setMinutesPerDay(value)}
+                        aria-pressed={minutesPerDay === value}
+                        className={`min-h-12 rounded-full border px-4 text-sm font-bold transition ${
+                          minutesPerDay === value
+                            ? "border-[#6C63FF] bg-[#6C63FF] text-white"
+                            : "border-slate-200 bg-white text-pathwise-ink hover:border-[#6C63FF]/50"
+                        }`}
+                      >
+                        {value} мин
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setProfileStep("subject")}
+                  className="pw-btn-secondary text-sm"
+                >
+                  Назад
+                </button>
+                <button type="button" onClick={startTest} className="pw-btn-primary text-sm">
+                  Начать диагностику
+                </button>
+                <p className="text-xs font-semibold text-pathwise-muted">
+                  {DIAGNOSTIC_SIZE} вопросов · {topicsLabel(subjectTopicCount)} по предмету «{subjectTitle(subjectId)}»
+                </p>
+              </div>
+            </div>
+          ) : null}
         </ContentCard>
       </div>
     );
@@ -318,6 +394,12 @@ export function DiagnosticsFlow() {
         </ContentCard>
 
         <ContentCard key={current.id} className="pw-reveal">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-pathwise-accent-strong">
+              Вопрос {answered + 1} из {DIAGNOSTIC_SIZE}
+            </p>
+            <DifficultyBadge difficulty={current.difficulty} />
+          </div>
           {current.passage ? (
             <p className="mb-4 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700 ring-1 ring-slate-200">
               {current.passage}
@@ -440,7 +522,14 @@ export function DiagnosticsFlow() {
           >
             Открыть личный кабинет
           </button>
-          <Link href="/learning/diagnostics" className="pw-btn-secondary text-sm" onClick={() => setStage("profile")}>
+          <Link
+            href="/learning/diagnostics"
+            className="pw-btn-secondary text-sm"
+            onClick={() => {
+              setStage("profile");
+              setProfileStep("grade");
+            }}
+          >
             Пройти заново
           </Link>
         </div>

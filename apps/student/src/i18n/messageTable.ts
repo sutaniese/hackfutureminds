@@ -128,7 +128,7 @@ const T = {
   "home.landing.stat3l": TR("заданий с разбором", "tasks with feedback", "талдаулы тапсырма"),
   "home.landing.stat4v": TR("AI", "AI", "AI"),
   "home.landing.stat4l": TR("подбор и объяснения", "matching & explanations", "іріктеу мен түсіндіру"),
-  "home.learn.kicker": TR("КАК РАБОТАЕТ ОБУЧЕНИЕ", "HOW LEARNING WORKS", "ОҚУ ҚАЛАЙ ЖҰМЫС ІСТЕЙДІ"),
+  "home.learn.kicker": TR("КАК РАБОТАЕТ ОБУЧЕНИЕ", "How Learning Works", "ОҚУ ҚАЛАЙ ЖҰМЫС ІСТЕЙДІ"),
   "home.learn.title": TR(
     "От диагностики до закрытых пробелов — за четыре шага",
     "From a level check to closed gaps in four steps",
