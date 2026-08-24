@@ -1,4 +1,4 @@
-import { getGroqApiKey, getGroqChatModel } from "@/lib/groq-env";
+import { getGroqApiKey, listGroqChatModelCandidates } from "@/lib/groq-env";
 
 /**
  * Server-side chat completions for learning routes.
@@ -7,7 +7,6 @@ import { getGroqApiKey, getGroqChatModel } from "@/lib/groq-env";
 
 const AI_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions";
 const DEFAULT_TIMEOUT_MS = 25_000;
-const FALLBACK_MODELS = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"] as const;
 
 export type GroqMessage = { role: "system" | "user" | "assistant"; content: string };
 
@@ -27,9 +26,7 @@ export function isGroqConfigured(): boolean {
 }
 
 function modelCandidates(): string[] {
-  const preferred = getGroqChatModel(FALLBACK_MODELS[0]);
-  const ordered = [preferred, ...FALLBACK_MODELS.filter((model) => model !== preferred)];
-  return [...new Set(ordered)];
+  return listGroqChatModelCandidates();
 }
 
 /** Groq accepts only one leading system message and alternating user/assistant turns. */
@@ -131,16 +128,19 @@ export async function groqChat(
 
   try {
     let lastError: string | undefined;
-    for (const model of modelCandidates()) {
+    const models = modelCandidates();
+    for (let index = 0; index < models.length; index += 1) {
+      const model = models[index]!;
       const result = await requestChatCompletion(key, model, payload, options, controller.signal);
       if (result.content) return result;
       lastError = result.error;
-      const retryable =
-        result.error?.includes("(404)") ||
-        result.error?.includes("(400)") ||
-        result.error?.toLowerCase().includes("model");
-      if (!retryable) break;
-      console.warn("[ai-chat] model failed, trying fallback:", model, result.error);
+      const authFailure =
+        result.error?.includes("(401)") ||
+        result.error?.toLowerCase().includes("invalid_api_key");
+      if (authFailure) break;
+      if (index < models.length - 1) {
+        console.warn("[ai-chat] model failed, trying fallback:", model, result.error);
+      }
     }
 
     if (lastError) console.error("[ai-chat]", lastError);

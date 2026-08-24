@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGroqApiKey } from "@/lib/groq-env";
+import { getGroqApiKey, resolveGroqChatModel } from "@/lib/groq-env";
 import { UNIVERSITIES } from "@/portal/data/universities";
 import type { OnboardingAnswers } from "@/types/onboarding";
 import type { UniversityProgramRecommendation } from "@/types/generate";
@@ -7,7 +7,7 @@ import type { UniversityProgramRecommendation } from "@/types/generate";
 export const runtime = "nodejs";
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const DEFAULT_MODEL = "llama-3.3-70b-versatile";
+const DEFAULT_MODEL = resolveGroqChatModel();
 
 type RecommendRequest = {
   onboarding?: OnboardingAnswers | null;
@@ -289,7 +289,7 @@ export async function POST(request: Request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: process.env.GROQ_MODEL || DEFAULT_MODEL,
+        model: resolveGroqChatModel(process.env.GROQ_MODEL),
         temperature: 0.2,
         response_format: { type: "json_object" },
         messages: [

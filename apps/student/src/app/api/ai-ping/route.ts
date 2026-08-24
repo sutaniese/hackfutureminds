@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGroqApiKey, getGroqChatModel } from "@/lib/groq-env";
+import { getGroqApiKey, resolveGroqChatModel } from "@/lib/groq-env";
 import { groqChat } from "@/lib/learning/groq-chat";
 import { userFacingAiError } from "@/lib/learning/ai-error-hint";
 
@@ -21,7 +21,7 @@ export async function GET() {
     });
   }
 
-  const model = getGroqChatModel("llama-3.3-70b-versatile");
+  const model = resolveGroqChatModel();
   const { content, error } = await groqChat(
     [{ role: "user", content: "Reply with exactly: OK" }],
     { maxTokens: 8, temperature: 0 },

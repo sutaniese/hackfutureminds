@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { getGroqApiKey } from "@/lib/groq-env";
+import { getGroqApiKey, resolveGroqChatModel } from "@/lib/groq-env";
 
 export const runtime = "nodejs";
 
 const AI_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions";
-const DEFAULT_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
+const DEFAULT_MODEL = resolveGroqChatModel();
 
 type ExtractRequest = {
   fileName?: string;
@@ -140,7 +140,7 @@ export async function POST(request: Request) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: process.env.GROQ_MODEL || DEFAULT_MODEL,
+      model: resolveGroqChatModel(process.env.GROQ_MODEL),
       temperature: 0.1,
       response_format: { type: "json_object" },
       messages: [

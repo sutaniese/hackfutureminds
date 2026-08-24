@@ -15,7 +15,7 @@ export function userFacingAiError(error?: string): string {
     lower.includes("model") &&
     (lower.includes("(404)") || lower.includes("not found") || lower.includes("decommission"))
   ) {
-    return "Модель AI не найдена. Удалите GROQ_MODEL или установите: llama-3.3-70b-versatile";
+    return "Модель AI не найдена. Удалите GROQ_MODEL или установите: openai/gpt-oss-120b";
   }
 
   if (lower.includes("(429)") || lower.includes("rate limit") || lower.includes("rate_limit")) {
