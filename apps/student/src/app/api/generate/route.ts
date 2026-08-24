@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { tryGenerateWithGroq } from "@/lib/generate/groq-optional";
+import { getGroqApiKey } from "@/lib/groq-env";
 import { generateDeterministic } from "@/lib/generate/deterministic";
 import { parseGenerateRequest } from "@/lib/generate/parse-request";
 import { queryLiveGrants, type LiveGrantRow } from "@/lib/grants-live-query";
@@ -221,7 +222,7 @@ export async function POST(request: Request) {
       available_grants: relevantGrants,
     } as GenerateRequest & { available_grants: LiveGrant[] };
 
-    if (process.env.GROQ_API_KEY) {
+    if (getGroqApiKey()) {
       const ai = await tryGenerateWithGroq(payloadWithGrants);
       if (ai && isLikelyResponse(ai)) {
         return NextResponse.json(withLiveGrants(ai, relevantGrants, payload));

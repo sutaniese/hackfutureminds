@@ -130,7 +130,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
       | null;
 
     if (!response.ok) {
-      throw new Error(payload?.error || "Groq не смог оценить документ.");
+      throw new Error(payload?.error || "AI не смог оценить документ.");
     }
     return payload?.evaluation;
   }
@@ -164,7 +164,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         evaluation,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Groq не смог оценить документ.");
+      setError(err instanceof Error ? err.message : "AI не смог оценить документ.");
       setSupportDocument({
         ...meta,
         evaluation: {
@@ -176,7 +176,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           recommendedAccommodations: [
             "Проверить документ вручную перед финальным решением.",
           ],
-          caveats: ["Groq evaluation failed."],
+          caveats: ["AI evaluation failed."],
           evaluatedAt: Date.now(),
         },
       });
@@ -427,12 +427,12 @@ export function AuthForm({ mode }: { mode: Mode }) {
                       className="mt-1.5 block w-full rounded-2xl border border-pathwise-line bg-white px-4 py-3 text-sm text-pathwise-ink shadow-sm file:mr-3 file:rounded-full file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-pathwise-ink"
                     />
                     <span className="mt-1.5 block text-xs text-pathwise-muted">
-                      Изображения анализируются через Groq. PDF/DOCX сохраняются как
+                      Изображения анализируются через AI. PDF/DOCX сохраняются как
                       метаданные и помечаются для ручной проверки.
                     </span>
                     {documentEvaluating ? (
                       <span className="mt-2 block rounded-2xl bg-[#f1efff] px-3 py-2 text-xs font-bold text-[#554dd6]">
-                        Groq оценивает документ…
+                        AI оценивает документ…
                       </span>
                     ) : null}
                     {supportDocument ? (

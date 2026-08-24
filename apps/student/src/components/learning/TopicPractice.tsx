@@ -33,7 +33,7 @@ type Feedback = {
   correct: boolean;
   text: string;
   nextStep: string;
-  source: "groq" | "local";
+  source: "ai" | "local";
   correctAnswer: string;
 };
 
@@ -155,8 +155,8 @@ export function TopicPractice({ topicId }: { topicId: string }) {
         const data = (await readJsonResponse<{
           feedback: string;
           nextStep: string;
-          source: "groq" | "local";
-        }>(response)) as { feedback?: string; nextStep?: string; source?: "groq" | "local" };
+          source: "ai" | "local";
+        }>(response)) as { feedback?: string; nextStep?: string; source?: "ai" | "local" };
 
         if (data.feedback) {
           setFeedback({
@@ -289,8 +289,8 @@ export function TopicPractice({ topicId }: { topicId: string }) {
                 >
                   {feedback.correct ? "Верно" : "Пока неверно"}
                 </p>
-                <Pill tone={feedback.source === "groq" ? "accent" : "muted"}>
-                  {feedback.source === "groq" ? "Разбор от AI" : "Разбор из базы"}
+                <Pill tone={feedback.source === "ai" ? "accent" : "muted"}>
+                  {feedback.source === "ai" ? "Разбор от AI" : "Разбор из базы"}
                 </Pill>
               </div>
 

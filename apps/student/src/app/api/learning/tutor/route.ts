@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { groqChat, type GroqMessage } from "@/lib/learning/groq-chat";
+import { groqChat, isGroqConfigured, type GroqMessage } from "@/lib/learning/groq-chat";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -17,8 +17,11 @@ type TutorRequest = {
 
 type TutorResponse = {
   answer: string;
-  source: "groq" | "local";
+  source: "ai" | "local";
 };
+
+const AI_UNAVAILABLE =
+  "AI-репетитор сейчас недоступен. Попробуйте позже или откройте конспект темы ниже.";
 
 const SYSTEM_PROMPT = [
   "Ты — AI-репетитор образовательной платформы teñ. для школьников Казахстана.",
@@ -83,7 +86,9 @@ export async function POST(request: Request) {
     } satisfies TutorResponse);
   }
 
-  const fallback = localAnswer(body);
+  if (!isGroqConfigured()) {
+    return NextResponse.json(localAnswer(body));
+  }
 
   try {
     const context = [
@@ -99,7 +104,7 @@ export async function POST(request: Request) {
       .slice(-6)
       .map((message) => ({ role: message.role, content: message.text }));
 
-    const raw = await groqChat(
+    const { content, error } = await groqChat(
       [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "system", content: context },
@@ -109,12 +114,15 @@ export async function POST(request: Request) {
       { maxTokens: 600, temperature: 0.5 },
     );
 
-    const answer = raw?.replace(/[`*#]/g, "").trim();
-    if (!answer) return NextResponse.json(fallback);
+    const answer = content?.replace(/[`*#]/g, "").trim();
+    if (answer) {
+      return NextResponse.json({ answer: answer.slice(0, 1600), source: "ai" } satisfies TutorResponse);
+    }
 
-    return NextResponse.json({ answer: answer.slice(0, 1600), source: "groq" } satisfies TutorResponse);
+    console.error("[learning/tutor] AI failed:", error);
+    return NextResponse.json({ answer: AI_UNAVAILABLE, source: "local" } satisfies TutorResponse);
   } catch (error) {
     console.error("[learning/tutor]", error);
-    return NextResponse.json(fallback);
+    return NextResponse.json({ answer: AI_UNAVAILABLE, source: "local" } satisfies TutorResponse);
   }
 }

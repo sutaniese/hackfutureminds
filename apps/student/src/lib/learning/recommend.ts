@@ -394,7 +394,7 @@ export type StudyPlan = {
   headline: string;
   minutesPerDay: number;
   weeks: PlanWeek[];
-  source: "local" | "groq";
+  source: "local" | "ai";
 };
 
 /** Детерминированный план подготовки — работает без ключа AI. */

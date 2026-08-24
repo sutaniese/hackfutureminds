@@ -43,8 +43,12 @@ function mapVoiceTransportError(raw: string, t: (key: string) => string): string
     return t("a11y.voiceServerHtml");
   }
   const u = raw.toLowerCase();
-  if (u.includes("groq_api_key") || u.includes("groq_api") || u.includes("not configured on the server")) {
-    return t("a11y.voiceNoGroq");
+  if (
+    u.includes("not configured on the server") ||
+    u.includes("voice ai is unavailable") ||
+    u.includes("ai is not configured")
+  ) {
+    return t("a11y.voiceNoAi");
   }
   if (raw.length > 200) return t("a11y.voiceGenericErr");
   return raw;

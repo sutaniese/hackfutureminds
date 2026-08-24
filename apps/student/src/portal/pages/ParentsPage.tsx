@@ -80,7 +80,7 @@ export function ParentsPage() {
           monthly_cost: number
           needsFinancialHelp: boolean
         }
-        source?: 'groq' | 'local-fallback'
+        source?: 'ai' | 'local-fallback'
         error?: string
       }
       const raw = await readJsonResponse<ExtractPayload>(response)
@@ -89,7 +89,7 @@ export function ParentsPage() {
       }
       const parsed = raw as ExtractPayload
       if (!response.ok || !parsed.student) {
-        throw new Error(parsed.error || "Groq не смог прочитать файл ученика.")
+        throw new Error(parsed.error || "AI не смог прочитать файл ученика.")
       }
 
       const payload = parsed
@@ -117,7 +117,7 @@ export function ParentsPage() {
           {
             title: extracted.primaryCareerTitle,
             salary: 'уточняется',
-            path: 'Направление извлечено Groq из файла ученика. Для точного плана можно позже запустить student results.',
+            path: 'Направление извлечено AI из файла ученика. Для точного плана можно позже запустить student results.',
             vacancies: [],
           },
         ],
@@ -130,7 +130,7 @@ export function ParentsPage() {
         content: [
           `# ${file.name}`,
           '',
-          `Groq source: ${payload.source || 'unknown'}`,
+          `AI source: ${payload.source || 'unknown'}`,
           `MIME: ${file.type || 'unknown'}`,
           `Size: ${(file.size / 1024).toFixed(1)} KB`,
           '',
@@ -144,7 +144,7 @@ export function ParentsPage() {
       upsertLocal(saved)
       setActiveStudentId(saved.id)
       setImportMessage(
-        `${saved.displayName} добавлен${payload.source === 'groq' ? ' через Groq' : ' локально'}. Теперь он выбран в списке.`,
+        `${saved.displayName} добавлен${payload.source === 'ai' ? ' через AI' : ' локально'}. Теперь он выбран в списке.`,
       )
     } catch (err) {
       setImportError(err instanceof Error ? err.message : 'Не удалось импортировать файл.')
@@ -170,10 +170,10 @@ export function ParentsPage() {
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.16em] text-[#554dd6]">
-              Groq import
+              AI import
             </p>
             <h2 className="mt-1 text-xl font-black tracking-tight text-pathwise-ink">
-              Загрузите файл ученика, и Groq создаст профиль
+              Загрузите файл ученика, и AI создаст профиль
             </h2>
             <p className="mt-1 text-sm leading-6 text-pathwise-muted">
               Подходит для анкеты, резюме, заметок, изображения справки или описания ученика.
@@ -181,7 +181,7 @@ export function ParentsPage() {
             </p>
           </div>
           <label className="inline-flex min-h-12 cursor-pointer items-center justify-center rounded-full bg-[#6C63FF] px-5 text-sm font-black text-white shadow-sm transition hover:bg-[#5B54D8]">
-            {importBusy ? 'Groq читает файл…' : 'Выбрать файл ученика'}
+            {importBusy ? 'AI читает файл…' : 'Выбрать файл ученика'}
             <input
               type="file"
               disabled={importBusy}

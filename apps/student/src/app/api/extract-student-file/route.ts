@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+import { getGroqApiKey } from "@/lib/groq-env";
 
 export const runtime = "nodejs";
 
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const AI_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions";
 const DEFAULT_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
 
 type ExtractRequest = {
@@ -106,8 +107,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing file content." }, { status: 400 });
   }
 
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey || apiKey.includes("replace-me")) {
+  const apiKey = getGroqApiKey();
+  if (!apiKey) {
     return NextResponse.json({ student: fallbackStudent(input), source: "local-fallback" });
   }
 
@@ -132,7 +133,7 @@ export async function POST(request: Request) {
         ]
       : prompt;
 
-  const response = await fetch(GROQ_URL, {
+  const response = await fetch(AI_CHAT_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -165,7 +166,7 @@ export async function POST(request: Request) {
   try {
     return NextResponse.json({
       student: cleanStudent(JSON.parse(raw) as Partial<ExtractedStudent>, input),
-      source: "groq",
+      source: "ai",
     });
   } catch {
     return NextResponse.json({ student: fallbackStudent(input), source: "local-fallback" });

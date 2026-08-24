@@ -29,11 +29,11 @@ const T = {
   "a11y.helpLabel": TR("Справка и доступность", "Accessibility help", "Анықтама"),
   "a11y.voiceReady": TR("Голосовой ассистент готов.", "Voice assistant ready.", "Дауыс ассистенті дайын."),
   "a11y.voiceThinking": TR("Думаю…", "Thinking…", "Ойлануда…"),
-  "a11y.voiceTranscribing": TR("Расшифровка через Groq…", "Transcribing with Groq…", "Groq арқылы транскрипция…"),
+  "a11y.voiceTranscribing": TR("Расшифровка голоса…", "Transcribing audio…", "Дауыс транскрипциясы…"),
   "a11y.voiceListening": TR(
-    "Слушаю (Groq). Запись остановится автоматически.",
-    "Listening with Groq audio… Recording stops automatically.",
-    "Groq дауысымен тыңдау… жазба өзі тоқтайды.",
+    "Слушаю. Запись остановится автоматически.",
+    "Listening… Recording stops automatically.",
+    "Тыңдау… жазба өзі тоқтайды.",
   ),
   "a11y.voiceHint": TR(
     "Скажите, например: «открой гранты и найди подходящие» или по-английски: open grants and find suitable grants for me.",
@@ -65,10 +65,10 @@ const T = {
     "The server returned an error page. Type your command below or refresh the page.",
     "Сервер қате бетін қайтарды. Төменде мәтінмен жіберіңіз немесе бетті жаңартыңыз.",
   ),
-  "a11y.voiceNoGroq": TR(
-    "Голос с сервера недоступен (нет GROQ_API_KEY в Vercel). Используйте текстовое поле команды.",
-    "Voice from the server is off (set GROQ_API_KEY on Vercel). Use the text command field.",
-    "Серверлік даыс өшік (Vercel-те GROQ_API_KEY). Мәтін өрісін қолданыңыз.",
+  "a11y.voiceNoAi": TR(
+    "Голосовой AI на сервере недоступен. Используйте текстовое поле команды.",
+    "Server voice AI is unavailable. Use the text command field.",
+    "Серверлік дауыс AI өшік. Мәтін өрісін қолданыңыз.",
   ),
   "a11y.voiceGenericErr": TR(
     "Команда не выполнена. Повторите или введите текстом.",
