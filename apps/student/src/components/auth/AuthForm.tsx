@@ -13,6 +13,7 @@ import {
   type DisabilitySupportType,
 } from "@/lib/auth";
 import { upsertStudentProfileSnapshot } from "@/lib/student-profile-store";
+import { readSessionOnboarding, studentContinuePath } from "@/lib/student-progress";
 import { useAuth } from "@/components/shell/useAuth";
 
 type Mode = "login" | "register";
@@ -221,13 +222,17 @@ export function AuthForm({ mode }: { mode: Mode }) {
                 : undefined,
           });
 
-      if (!isLogin && user.role === "student") {
-        upsertStudentProfileSnapshot(user, {
-          accessibilitySupport: user.accessibilitySupport,
-        });
+      if (user.role === "student") {
+        if (!isLogin) {
+          const guestAnswers = readSessionOnboarding();
+          upsertStudentProfileSnapshot(user, {
+            accessibilitySupport: user.accessibilitySupport,
+            ...(guestAnswers ? { onboarding: guestAnswers } : {}),
+          });
+        }
       }
 
-      const roleHome = ROLE_ENTRY_PATHS[user.role];
+      const roleHome = user.role === "student" ? studentContinuePath() : ROLE_ENTRY_PATHS[user.role];
       const redirectIsGeneric = !redirect || redirect === "/";
       const redirectWrongRole =
         Boolean(redirect) &&

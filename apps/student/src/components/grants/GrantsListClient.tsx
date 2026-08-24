@@ -8,21 +8,7 @@ import { looksLikeHttpHtmlFailureMessage, readJsonResponse } from "@/lib/http-js
 import { useI18n } from "@/i18n/I18nProvider";
 import type { GrantRecord, GrantType } from "@/types/grants";
 import type { OnboardingAnswers } from "@/types/onboarding";
-
-const ONBOARDING_KEY = "pathwise-onboarding-answers";
-
-function readOnboarding(): OnboardingAnswers | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = sessionStorage.getItem(ONBOARDING_KEY);
-    if (!raw) return null;
-    const p = JSON.parse(raw) as unknown;
-    if (!p || typeof p !== "object") return null;
-    return p as OnboardingAnswers;
-  } catch {
-    return null;
-  }
-}
+import { readCurrentOnboarding } from "@/lib/student-progress";
 
 type RegionKey = "all" | "kz" | "eu" | "asia" | "americas" | "uk" | "other";
 type MatchPill = "all" | "high" | "medium" | "low";
@@ -187,7 +173,7 @@ export function GrantsListClient() {
   const [, setSource] = useState<"live" | "fallback" | "loading">("loading");
   const [error, setError] = useState<string | null>(null);
 
-  const sync = useCallback(() => { setOnboarding(readOnboarding()); }, []);
+  const sync = useCallback(() => { setOnboarding(readCurrentOnboarding()); }, []);
 
   useEffect(() => {
     const query = searchParams.get("q");

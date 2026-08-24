@@ -1,3 +1,4 @@
+import { AUTH_EVENT, getCurrentUser } from "@/lib/auth";
 import { BASE_TOPICS } from "./catalog";
 import type { Difficulty, Grade, LearningGoalId, Topic } from "./types";
 
@@ -104,6 +105,34 @@ function hasWindow(): boolean {
   return typeof window !== "undefined";
 }
 
+function accountScope(): string {
+  const email = getCurrentUser()?.email?.trim().toLowerCase();
+  return email || "guest";
+}
+
+function scopedKey(base: string): string {
+  return `${base}::${accountScope()}`;
+}
+
+/** Move pre-account keys onto the first user that opens them so unique accounts start clean. */
+function adoptLegacyKey(base: string): string {
+  const scoped = scopedKey(base);
+  if (!hasWindow()) return scoped;
+  try {
+    if (!window.localStorage.getItem(scoped)) {
+      const legacy = window.localStorage.getItem(base);
+      if (legacy) {
+        window.localStorage.setItem(scoped, legacy);
+        window.localStorage.removeItem(base);
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  return scoped;
+}
+
+
 function readJson<T>(key: string, fallback: T): T {
   if (!hasWindow()) return fallback;
   try {
@@ -142,7 +171,9 @@ export function subscribeLearning(listener: () => void): () => void {
     if (
       event.key === null ||
       event.key === LEARNING_PROFILE_KEY ||
+      event.key?.startsWith(`${LEARNING_PROFILE_KEY}::`) ||
       event.key === LEARNING_STATE_KEY ||
+      event.key?.startsWith(`${LEARNING_STATE_KEY}::`) ||
       event.key === LEARNING_CUSTOM_KEY ||
       event.key === LEARNING_ROSTER_KEY
     ) {
@@ -151,23 +182,25 @@ export function subscribeLearning(listener: () => void): () => void {
   };
   window.addEventListener(LEARNING_EVENT, onCustom as EventListener);
   window.addEventListener("storage", onStorage);
+  window.addEventListener(AUTH_EVENT, onCustom as EventListener);
   return () => {
     window.removeEventListener(LEARNING_EVENT, onCustom as EventListener);
     window.removeEventListener("storage", onStorage);
+    window.removeEventListener(AUTH_EVENT, onCustom as EventListener);
   };
 }
 
 /* ------------------------------- профиль ------------------------------- */
 
 export function readLearningProfile(): LearningProfile | null {
-  const value = readJson<LearningProfile | null>(LEARNING_PROFILE_KEY, null);
+  const value = readJson<LearningProfile | null>(adoptLegacyKey(LEARNING_PROFILE_KEY), null);
   if (!value || typeof value.subjectId !== "string") return null;
   return value;
 }
 
 export function writeLearningProfile(profile: Omit<LearningProfile, "updatedAt">): LearningProfile {
   const next: LearningProfile = { ...profile, updatedAt: Date.now() };
-  writeJson(LEARNING_PROFILE_KEY, next);
+  writeJson(scopedKey(LEARNING_PROFILE_KEY), next);
   emitLearningChange();
   return next;
 }
@@ -175,7 +208,7 @@ export function writeLearningProfile(profile: Omit<LearningProfile, "updatedAt">
 /* -------------------------------- прогресс ------------------------------ */
 
 export function readLearningState(): LearningState {
-  const value = readJson<Partial<LearningState>>(LEARNING_STATE_KEY, {});
+  const value = readJson<Partial<LearningState>>(adoptLegacyKey(LEARNING_STATE_KEY), {});
   return {
     diagnostic: value.diagnostic ?? null,
     topics: value.topics && typeof value.topics === "object" ? value.topics : {},
@@ -184,7 +217,7 @@ export function readLearningState(): LearningState {
 }
 
 function writeLearningState(state: LearningState): LearningState {
-  writeJson(LEARNING_STATE_KEY, state);
+  writeJson(scopedKey(LEARNING_STATE_KEY), state);
   emitLearningChange();
   return state;
 }

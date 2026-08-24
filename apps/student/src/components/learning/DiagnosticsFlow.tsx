@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ContentCard } from "@/components/ui/PageHero";
 import { useAuth } from "@/components/shell/useAuth";
@@ -18,6 +18,8 @@ import {
 import {
   LEVEL_LABELS,
   readAllTopics,
+  readLearningProfile,
+  readLearningState,
   saveDiagnostic,
   seedDueReview,
   upsertRosterEntry,
@@ -75,6 +77,21 @@ export function DiagnosticsFlow() {
     () => topicsForSubject(topics, subjectId).length,
     [topics, subjectId],
   );
+
+  useEffect(() => {
+    const saved = readLearningState().diagnostic;
+    if (!saved) return;
+    const profile = readLearningProfile();
+    if (profile) {
+      setGrade(profile.grade);
+      setSubjectId(profile.subjectId);
+      setGoals(profile.goals.length ? profile.goals : ["ent"]);
+      setExamDate(profile.examDate || defaultExamDate());
+      setMinutesPerDay(profile.minutesPerDay);
+    }
+    setResult(saved);
+    setStage("result");
+  }, []);
 
   const toggleGoal = useCallback((goal: LearningGoalId) => {
     setGoals((prev) => (prev.includes(goal) ? prev.filter((item) => item !== goal) : [...prev, goal]));
@@ -487,6 +504,7 @@ export function DiagnosticsFlow() {
           </div>
         </ContentCard>
 
+        {records.length > 0 ? (
         <ContentCard>
           <h3 className="text-lg font-black tracking-tight text-pathwise-ink">Разбор вопросов</h3>
           <div className="mt-4 grid gap-3">
@@ -513,8 +531,9 @@ export function DiagnosticsFlow() {
             ))}
           </div>
         </ContentCard>
+        ) : null}
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
             onClick={() => router.push("/learning")}
@@ -522,15 +541,8 @@ export function DiagnosticsFlow() {
           >
             Открыть личный кабинет
           </button>
-          <Link
-            href="/learning/diagnostics"
-            className="pw-btn-secondary text-sm"
-            onClick={() => {
-              setStage("profile");
-              setProfileStep("grade");
-            }}
-          >
-            Пройти заново
+          <Link href="/roadmap" className="pw-btn-secondary text-sm">
+            К дорожной карте
           </Link>
         </div>
       </div>

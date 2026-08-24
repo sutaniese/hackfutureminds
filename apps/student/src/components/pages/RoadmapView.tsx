@@ -3,22 +3,17 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ContentCard, PageHero } from "@/components/ui/PageHero";
+import { readLearningProfile, readLearningState } from "@/lib/learning/store";
+import {
+  buildPersonalRoadmap,
+  inferTrack,
+  readinessScore,
+  type RoadmapNode,
+} from "@/lib/roadmap/personalRoadmap";
+import { readCurrentStudentProfile } from "@/lib/student-profile-store";
+import { isOnboardingComplete, readCurrentOnboarding } from "@/lib/student-progress";
+import { readTargetUniversity } from "@/portal/lib/targetUniversity";
 import type { OnboardingAnswers, WorkPreference } from "@/types/onboarding";
-
-const ONBOARDING_KEY = "pathwise-onboarding-answers";
-
-type RoadmapNode = {
-  id: string;
-  title: string;
-  subtitle: string;
-  phase: string;
-  detail: string;
-  actions: string[];
-  metric: string;
-  x: number;
-  y: number;
-  tone: "purple" | "green" | "red" | "slate";
-};
 
 const TONE: Record<RoadmapNode["tone"], { fill: string; stroke: string; soft: string; text: string }> = {
   purple: { fill: "#6C63FF", stroke: "#564DE6", soft: "bg-[#6C63FF]/10", text: "text-[#5B54D8]" },
@@ -27,154 +22,12 @@ const TONE: Record<RoadmapNode["tone"], { fill: string; stroke: string; soft: st
   slate: { fill: "#64748B", stroke: "#475569", soft: "bg-slate-100", text: "text-slate-700" },
 };
 
-function readOnboarding(): OnboardingAnswers | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = sessionStorage.getItem(ONBOARDING_KEY);
-    return raw ? (JSON.parse(raw) as OnboardingAnswers) : null;
-  } catch {
-    return null;
-  }
-}
-
-function directionFromAnswers(answers: OnboardingAnswers | null) {
-  const subjects = new Set(answers?.subjectIds ?? []);
-  const text = [
-    ...(answers?.subjectIds ?? []),
-    answers?.freeTime ?? "",
-    answers?.achievements ?? "",
-  ].join(" ").toLowerCase();
-
-  if (subjects.has("biology") || subjects.has("chemistry") || /bio|мед|health|doctor/.test(text)) {
-    return {
-      label: "Health & bio innovation",
-      university: "medical / biotech programs",
-      proof: "lab notes, olympiad results, volunteering, research essay",
-    };
-  }
-  if (subjects.has("cs") || subjects.has("math") || /code|python|data|робот|информ/.test(text)) {
-    return {
-      label: "Data, AI & software",
-      university: "computer science / engineering programs",
-      proof: "GitHub projects, hackathons, math competitions, product demos",
-    };
-  }
-  if (subjects.has("history") || subjects.has("geography") || /debate|model un|law|policy|history/.test(text)) {
-    return {
-      label: "Public policy & international affairs",
-      university: "law / public policy / international relations programs",
-      proof: "debate cases, essays, volunteer leadership, language certificates",
-    };
-  }
-  return {
-    label: "Personalized interdisciplinary track",
-    university: "programs matching your strongest subjects",
-    proof: "projects, essays, competitions, certificates, and mentor feedback",
-  };
-}
-
 function workStyleLabel(style: WorkPreference | null) {
-  if (style === "people") return "people-facing leadership";
-  if (style === "data") return "analysis and research";
-  if (style === "hands") return "hands-on labs and prototypes";
-  if (style === "ideas") return "strategy, design, and concepts";
-  return "mixed exploration";
-}
-
-function buildRoadmap(answers: OnboardingAnswers | null): RoadmapNode[] {
-  const direction = directionFromAnswers(answers);
-  const city = answers?.city?.trim() || "target city";
-  const studyPlace = answers?.studyLocation === "abroad" ? "international admissions" : "Kazakhstan admissions";
-  const budget = answers?.budgetConstraints?.trim() || "grant-first budget plan";
-  const achievement = answers?.achievements?.trim() || "current school achievements";
-
-  return [
-    {
-      id: "vision",
-      title: "Future vision",
-      subtitle: direction.label,
-      phase: "Now",
-      detail: `Turn your interests into a clear direction: ${direction.label}. Your work style points toward ${workStyleLabel(answers?.workPreference ?? null)}.`,
-      actions: ["Name 3 dream roles", "Pick 2 target programs", "Write a one-sentence future vision"],
-      metric: "Vision clarity",
-      x: 9,
-      y: 68,
-      tone: "purple",
-    },
-    {
-      id: "skills",
-      title: "Skill sprint",
-      subtitle: direction.proof,
-      phase: "1-3 months",
-      detail: `Build evidence around ${achievement}. The roadmap favors visible proof over vague motivation.`,
-      actions: ["Choose one portfolio project", "Document weekly progress", "Ask a teacher or mentor for feedback"],
-      metric: "Proof strength",
-      x: 25,
-      y: 34,
-      tone: "green",
-    },
-    {
-      id: "programs",
-      title: "Program shortlist",
-      subtitle: direction.university,
-      phase: "3-5 months",
-      detail: `Compare ${direction.university} around ${city}. Keep only programs that fit your subjects, budget, and study location.`,
-      actions: ["Shortlist 5 programs", "Check prerequisites", "Compare deadlines and language requirements"],
-      metric: "Fit score",
-      x: 43,
-      y: 61,
-      tone: "purple",
-    },
-    {
-      id: "grants",
-      title: "Grant strategy",
-      subtitle: budget,
-      phase: "5-7 months",
-      detail: `Use the live grants catalog for ${studyPlace}. Track official deadlines and prepare documents before the final month.`,
-      actions: ["Open the grants page", "Save 3 matching grants", "Prepare transcript and proof documents"],
-      metric: "Funding coverage",
-      x: 61,
-      y: 28,
-      tone: "red",
-    },
-    {
-      id: "portfolio",
-      title: "Application package",
-      subtitle: "portfolio, essay, recommendation",
-      phase: "7-9 months",
-      detail: "Package your story into a portfolio block, motivation essay, recommendation request, and interview talking points.",
-      actions: ["Upload portfolio evidence", "Draft motivation essay", "Request recommendation letter"],
-      metric: "Package readiness",
-      x: 78,
-      y: 56,
-      tone: "green",
-    },
-    {
-      id: "launch",
-      title: "Launch month",
-      subtitle: "submit, interview, adapt",
-      phase: "9-12 months",
-      detail: "Submit early, rehearse interviews, and keep a backup plan with a second city or adjacent program.",
-      actions: ["Submit applications", "Rehearse interview answers", "Create backup route"],
-      metric: "Launch confidence",
-      x: 92,
-      y: 31,
-      tone: "slate",
-    },
-  ];
-}
-
-function scoreFromAnswers(answers: OnboardingAnswers | null) {
-  if (!answers) return 18;
-  let score = 20;
-  if (answers.subjectIds.length > 0) score += 15;
-  if (answers.freeTime.trim()) score += 12;
-  if (answers.achievements.trim()) score += 18;
-  if (answers.workPreference) score += 10;
-  if (answers.studyLocation) score += 10;
-  if (answers.city.trim()) score += 8;
-  if (answers.budgetConstraints.trim()) score += 7;
-  return Math.min(100, score);
+  if (style === "people") return "лидерство и люди";
+  if (style === "data") return "анализ и исследование";
+  if (style === "hands") return "лаборатории и прототипы";
+  if (style === "ideas") return "стратегия и концепции";
+  return "смешанный формат";
 }
 
 export function RoadmapView() {
@@ -183,13 +36,37 @@ export function RoadmapView() {
   const [activeId, setActiveId] = useState("vision");
 
   useEffect(() => {
-    setAnswers(readOnboarding());
+    setAnswers(readCurrentOnboarding());
     setReady(true);
   }, []);
 
-  const nodes = useMemo(() => buildRoadmap(answers), [answers]);
+  const diagnostic = typeof window === "undefined" ? null : readLearningState().diagnostic;
+  const profile = typeof window === "undefined" ? null : readLearningProfile();
+  const generated = typeof window === "undefined" ? null : readCurrentStudentProfile()?.generated ?? null;
+  const targetUniversity = typeof window === "undefined" ? null : readTargetUniversity();
+
+  const nodes = useMemo(
+    () =>
+      buildPersonalRoadmap({
+        answers,
+        diagnostic: ready ? readLearningState().diagnostic : null,
+        profile: ready ? readLearningProfile() : null,
+        generated: ready ? readCurrentStudentProfile()?.generated ?? null : null,
+        targetUniversity: ready ? readTargetUniversity() : null,
+      }),
+    [answers, ready],
+  );
+  const track = useMemo(
+    () => inferTrack(answers, ready ? readLearningState().diagnostic : null, ready ? readCurrentStudentProfile()?.generated ?? null : null),
+    [answers, ready],
+  );
   const active = nodes.find((node) => node.id === activeId) ?? nodes[0];
-  const score = scoreFromAnswers(answers);
+  const score = readinessScore({
+    answers,
+    diagnostic: ready ? readLearningState().diagnostic : null,
+    generated: ready ? readCurrentStudentProfile()?.generated ?? null : null,
+  });
+  const onboardingDone = isOnboardingComplete(answers);
 
   if (!ready) {
     return <div className="pw-shimmer min-h-[32rem] rounded-[2rem] bg-white" aria-hidden />;
@@ -200,20 +77,20 @@ export function RoadmapView() {
       <PageHero
         kicker="Roadmap"
         title="Персональная дорожная карта"
-        description="Интерактивный граф будущего: от видения и навыков до грантов, портфолио и подачи заявок."
+        description="Маршрут собран из вашей анкеты, диагностики и карьерного плана — не из общего шаблона."
       >
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <HeroMetric label="Готовность" value={`${score}%`} />
-          <HeroMetric label="Трек" value={directionFromAnswers(answers).label} />
+          <HeroMetric label="Трек" value={track.label} />
           <HeroMetric label="Фокус" value={workStyleLabel(answers?.workPreference ?? null)} />
         </div>
       </PageHero>
 
-      {!answers ? (
+      {!onboardingDone ? (
         <ContentCard className="border-l-4 border-l-[#6C63FF]">
-          <p className="text-sm font-semibold text-pathwise-ink">Дорожная карта станет точнее после анкеты.</p>
+          <p className="text-sm font-semibold text-pathwise-ink">Чтобы персонализировать карту, заполните анкету.</p>
           <p className="mt-1 text-sm text-pathwise-muted">
-            Сейчас показан базовый красивый маршрут. Ответьте на 7 вопросов, чтобы граф перестроился под ваше видение.
+            Новые ученики начинают здесь. Если анкета уже пройдена под другим аккаунтом — войдите в него.
           </p>
           <Link href="/onboarding" className="pw-btn-primary mt-4 inline-flex !min-h-12 !px-5">
             Заполнить анкету
@@ -225,7 +102,7 @@ export function RoadmapView() {
         <ContentCard className="overflow-hidden p-0">
           <div className="border-b border-slate-200 px-5 py-4">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-pathwise-accent-strong">Future graph</p>
-            <p className="mt-1 text-sm text-pathwise-muted">Tap a node to open tasks and milestones.</p>
+            <p className="mt-1 text-sm text-pathwise-muted">Нажмите узел, чтобы открыть задачи.</p>
           </div>
           <div className="relative min-h-[30rem] overflow-hidden bg-white p-4 sm:p-6">
             <div className="pointer-events-none absolute inset-0 z-0 opacity-70 [background-image:radial-gradient(circle_at_1px_1px,rgb(100_116_139_/_0.16)_1px,transparent_0)] [background-size:24px_24px]" />
@@ -296,7 +173,7 @@ export function RoadmapView() {
           </ContentCard>
 
           <ContentCard>
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-pathwise-muted">Next actions</p>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-pathwise-muted">Следующие шаги</p>
             <div className="mt-4 grid gap-3">
               {active.actions.map((action, index) => (
                 <div key={action} className="flex gap-3 rounded-2xl border border-slate-200 bg-white p-3">

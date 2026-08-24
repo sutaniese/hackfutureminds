@@ -9,11 +9,14 @@ import {
 } from "@/lib/onboarding-constants";
 import { useUserProgress } from "@/components/gamification/UserProgressProvider";
 import { syncCurrentStudentProfile } from "@/lib/student-profile-store";
+import {
+  isOnboardingComplete,
+  persistOnboarding,
+  readCurrentOnboarding,
+} from "@/lib/student-progress";
 import type { OnboardingAnswers, WorkPreference } from "@/types/onboarding";
 import { TOTAL_ONBOARDING_STEPS, createEmptyAnswers } from "@/types/onboarding";
 import { OnboardingProgress } from "./OnboardingProgress";
-
-const STORAGE_KEY = "pathwise-onboarding-answers";
 
 function isStepSatisfied(step: number, a: OnboardingAnswers): boolean {
   switch (step) {
@@ -53,8 +56,18 @@ export function OnboardingChat() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<OnboardingAnswers>(() => createEmptyAnswers());
   const [complete, setComplete] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const [typing, setTyping] = useState(true);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const saved = readCurrentOnboarding();
+    if (saved && isOnboardingComplete(saved)) {
+      setAnswers(saved);
+      setComplete(true);
+    }
+    setHydrated(true);
+  }, []);
 
   const canNext = isStepSatisfied(step, answers);
   const isLast = step === TOTAL_ONBOARDING_STEPS - 1;
@@ -81,7 +94,7 @@ export function OnboardingChat() {
 
   useEffect(() => {
     if (complete) {
-      try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(answers)); } catch { /* */ }
+      persistOnboarding(answers);
       syncCurrentStudentProfile({ onboarding: answers });
     }
   }, [complete, answers]);
@@ -96,11 +109,9 @@ export function OnboardingChat() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [step, typing, complete]);
 
-  const reset = useCallback(() => {
-    setComplete(false);
-    setStep(0);
-    setAnswers(createEmptyAnswers());
-  }, []);
+  if (!hydrated) {
+    return <div className="pw-shimmer min-h-[22rem] rounded-[2rem] bg-white" aria-hidden />;
+  }
 
   if (complete) {
     return (
@@ -122,10 +133,13 @@ export function OnboardingChat() {
               <Link href="/results" className="pw-btn-primary flex-1 text-center">
                 {t("onboard.toResults")}
               </Link>
-              <button type="button" onClick={reset} className="pw-btn-secondary flex-1">
-                {t("onboard.startOver")}
-              </button>
+              <Link href="/roadmap" className="pw-btn-secondary flex-1 text-center">
+                {t("onboard.toRoadmap")}
+              </Link>
             </div>
+            <p className="mt-4 text-center text-xs text-pathwise-muted">
+              Анкета уже сохранена для этого аккаунта. Новые ученики по-прежнему начинают со «Старт».
+            </p>
           </div>
         </div>
       </div>
