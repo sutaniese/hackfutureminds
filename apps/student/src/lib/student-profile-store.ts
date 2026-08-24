@@ -74,3 +74,9 @@ export function syncCurrentStudentProfile(
   if (!user || user.role !== "student") return;
   upsertStudentProfileSnapshot(user, patch);
 }
+
+export function readCurrentStudentProfile(): StudentProfileSnapshot | null {
+  const user = getCurrentUser();
+  if (!user || user.role !== "student") return null;
+  return readStudentProfiles()[user.email.trim().toLowerCase()] ?? null;
+}

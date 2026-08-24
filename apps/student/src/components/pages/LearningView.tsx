@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { LearningDashboard } from "@/components/learning/LearningDashboard";
+import { useLearning } from "@/components/learning/useLearning";
 import { PageHero } from "@/components/ui/PageHero";
 
 export function LearningView() {
+  const { state, ready } = useLearning();
+  const diagnosticDone = Boolean(ready && state.diagnostic);
   return (
     <div className="flex flex-col gap-5">
       <PageHero
@@ -14,9 +17,15 @@ export function LearningView() {
         description="Прогресс по темам, слабые места и план, который пересобирается после каждого задания."
       >
         <div className="mt-5 flex flex-wrap gap-3">
-          <Link href="/learning/diagnostics" className="pw-btn-primary text-sm">
-            Пройти диагностику
-          </Link>
+          {diagnosticDone ? (
+            <Link href="/learning/diagnostics" className="pw-btn-secondary text-sm">
+              Результаты диагностики
+            </Link>
+          ) : (
+            <Link href="/learning/diagnostics" className="pw-btn-primary text-sm">
+              Пройти диагностику
+            </Link>
+          )}
           <Link href="/roadmap" className="pw-btn-secondary text-sm">
             Карьерная дорожная карта
           </Link>

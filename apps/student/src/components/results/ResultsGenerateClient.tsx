@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { buildGenerateRequest } from "@/lib/build-generate-request";
 import { readLastGeneratePayload, writeLastGeneratePayload } from "@/lib/gamification";
 import { syncCurrentStudentProfile } from "@/lib/student-profile-store";
+import { readCurrentOnboarding } from "@/lib/student-progress";
 import { ResultsGamificationBar } from "@/components/results/ResultsGamificationBar";
 import { CrossAppPromo } from "@/components/results/CrossAppPromo";
 import { useUserProgress } from "@/components/gamification/UserProgressProvider";
@@ -15,19 +16,6 @@ import type {
   MatchedGrantSummary,
   UniversityProgramRecommendation,
 } from "@/types/generate";
-
-const STORAGE = "pathwise-onboarding-answers";
-
-function readOnboarding(): OnboardingAnswers | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = sessionStorage.getItem(STORAGE);
-    if (!raw) return null;
-    const p = JSON.parse(raw) as unknown;
-    if (!p || typeof p !== "object") return null;
-    return p as OnboardingAnswers;
-  } catch { return null; }
-}
 
 const UNIVERSITY_TYPE_RU: Record<string, string> = {
   public: "государственный",
@@ -95,7 +83,7 @@ export function ResultsGenerateClient() {
   const [restored, setRestored] = useState(false);
 
   useEffect(() => {
-    const o = readOnboarding();
+    const o = readCurrentOnboarding();
     setOnboarding(o);
     if (o) {
       const r = readLastGeneratePayload(o);
@@ -115,7 +103,7 @@ export function ResultsGenerateClient() {
   const hasOnboarding = !!onboarding;
 
   const run = useCallback(async () => {
-    const o = readOnboarding();
+    const o = readCurrentOnboarding();
     setOnboarding(o);
     if (!o) { setError(t("results.errOnboard")); return; }
     setLoading(true);

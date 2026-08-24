@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ROLE_ENTRY_PATHS,
@@ -12,6 +12,7 @@ import { useAuth } from "@/components/shell/useAuth";
 import { useI18n } from "@/i18n/I18nProvider";
 import { profileHref } from "@/lib/profile-slug";
 import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
+import { studentContinuePath } from "@/lib/student-progress";
 
 type EntryCard = {
   role: UserRole;
@@ -117,7 +118,13 @@ export function HomeView() {
     );
   }
 
-  const authedHome = isAuthed && user ? ROLE_ENTRY_PATHS[user.role] : null;
+  const [studentHome, setStudentHome] = useState("/onboarding");
+  useEffect(() => {
+    if (isAuthed && user?.role === "student") setStudentHome(studentContinuePath());
+  }, [isAuthed, user]);
+  const authedHome = isAuthed && user
+    ? (user.role === "student" ? studentHome : ROLE_ENTRY_PATHS[user.role])
+    : null;
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 text-[#111827]">
