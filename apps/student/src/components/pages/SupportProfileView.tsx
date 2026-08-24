@@ -149,7 +149,7 @@ export function SupportProfileView() {
                 {support.document.type} · {formatBytes(support.document.size)}
               </p>
               <p className="mt-3 text-xs leading-5 text-pathwise-muted">
-                Groq анализирует изображение документа при регистрации. PDF/DOCX помечаются
+                AI анализирует изображение документа при регистрации. PDF/DOCX помечаются
                 для ручной проверки, пока нет защищённого парсинга файлов.
               </p>
               {support.document.evaluation ? (

@@ -1,14 +1,12 @@
 import { getGroqApiKey, getGroqChatModel } from "@/lib/groq-env";
 
 /**
- * Тонкая обёртка над Groq chat completions для учебных маршрутов.
- * Никогда не бросает исключение: при отсутствии ключа, таймауте или
- * ошибке сети возвращает null, и вызывающий код уходит в детерминированный
- * fallback. Демонстрация обязана работать без ключа.
+ * Server-side chat completions for learning routes.
+ * Returns structured results so callers can avoid silent mock fallbacks when AI is configured.
  */
 
-const GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions";
-const DEFAULT_TIMEOUT_MS = 12_000;
+const AI_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions";
+const DEFAULT_TIMEOUT_MS = 25_000;
 
 export type GroqMessage = { role: "system" | "user" | "assistant"; content: string };
 
@@ -18,6 +16,11 @@ export type GroqChatOptions = {
   timeoutMs?: number;
 };
 
+export type GroqChatResult = {
+  content: string | null;
+  error?: string;
+};
+
 export function isGroqConfigured(): boolean {
   return Boolean(getGroqApiKey());
 }
@@ -25,15 +28,17 @@ export function isGroqConfigured(): boolean {
 export async function groqChat(
   messages: GroqMessage[],
   options: GroqChatOptions = {},
-): Promise<string | null> {
+): Promise<GroqChatResult> {
   const key = getGroqApiKey();
-  if (!key) return null;
+  if (!key) {
+    return { content: null, error: "AI is not configured on the server." };
+  }
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
 
   try {
-    const response = await fetch(GROQ_CHAT_URL, {
+    const response = await fetch(AI_CHAT_URL, {
       method: "POST",
       signal: controller.signal,
       headers: {
@@ -48,22 +53,46 @@ export async function groqChat(
       }),
     });
 
-    if (!response.ok) return null;
+    const rawBody = await response.text();
+    if (!response.ok) {
+      const detail = rawBody.slice(0, 280).trim();
+      const error = detail
+        ? `AI request failed (${response.status}): ${detail}`
+        : `AI request failed (${response.status}).`;
+      console.error("[ai-chat]", error);
+      return { content: null, error };
+    }
 
-    const data = (await response.json()) as {
-      choices?: { message?: { content?: string } }[];
-    };
+    let data: { choices?: { message?: { content?: string } }[] };
+    try {
+      data = JSON.parse(rawBody) as { choices?: { message?: { content?: string } }[] };
+    } catch {
+      console.error("[ai-chat] Non-JSON response:", rawBody.slice(0, 280));
+      return { content: null, error: "AI returned an unreadable response." };
+    }
+
     const text = data.choices?.[0]?.message?.content?.trim();
-    return text && text.length > 0 ? text : null;
-  } catch {
-    return null;
+    if (!text) {
+      return { content: null, error: "AI returned an empty response." };
+    }
+
+    return { content: text };
+  } catch (error) {
+    const message =
+      error instanceof Error && error.name === "AbortError"
+        ? "AI request timed out."
+        : error instanceof Error
+          ? error.message
+          : "AI request failed.";
+    console.error("[ai-chat]", message);
+    return { content: null, error: message };
   } finally {
     clearTimeout(timer);
   }
 }
 
 /** Достаёт первый JSON-объект из ответа модели (модель любит добавлять текст вокруг). */
-export function extractJsonObject<T>(raw: string | null): T | null {
+export function extractJsonObject<T>(raw: string | null | undefined): T | null {
   if (!raw) return null;
   const first = raw.indexOf("{");
   const last = raw.lastIndexOf("}");

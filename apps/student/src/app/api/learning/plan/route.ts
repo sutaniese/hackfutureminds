@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { extractJsonObject, groqChat } from "@/lib/learning/groq-chat";
+import { extractJsonObject, groqChat, isGroqConfigured } from "@/lib/learning/groq-chat";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -23,7 +23,7 @@ type PlanResponse = {
   headline: string;
   focus: string[];
   weeks: PlanWeekInput[];
-  source: "groq" | "local";
+  source: "ai" | "local";
 };
 
 const SYSTEM_PROMPT = [
@@ -78,9 +78,12 @@ export async function POST(request: Request) {
   }
 
   const fallback = localPlan(body);
+  if (!isGroqConfigured()) {
+    return NextResponse.json(fallback);
+  }
 
   try {
-    const raw = await groqChat(
+    const { content } = await groqChat(
       [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: buildUserPrompt(body) },
@@ -92,7 +95,7 @@ export async function POST(request: Request) {
       headline?: unknown;
       focus?: unknown;
       weeks?: unknown;
-    }>(raw);
+    }>(content);
 
     if (!parsed) return NextResponse.json(fallback);
 
@@ -108,7 +111,6 @@ export async function POST(request: Request) {
             const base = fallback.weeks[index];
             return {
               index: typeof week.index === "number" ? week.index : base?.index ?? index + 1,
-              // Название темы берём из локального плана — модель не должна его придумывать.
               title: base?.title ?? (typeof week.title === "string" ? week.title : ""),
               goals: Array.isArray(week.goals)
                 ? week.goals.filter((goal): goal is string => typeof goal === "string").slice(0, 4)
@@ -126,7 +128,7 @@ export async function POST(request: Request) {
       headline: headline || fallback.headline,
       focus: focus.length > 0 ? focus : fallback.focus,
       weeks: weeks.length > 0 ? weeks : fallback.weeks,
-      source: "groq",
+      source: "ai",
     } satisfies PlanResponse);
   } catch (error) {
     console.error("[learning/plan]", error);

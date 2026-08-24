@@ -26,7 +26,7 @@ import { ReminderBanner } from "./ReminderBanner";
 import { useLearning } from "./useLearning";
 
 type PlanWeek = { index: number; title: string; goals: string[] };
-type PlanPayload = { headline: string; focus: string[]; weeks: PlanWeek[]; source: "groq" | "local" };
+type PlanPayload = { headline: string; focus: string[]; weeks: PlanWeek[]; source: "ai" | "local" };
 
 function goalTitle(goalId: string): string {
   return LEARNING_GOALS.find((goal) => goal.id === goalId)?.title ?? goalId;
@@ -382,8 +382,8 @@ export function LearningDashboard() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {activePlan ? (
-              <Pill tone={activePlan.source === "groq" ? "accent" : "muted"}>
-                {activePlan.source === "groq" ? "Составлен AI" : "Локальный расчёт"}
+              <Pill tone={activePlan.source === "ai" ? "accent" : "muted"}>
+                {activePlan.source === "ai" ? "Составлен AI" : "Локальный расчёт"}
               </Pill>
             ) : null}
             <button

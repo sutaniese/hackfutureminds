@@ -237,7 +237,7 @@ export async function POST(request: Request) {
     const data = parseGroqChatJson(raw);
     const content = data?.choices?.[0]?.message?.content;
     const parsed = content ? parseModelActionJson(content) : null;
-    return NextResponse.json({ intent: normalizeIntent(parsed, command), source: "groq" });
+    return NextResponse.json({ intent: normalizeIntent(parsed, command), source: "ai" });
   } catch (err) {
     console.error("[voice-command]", err);
     const safe = command.trim() ? fallbackIntent(command) : fallbackIntent("help");

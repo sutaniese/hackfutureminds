@@ -6,7 +6,7 @@ import { subjectTitle } from "@/lib/learning/catalog";
 import type { Topic } from "@/lib/learning/types";
 import { Pill } from "./LearningUI";
 
-type Message = { role: "user" | "assistant"; text: string; source?: "groq" | "local" };
+type Message = { role: "user" | "assistant"; text: string; source?: "ai" | "local" };
 
 const QUICK_PROMPTS = [
   "Объясни тему простыми словами",
@@ -44,9 +44,9 @@ export function TutorChat({ topic, grade }: { topic: Topic; grade?: number }) {
             history,
           }),
         });
-        const data = (await readJsonResponse<{ answer: string; source: "groq" | "local" }>(
+        const data = (await readJsonResponse<{ answer: string; source: "ai" | "local" }>(
           response,
-        )) as { answer?: string; source?: "groq" | "local"; error?: string };
+        )) as { answer?: string; source?: "ai" | "local"; error?: string };
 
         setMessages((prev) => [
           ...prev,
@@ -112,7 +112,11 @@ export function TutorChat({ topic, grade }: { topic: Topic; grade?: number }) {
                 }`}
               >
                 {message.text}
-                {message.role === "assistant" && message.source === "local" ? (
+                {message.role === "assistant" && message.source === "ai" ? (
+                  <span className="mt-2 block text-[11px] font-bold uppercase tracking-[0.12em] text-[#6C63FF]">
+                    Ответ от AI
+                  </span>
+                ) : message.role === "assistant" && message.source === "local" ? (
                   <span className="mt-2 block text-[11px] font-bold uppercase tracking-[0.12em] text-pathwise-muted">
                     Ответ из конспекта
                   </span>

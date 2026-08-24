@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getGroqApiKey } from "@/lib/groq-env";
 import { UNIVERSITIES } from "@/portal/data/universities";
 import type { OnboardingAnswers } from "@/types/onboarding";
 import type { UniversityProgramRecommendation } from "@/types/generate";
@@ -273,8 +274,8 @@ export async function POST(request: Request) {
 
     if (!input.onboarding) return jsonError("Missing onboarding answers.", 400);
 
-    const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey || apiKey.includes("replace-me")) {
+    const apiKey = getGroqApiKey();
+    if (!apiKey) {
       return NextResponse.json({
         recommendations: fallbackRecommendations(input.onboarding, input.careerTitles ?? []),
         source: "local-fallback",
@@ -308,7 +309,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         recommendations: fallbackRecommendations(input.onboarding, input.careerTitles ?? []),
         source: "local-fallback",
-        warning: `Groq: ${raw.slice(0, 240) || response.statusText}`,
+        warning: `AI: ${raw.slice(0, 240) || response.statusText}`,
       });
     }
 
@@ -317,7 +318,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         recommendations: fallbackRecommendations(input.onboarding, input.careerTitles ?? []),
         source: "local-fallback",
-        warning: "Groq returned non-JSON body.",
+        warning: "AI returned non-JSON body.",
       });
     }
 
@@ -328,7 +329,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         recommendations: fallbackRecommendations(input.onboarding, input.careerTitles ?? []),
         source: "local-fallback",
-        warning: "Groq JSON parse failed.",
+        warning: "AI JSON parse failed.",
       });
     }
 
@@ -337,13 +338,13 @@ export async function POST(request: Request) {
       return NextResponse.json({
         recommendations: fallbackRecommendations(input.onboarding, input.careerTitles ?? []),
         source: "local-fallback",
-        warning: "Groq returned empty recommendations.",
+        warning: "AI returned empty recommendations.",
       });
     }
 
     return NextResponse.json({
       recommendations: parseRecommendations(content, input.onboarding, input.careerTitles ?? []),
-      source: "groq",
+      source: "ai",
     });
   } catch (e) {
     console.error("[recommend-programs]", e);

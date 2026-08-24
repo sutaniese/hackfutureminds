@@ -47,7 +47,11 @@ ${JSON.stringify(request).slice(0, 12_000)}`;
     return null;
   }
 
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    console.error("[generate/ai]", res.status, detail.slice(0, 280));
+    return null;
+  }
 
   let data: {
     choices?: { message?: { content?: string } }[];

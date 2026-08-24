@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { groqChat } from "@/lib/learning/groq-chat";
+import { groqChat, isGroqConfigured } from "@/lib/learning/groq-chat";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -22,7 +22,7 @@ type FeedbackRequest = {
 type FeedbackResponse = {
   feedback: string;
   nextStep: string;
-  source: "groq" | "local";
+  source: "ai" | "local";
 };
 
 const SYSTEM_PROMPT = [
@@ -34,7 +34,6 @@ const SYSTEM_PROMPT = [
   "Никогда не выдумывай факты: опирайся на переданное объяснение.",
 ].join(" ");
 
-/** Запасная обратная связь: объяснение задания плюс конкретный следующий шаг. */
 function localFeedback(body: FeedbackRequest): FeedbackResponse {
   const explanation = body.explanation?.trim();
   const topic = body.topicTitle?.trim();
@@ -100,9 +99,12 @@ export async function POST(request: Request) {
   }
 
   const fallback = localFeedback(body);
+  if (!isGroqConfigured()) {
+    return NextResponse.json(fallback);
+  }
 
   try {
-    const raw = await groqChat(
+    const { content } = await groqChat(
       [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: buildUserPrompt(body) },
@@ -110,13 +112,13 @@ export async function POST(request: Request) {
       { maxTokens: 400, temperature: 0.3 },
     );
 
-    if (!raw) return NextResponse.json(fallback);
+    if (!content) return NextResponse.json(fallback);
 
-    const first = raw.indexOf("{");
-    const last = raw.lastIndexOf("}");
+    const first = content.indexOf("{");
+    const last = content.lastIndexOf("}");
     if (first >= 0 && last > first) {
       try {
-        const parsed = JSON.parse(raw.slice(first, last + 1)) as {
+        const parsed = JSON.parse(content.slice(first, last + 1)) as {
           feedback?: unknown;
           nextStep?: unknown;
         };
@@ -126,7 +128,7 @@ export async function POST(request: Request) {
           return NextResponse.json({
             feedback,
             nextStep: nextStep || fallback.nextStep,
-            source: "groq",
+            source: "ai",
           } satisfies FeedbackResponse);
         }
       } catch {
@@ -134,12 +136,12 @@ export async function POST(request: Request) {
       }
     }
 
-    const plain = raw.replace(/[`*#]/g, "").trim();
+    const plain = content.replace(/[`*#]/g, "").trim();
     if (plain.length > 0) {
       return NextResponse.json({
         feedback: plain.slice(0, 900),
         nextStep: fallback.nextStep,
-        source: "groq",
+        source: "ai",
       } satisfies FeedbackResponse);
     }
 

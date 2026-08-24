@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getGroqApiKey } from "@/lib/groq-env";
 import type {
   DisabilitySupportType,
   DisabilityDocumentEvaluation,
@@ -24,7 +25,7 @@ type GroqMessageContent =
       | { type: "image_url"; image_url: { url: string } }
     >;
 
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const AI_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions";
 const DEFAULT_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
 
 function jsonError(message: string, status: number) {
@@ -77,14 +78,14 @@ function fallbackEvaluation(input: EvaluateRequest): DisabilityDocumentEvaluatio
     status: "needs_human_review",
     documentType: input.document?.type || "unknown",
     summary:
-      "Документ сохранён для проверки, но автоматическая оценка недоступна без настроенного Groq API.",
+      "Документ сохранён для проверки, но автоматическая оценка недоступна без настроенного AI на сервере.",
     confidence: 0,
     detectedSupportTypes: input.supportTypes ?? [],
     recommendedAccommodations: [
       "Проверить документ вручную перед принятием решений.",
       "Использовать комментарий ученика для временных образовательных адаптаций.",
     ],
-    caveats: ["Нужен GROQ_API_KEY в .env.local."],
+    caveats: ["Нужно настроить AI-ключ на сервере."],
     evaluatedAt: Date.now(),
   };
 }
@@ -120,8 +121,8 @@ function parseEvaluation(content: string, input: EvaluateRequest): DisabilityDoc
   } catch {
     return {
       ...fallbackEvaluation(input),
-      summary: content.slice(0, 1000) || "Groq returned an unreadable evaluation.",
-      caveats: ["Groq response was not valid JSON; human review required."],
+      summary: content.slice(0, 1000) || "AI returned an unreadable evaluation.",
+      caveats: ["AI response was not valid JSON; human review required."],
     };
   }
 }
@@ -134,7 +135,7 @@ export async function POST(request: Request) {
     return jsonError("Invalid JSON body.", 400);
   }
 
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = getGroqApiKey();
   if (!apiKey || apiKey.includes("replace-me")) {
     return NextResponse.json({ evaluation: fallbackEvaluation(input) }, { status: 200 });
   }
@@ -148,7 +149,7 @@ export async function POST(request: Request) {
       ]
     : prompt;
 
-  const response = await fetch(GROQ_URL, {
+  const response = await fetch(AI_CHAT_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -171,14 +172,14 @@ export async function POST(request: Request) {
 
   if (!response.ok) {
     const text = await response.text().catch(() => "");
-    return jsonError(`Groq evaluation failed: ${text || response.statusText}`, response.status);
+    return jsonError(`AI evaluation failed: ${text || response.statusText}`, response.status);
   }
 
   const data = (await response.json()) as {
     choices?: Array<{ message?: { content?: string } }>;
   };
   const output = data.choices?.[0]?.message?.content;
-  if (!output) return jsonError("Groq returned an empty evaluation.", 502);
+  if (!output) return jsonError("AI returned an empty evaluation.", 502);
 
   return NextResponse.json({ evaluation: parseEvaluation(output, input) });
 }

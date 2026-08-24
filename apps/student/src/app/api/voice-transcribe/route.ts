@@ -23,11 +23,10 @@ function parseGroqTranscriptionJson(text: string): { text?: string } | null {
 
 export async function POST(request: Request) {
   try {
-    const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey || apiKey.includes("replace-me")) {
-      // 200 + JSON avoids some proxies/CDNs surfacing an HTML error shell for 5xx.
+    const apiKey = getGroqApiKey();
+    if (!apiKey) {
       return NextResponse.json(
-        { error: "GROQ_API_KEY is not configured on the server.", transcript: "" },
+        { error: "Voice AI is not configured on the server.", transcript: "" },
         { status: 200 },
       );
     }
@@ -66,7 +65,7 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: `Groq transcription failed: ${rawBody || response.statusText}` },
+        { error: `Voice transcription failed: ${rawBody || response.statusText}` },
         { status: response.status >= 400 && response.status < 600 ? response.status : 502 },
       );
     }
@@ -75,7 +74,7 @@ export async function POST(request: Request) {
     const transcript = typeof data?.text === "string" ? data.text.trim() : "";
     if (!transcript) {
       return NextResponse.json(
-        { error: "Groq returned an empty or non-JSON transcript." },
+        { error: "AI returned an empty or unreadable transcript." },
         { status: 502 },
       );
     }
