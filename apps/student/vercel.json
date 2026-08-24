@@ -8,6 +8,12 @@
     },
     "src/app/api/voice-command/route.ts": {
       "maxDuration": 30
+    },
+    "src/app/api/learning/tutor/route.ts": {
+      "maxDuration": 30
+    },
+    "src/app/api/ai-ping/route.ts": {
+      "maxDuration": 30
     }
   }
 }

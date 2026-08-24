@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { groqChat, isGroqConfigured, type GroqMessage } from "@/lib/learning/groq-chat";
+import { userFacingAiError } from "@/lib/learning/ai-error-hint";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -20,8 +21,7 @@ type TutorResponse = {
   source: "ai" | "local";
 };
 
-const AI_UNAVAILABLE =
-  "AI-репетитор сейчас недоступен. Попробуйте позже или откройте конспект темы ниже.";
+const AI_UNAVAILABLE = userFacingAiError();
 
 const SYSTEM_PROMPT = [
   "Ты — AI-репетитор образовательной платформы teñ. для школьников Казахстана.",
@@ -122,9 +122,15 @@ export async function POST(request: Request) {
     }
 
     console.error("[learning/tutor] AI failed:", error);
-    return NextResponse.json({ answer: AI_UNAVAILABLE, source: "local" } satisfies TutorResponse);
+    return NextResponse.json({
+      answer: userFacingAiError(error),
+      source: "local",
+    } satisfies TutorResponse);
   } catch (error) {
     console.error("[learning/tutor]", error);
-    return NextResponse.json({ answer: AI_UNAVAILABLE, source: "local" } satisfies TutorResponse);
+    return NextResponse.json({
+      answer: userFacingAiError(error instanceof Error ? error.message : undefined),
+      source: "local",
+    } satisfies TutorResponse);
   }
 }
