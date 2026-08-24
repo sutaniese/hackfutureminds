@@ -89,7 +89,7 @@ export const api = {
       `/api/agent/history?studentId=${encodeURIComponent(studentId)}`,
     ).then((r) => r.conversation),
   chat: (studentId: string, message: string) =>
-    jsonFetch<{ reply: string; source: 'gemini' | 'fallback'; savedNote?: { fileName: string } }>(
+    jsonFetch<{ reply: string; source: 'ai' | 'fallback'; savedNote?: { fileName: string } }>(
       '/api/agent/chat',
       { method: 'POST', body: JSON.stringify({ studentId, message }) },
     ),

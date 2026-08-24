@@ -1,9 +1,14 @@
 const AI_UNAVAILABLE =
   "AI-репетитор сейчас недоступен. Попробуйте позже или откройте конспект темы ниже.";
 
+const COACH_UNAVAILABLE =
+  "AI-наставник сейчас недоступен. Попробуйте позже или проверьте GROQ_API_KEY на сервере.";
+
+export { COACH_UNAVAILABLE };
+
 /** Map provider errors to short Russian hints for students/admins. */
-export function userFacingAiError(error?: string): string {
-  if (!error) return AI_UNAVAILABLE;
+export function userFacingAiError(error?: string, unavailableMessage = AI_UNAVAILABLE): string {
+  if (!error) return unavailableMessage;
 
   const lower = error.toLowerCase();
 
@@ -26,5 +31,5 @@ export function userFacingAiError(error?: string): string {
     return "AI не успел ответить вовремя. Попробуйте короче вопрос или проверьте лимиты функции на Vercel.";
   }
 
-  return AI_UNAVAILABLE;
+  return unavailableMessage;
 }
