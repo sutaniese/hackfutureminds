@@ -259,6 +259,29 @@ export function resetLearningProgress(): void {
   writeLearningState(EMPTY_STATE);
 }
 
+const DAY_MS = 86_400_000;
+
+/**
+ * Помечает тему как «пора повторить»: lastAt сдвигается назад,
+ * чтобы баннер напоминаний в кабинете был виден сразу после диагностики.
+ */
+export function seedDueReview(topicId: string, daysAgo = 10): LearningState {
+  const state = readLearningState();
+  const current = state.topics[topicId] ?? emptyTopicState(topicId);
+  const lastAt = Date.now() - daysAgo * DAY_MS;
+  return writeLearningState({
+    ...state,
+    topics: {
+      ...state.topics,
+      [topicId]: {
+        ...current,
+        attempts: Math.max(current.attempts, 1),
+        lastAt,
+      },
+    },
+  });
+}
+
 /* --------------------------- контент учителя ---------------------------- */
 
 type CustomContent = { topics: Topic[] };
