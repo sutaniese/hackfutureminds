@@ -8,7 +8,7 @@ export function AgentChat() {
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [source, setSource] = useState<'gemini' | 'fallback' | null>(null)
+  const [source, setSource] = useState<'ai' | 'fallback' | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -135,7 +135,7 @@ export function AgentChat() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Спросите: «расскажи про мой план», «сохрани заметку: …»"
+              placeholder="Спросите: «какой прогресс у ученика?», «сохрани заметку: …»"
               className="pw-input min-h-[48px] flex-1 px-4 py-2 text-sm"
               disabled={busy}
               aria-label="Сообщение агенту"
@@ -153,8 +153,8 @@ export function AgentChat() {
             {source && (
               <span>
                 Источник:{' '}
-                <strong className={source === 'gemini' ? 'text-emerald-600' : 'text-amber-600'}>
-                  {source === 'gemini' ? 'Gemini' : 'fallback'}
+                <strong className={source === 'ai' ? 'text-emerald-600' : 'text-amber-600'}>
+                  {source === 'ai' ? 'AI' : 'fallback'}
                 </strong>
               </span>
             )}

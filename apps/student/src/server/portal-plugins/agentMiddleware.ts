@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'http'
-import { geminiGenerate, getGeminiApiKey } from './geminiClient'
+import { COACH_UNAVAILABLE, userFacingAiError } from '@/lib/learning/ai-error-hint'
+import { groqChat, isGroqConfigured, type GroqMessage } from '@/lib/learning/groq-chat'
 import { parseJson, pathOf, sendJson } from './httpUtils'
 import {
   appendChatMessage,
@@ -13,19 +14,20 @@ import {
 
 type ReadBody = (req: IncomingMessage) => Promise<string>
 
-const SYSTEM_PROMPT = `Ты — персональный ИИ-наставник по платформе **ten** для одного конкретного ученика.
-Ты опираешься ТОЛЬКО на профиль ученика, его результаты, прогресс и заметки наставника, которые передаются ниже.
-Учитель может спрашивать о прогрессе, слабых местах и следующих шагах — отвечай по этим данным.
-Если данных нет — честно скажи об этом и предложи добавить заметку.
+const SYSTEM_PROMPT = `Ты — ИИ-ассистент для учителя на платформе **ten**.
+Учитель выбирает одного ученика и спрашивает о его прогрессе, слабых местах и следующих шагах.
+Ты опираешься ТОЛЬКО на профиль ученика, его результаты, прогресс и заметки, которые передаются ниже.
+Обращайся к пользователю как к учителю (на «вы»), говорите О ученике в третьем лице. Не путайте учителя с учеником.
+Если данных нет — честно скажите об этом и предложите добавить заметку.
 
 Стиль:
-- говори на языке ученика (kk/ru/en) исходя из его профиля; если он пишет тебе на другом — отвечай на языке его сообщения;
+- отвечайте на языке сообщения учителя (kk/ru/en);
 - коротко, по делу, дружелюбно, без воды;
-- при оценке профессии давай: зарплату (KZT), спрос (low/medium/high), путь, риски;
-- при разговоре о деньгах учитывай financial_route и подсвечивай grants с дедлайнами;
-- предлагай конкретный следующий шаг (1 действие).
+- при оценке профессии давайте: зарплату (KZT), спрос (low/medium/high), путь, риски;
+- при разговоре о деньгах учитывайте financial_route и подсвечивайте grants с дедлайнами;
+- предлагайте один конкретный следующий шаг для ученика.
 
-Если пользователь просит "запомнить" или "добавь заметку" — выдай команду
+Если учитель просит "запомнить" или "добавь заметку" — выдайте команду
 вида \`<<SAVE_NOTE title="..." filename="..." >>\\n...content...\\n<<END_NOTE>>\` (фронт это распознает).
 `
 
@@ -68,13 +70,14 @@ export async function agentMiddleware(
       const userMsg: ChatMessage = { role: 'user', text: body.message.trim(), ts: new Date().toISOString() }
       appendChatMessage(student.id, userMsg)
 
-      const hasKey = !!getGeminiApiKey()
+      const hasKey = isGroqConfigured()
       let answer = ''
-      let source: 'gemini' | 'fallback' = 'fallback'
+      let source: 'ai' | 'fallback' = 'fallback'
+      let aiError: string | undefined
 
       if (hasKey) {
         try {
-          const prompt = buildPrompt({
+          const messages = buildGroqMessages({
             student: {
               displayName: student.displayName,
               language: student.language,
@@ -83,15 +86,20 @@ export async function agentMiddleware(
             vault,
             history: [...conv.messages, userMsg].slice(-12),
           })
-          answer = (await geminiGenerate(prompt)).trim()
-          if (answer) source = 'gemini'
+          const result = await groqChat(messages, { maxTokens: 800, temperature: 0.4 })
+          answer = result.content?.trim() ?? ''
+          aiError = result.error
+          if (answer) source = 'ai'
         } catch (err) {
-          console.warn('[agent] gemini error:', err)
+          aiError = err instanceof Error ? err.message : 'AI request failed.'
+          console.warn('[agent] ai error:', err)
         }
       }
 
       if (!answer) {
-        answer = buildFallback(student.displayName, body.message)
+        answer = hasKey
+          ? userFacingAiError(aiError, COACH_UNAVAILABLE)
+          : buildFallback(student.displayName, body.message)
       }
 
       const noteParsed = extractAutoNote(answer)
@@ -116,11 +124,11 @@ export async function agentMiddleware(
   }
 }
 
-function buildPrompt(args: {
+function buildGroqMessages(args: {
   student: { displayName: string; language: string; primary: string }
   vault: { profile: string; notes: { fileName: string; title: string; content: string }[] } | null
   history: ChatMessage[]
-}): string {
+}): GroqMessage[] {
   const { student, vault, history } = args
   const profile = vault?.profile ?? '_профиль ещё не заполнен_'
   const notesBlock = vault?.notes.length
@@ -129,33 +137,32 @@ function buildPrompt(args: {
         .join('\n\n---\n\n')
     : '_заметок пока нет_'
 
-  const historyBlock = history
-    .map((m) => `${m.role === 'user' ? 'Ученик' : 'Ассистент'}: ${m.text}`)
-    .join('\n')
-
-  return [
+  const systemContent = [
     SYSTEM_PROMPT,
     '',
-    `Ученик: ${student.displayName} (язык интерфейса: ${student.language}, основное направление: ${student.primary || '—'})`,
+    `Выбранный ученик: ${student.displayName} (язык интерфейса: ${student.language}, основное направление: ${student.primary || '—'})`,
     '',
     '## Профиль ученика',
     profile,
     '',
     '## Заметки и результаты',
     notesBlock,
-    '',
-    '## История диалога',
-    historyBlock,
-    '',
-    'Ответь следующим сообщением ученику.',
   ].join('\n')
+
+  return [
+    { role: 'system', content: systemContent },
+    ...history.map((message) => ({
+      role: message.role,
+      content: message.text,
+    })),
+  ]
 }
 
-function buildFallback(name: string, message: string): string {
+function buildFallback(studentName: string, message: string): string {
   return [
-    `Привет, ${name}! Я твой AI-наставник в ten (offline-режим — нет ключа Gemini в .env).`,
-    `Я записал твой вопрос: "${message}".`,
-    'Когда подключим API — отвечу с учётом профиля, результатов и заметок ученика.',
+    'AI-наставник сейчас недоступен: на сервере не настроен GROQ_API_KEY.',
+    `Ваш вопрос по ученику «${studentName}»: «${message}».`,
+    'После подключения ключа отвечу с учётом профиля, результатов и ваших заметок.',
   ].join('\n')
 }
 
