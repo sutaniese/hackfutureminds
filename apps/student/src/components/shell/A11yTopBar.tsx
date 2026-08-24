@@ -138,7 +138,7 @@ export function A11yTopBar() {
                 Выйти
               </button>
             </>
-          ) : showSessionActions && status === "guest" ? (
+          ) : showSessionActions ? (
             <>
               <Link
                 href="/login"
