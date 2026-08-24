@@ -106,8 +106,10 @@ export async function POST(request: Request) {
 
     const { content, error } = await groqChat(
       [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "system", content: context },
+        {
+          role: "system",
+          content: `${SYSTEM_PROMPT}\n\n${context}`,
+        },
         ...history,
         { role: "user", content: body.question.trim() },
       ],

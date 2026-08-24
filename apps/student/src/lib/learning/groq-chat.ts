@@ -7,6 +7,7 @@ import { getGroqApiKey, getGroqChatModel } from "@/lib/groq-env";
 
 const AI_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions";
 const DEFAULT_TIMEOUT_MS = 25_000;
+const FALLBACK_MODELS = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"] as const;
 
 export type GroqMessage = { role: "system" | "user" | "assistant"; content: string };
 
@@ -25,6 +26,96 @@ export function isGroqConfigured(): boolean {
   return Boolean(getGroqApiKey());
 }
 
+function modelCandidates(): string[] {
+  const preferred = getGroqChatModel(FALLBACK_MODELS[0]);
+  const ordered = [preferred, ...FALLBACK_MODELS.filter((model) => model !== preferred)];
+  return [...new Set(ordered)];
+}
+
+/** Groq accepts only one leading system message and alternating user/assistant turns. */
+export function normalizeGroqMessages(messages: GroqMessage[]): GroqMessage[] {
+  const systemParts: string[] = [];
+  const conversation: GroqMessage[] = [];
+
+  for (const message of messages) {
+    const content = message.content.trim();
+    if (!content) continue;
+    if (message.role === "system") {
+      systemParts.push(content);
+      continue;
+    }
+    conversation.push({ role: message.role, content });
+  }
+
+  const normalized: GroqMessage[] = [];
+  if (systemParts.length > 0) {
+    normalized.push({ role: "system", content: systemParts.join("\n\n") });
+  }
+
+  for (const message of conversation) {
+    const last = normalized[normalized.length - 1];
+    if (last && last.role === message.role) {
+      last.content = `${last.content}\n\n${message.content}`;
+      continue;
+    }
+    normalized.push(message);
+  }
+
+  const firstDialog = normalized.find((message) => message.role !== "system");
+  if (firstDialog?.role === "assistant") {
+    const index = normalized.findIndex((message) => message.role === "assistant");
+    normalized.splice(index, 0, { role: "user", content: "Продолжим разбор темы." });
+  }
+
+  return normalized;
+}
+
+async function requestChatCompletion(
+  key: string,
+  model: string,
+  messages: GroqMessage[],
+  options: GroqChatOptions,
+  signal: AbortSignal,
+): Promise<GroqChatResult> {
+  const response = await fetch(AI_CHAT_URL, {
+    method: "POST",
+    signal,
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${key}`,
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: options.maxTokens ?? 700,
+      temperature: options.temperature ?? 0.4,
+      messages,
+    }),
+  });
+
+  const rawBody = await response.text();
+  if (!response.ok) {
+    const detail = rawBody.slice(0, 280).trim();
+    const error = detail
+      ? `AI request failed (${response.status}): ${detail}`
+      : `AI request failed (${response.status}).`;
+    return { content: null, error };
+  }
+
+  let data: { choices?: { message?: { content?: string } }[] };
+  try {
+    data = JSON.parse(rawBody) as { choices?: { message?: { content?: string } }[] };
+  } catch {
+    return { content: null, error: "AI returned an unreadable response." };
+  }
+
+  const text = data.choices?.[0]?.message?.content?.trim();
+  if (!text) {
+    return { content: null, error: "AI returned an empty response." };
+  }
+
+  return { content: text };
+}
+
 export async function groqChat(
   messages: GroqMessage[],
   options: GroqChatOptions = {},
@@ -34,49 +125,26 @@ export async function groqChat(
     return { content: null, error: "AI is not configured on the server." };
   }
 
+  const payload = normalizeGroqMessages(messages);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
 
   try {
-    const response = await fetch(AI_CHAT_URL, {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${key}`,
-      },
-      body: JSON.stringify({
-        model: getGroqChatModel("llama-3.3-70b-versatile"),
-        max_tokens: options.maxTokens ?? 700,
-        temperature: options.temperature ?? 0.4,
-        messages,
-      }),
-    });
-
-    const rawBody = await response.text();
-    if (!response.ok) {
-      const detail = rawBody.slice(0, 280).trim();
-      const error = detail
-        ? `AI request failed (${response.status}): ${detail}`
-        : `AI request failed (${response.status}).`;
-      console.error("[ai-chat]", error);
-      return { content: null, error };
+    let lastError: string | undefined;
+    for (const model of modelCandidates()) {
+      const result = await requestChatCompletion(key, model, payload, options, controller.signal);
+      if (result.content) return result;
+      lastError = result.error;
+      const retryable =
+        result.error?.includes("(404)") ||
+        result.error?.includes("(400)") ||
+        result.error?.toLowerCase().includes("model");
+      if (!retryable) break;
+      console.warn("[ai-chat] model failed, trying fallback:", model, result.error);
     }
 
-    let data: { choices?: { message?: { content?: string } }[] };
-    try {
-      data = JSON.parse(rawBody) as { choices?: { message?: { content?: string } }[] };
-    } catch {
-      console.error("[ai-chat] Non-JSON response:", rawBody.slice(0, 280));
-      return { content: null, error: "AI returned an unreadable response." };
-    }
-
-    const text = data.choices?.[0]?.message?.content?.trim();
-    if (!text) {
-      return { content: null, error: "AI returned an empty response." };
-    }
-
-    return { content: text };
+    if (lastError) console.error("[ai-chat]", lastError);
+    return { content: null, error: lastError ?? "AI request failed." };
   } catch (error) {
     const message =
       error instanceof Error && error.name === "AbortError"
