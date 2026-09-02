@@ -332,7 +332,8 @@ export function logoutUser(): void {
 }
 
 /** Role is immutable after registration. Kept for call-site compatibility. */
-export function updateCurrentUserRole(_role: UserRole): PublicUser | null {
+export function updateCurrentUserRole(role: UserRole): PublicUser | null {
+  void role;
   return getCurrentUser();
 }
 

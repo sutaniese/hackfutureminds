@@ -65,6 +65,6 @@ export function useLearning() {
 
   return useMemo(
     () => ({ profile, state, topics, ready, refresh: sync, classId, inviteCode }),
-    [classId, inviteCode, locale, profile, ready, state, sync, topics],
+    [classId, inviteCode, profile, ready, state, sync, topics],
   );
 }

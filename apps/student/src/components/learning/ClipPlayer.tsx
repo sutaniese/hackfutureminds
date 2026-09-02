@@ -39,10 +39,12 @@ export function ClipPlayer() {
   const beat = clip?.beats[beatIndex];
   const progress = clip ? ((beatIndex + 1) / clip.beats.length) * 100 : 0;
 
+  const clipId = clip?.id;
+  const clipTopicId = clip?.topicId;
   useEffect(() => {
-    if (!clip) return;
-    void recordClipEvent({ clipId: clip.id, topicId: clip.topicId, event: "start" });
-  }, [clip?.id, clip?.topicId]);
+    if (!clipId || !clipTopicId) return;
+    void recordClipEvent({ clipId, topicId: clipTopicId, event: "start" });
+  }, [clipId, clipTopicId]);
 
   const loadTopic = useCallback(
     async (topicId: string, forceLive = false) => {

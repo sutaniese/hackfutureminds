@@ -26,6 +26,8 @@ type ClassRecord = {
 };
 
 export async function listClassesForUser(user: AuthedUser): Promise<ClassRow[]> {
+  void user;
+  const supabase = await createServerSupabase();
   const supabase = await createServerSupabase();
   if (!supabase) throw new HttpError(503, "Supabase is not configured.");
 
@@ -165,7 +167,7 @@ export async function readOwnProgress(user: AuthedUser) {
 
   const classIds = (memberships ?? []).map((m: { class_id: string }) => m.class_id);
   let topics: Topic[] = [];
-  let classId: string | null = classIds[0] ?? null;
+  const classId: string | null = classIds[0] ?? null;
   let inviteCode: string | null = null;
 
   if (classIds.length > 0) {

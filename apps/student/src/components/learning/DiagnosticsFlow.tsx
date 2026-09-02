@@ -167,6 +167,9 @@ export function DiagnosticsFlow() {
     }
     setResult(saved);
     setStage("result");
+    // Restore once on mount. Locale for KK overlay is read from the current i18n value
+    // inside the draft branch; re-running on locale change would wipe an in-progress test.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const toggleGoal = useCallback((goal: LearningGoalId) => {
