@@ -6,6 +6,8 @@ import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { ContentCard } from "@/components/ui/PageHero";
 import { useAuth } from "@/components/shell/useAuth";
 import { useUserProgress } from "@/components/gamification/UserProgressProvider";
+import { useI18n } from "@/i18n/I18nProvider";
+import { localizedCount, ofTasksI18n } from "@/lib/i18n-labels";
 import { readJsonResponse } from "@/lib/http-json";
 import { findSubject, subjectTitle, topicsForSubject } from "@/lib/learning/catalog";
 import {
@@ -18,8 +20,7 @@ import {
   weakSpots,
 } from "@/lib/learning/recommend";
 import { recordAttempt, upsertRosterEntry } from "@/lib/learning/store";
-import { attemptsLabel, ofTasksLabel } from "@/lib/learning/plural";
-import { MATERIAL_KIND_LABELS, isAnswerCorrect, taskCorrectLabel } from "@/lib/learning/types";
+import { isAnswerCorrect, taskCorrectLabel } from "@/lib/learning/types";
 import type { Task } from "@/lib/learning/types";
 import { whyThisTask } from "@/lib/learning/why-this";
 import { AnswerField } from "./AnswerField";
@@ -38,13 +39,14 @@ type Feedback = {
   correctAnswer: string;
 };
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: "practice", label: "Задания" },
-  { id: "theory", label: "Конспект" },
-  { id: "tutor", label: "AI-репетитор" },
+const TABS: { id: Tab; labelKey: string }[] = [
+  { id: "practice", labelKey: "topic.tab.practice" },
+  { id: "theory", labelKey: "topic.tab.theory" },
+  { id: "tutor", labelKey: "topic.tab.tutor" },
 ];
 
 export function TopicPractice({ topicId }: { topicId: string }) {
+  const { t, locale } = useI18n();
   const { profile, state, topics, ready } = useLearning();
   const { user } = useAuth();
   const { awardXp, earnBadge } = useUserProgress();
@@ -129,8 +131,8 @@ export function TopicPractice({ topicId }: { topicId: string }) {
         correct,
         text: current.explanation,
         nextStep: correct
-          ? "Следующее задание подстроится под твой уровень."
-          : `Повтори навык «${current.skill}» в конспекте темы.`,
+          ? t("topic.nextLocalOk")
+          : t("topic.nextLocalBad", { skill: current.skill }),
         source: "local",
         correctAnswer: taskCorrectLabel(current),
       });
@@ -176,7 +178,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
         syncRoster();
       }
     },
-    [answer, awardXp, earnBadge, profile?.grade, state, syncRoster, topic, topics],
+    [answer, awardXp, earnBadge, profile?.grade, state, syncRoster, t, topic, topics],
   );
 
   const goNext = useCallback(() => {
@@ -191,11 +193,11 @@ export function TopicPractice({ topicId }: { topicId: string }) {
   if (!topic) {
     return (
       <EmptyState
-        title="Тема не найдена"
-        description="Возможно, тема была удалена из конструктора учителя или ссылка устарела."
+        title={t("topic.notFound")}
+        description={t("topic.notFoundHint")}
         action={
           <Link href="/learning" className="pw-btn-primary text-sm">
-            Вернуться в кабинет
+            {t("topic.backDash")}
           </Link>
         }
       />
@@ -212,8 +214,8 @@ export function TopicPractice({ topicId }: { topicId: string }) {
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <Pill tone="accent">{subjectTitle(topic.subjectId)}</Pill>
-              <Pill>{topic.grades.join(", ")} класс</Pill>
-              {topic.custom ? <Pill tone="good">Добавлено учителем</Pill> : null}
+              <Pill>{t("learn.grade", { n: topic.grades.join(", ") })}</Pill>
+              {topic.custom ? <Pill tone="good">{t("topic.teacherAdded")}</Pill> : null}
             </div>
             <h2 className="mt-3 flex flex-wrap items-center gap-3 text-2xl font-black tracking-tight text-pathwise-ink">
               {subject ? (
@@ -230,36 +232,36 @@ export function TopicPractice({ topicId }: { topicId: string }) {
             <p className="mt-2 max-w-3xl text-sm leading-6 text-pathwise-muted">{topic.summary}</p>
           </div>
           <Link href="/learning" className="pw-btn-secondary shrink-0 text-sm">
-            В кабинет
+            {t("topic.toDash")}
           </Link>
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <StatTile
-            label="Освоено"
+            label={t("learn.mastery")}
             value={<AnimatedNumber value={mastery} suffix="%" duration={700} />}
-            hint={`${solvedCount} из ${ofTasksLabel(topic.tasks.length)}`}
+            hint={`${solvedCount} / ${ofTasksI18n(locale, topic.tasks.length)}`}
             tone="accent"
           />
           <StatTile
-            label="Точность по теме"
+            label={t("topic.accuracy")}
             value={
               accuracy === null ? "—" : <AnimatedNumber value={accuracy} suffix="%" duration={700} />
             }
-            hint={attemptsLabel(topicState?.attempts ?? 0)}
+            hint={localizedCount(locale, "attempts", topicState?.attempts ?? 0)}
             tone={accuracy !== null && accuracy >= 70 ? "good" : "warn"}
           />
           <StatTile
-            label="Текущая сложность"
-            value={`Уровень ${topicState?.difficulty ?? 1}`}
-            hint="подстраивается автоматически"
+            label={t("topic.diffNow")}
+            value={t("topic.levelN", { n: topicState?.difficulty ?? 1 })}
+            hint={t("topic.auto")}
           />
         </div>
         <div className="mt-5">
-          <ProgressBar value={mastery} label={`Освоено ${mastery}%`} />
+          <ProgressBar value={mastery} label={t("learn.masteredPct", { n: mastery })} />
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Разделы темы">
+        <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label={t("topic.tabs")}>
           {TABS.map((item) => (
             <button
               key={item.id}
@@ -273,7 +275,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
                   : "border border-slate-200 bg-white text-pathwise-ink hover:border-[#6C63FF]/50"
               }`}
             >
-              {item.label}
+              {t(item.labelKey)}
             </button>
           ))}
         </div>
@@ -289,10 +291,10 @@ export function TopicPractice({ topicId }: { topicId: string }) {
                     feedback.correct ? "text-emerald-700" : "text-[#c63d3d]"
                   }`}
                 >
-                  {feedback.correct ? "Верно" : "Пока неверно"}
+                  {feedback.correct ? t("topic.yes") : t("topic.no")}
                 </p>
                 <Pill tone={feedback.source === "ai" ? "accent" : "muted"}>
-                  {feedback.source === "ai" ? "Разбор от AI" : "Разбор из базы"}
+                  {feedback.source === "ai" ? t("topic.aiExplain") : t("topic.bankExplain")}
                 </Pill>
               </div>
 
@@ -304,27 +306,27 @@ export function TopicPractice({ topicId }: { topicId: string }) {
                 }`}
               >
                 {!feedback.correct ? (
-                  <p className="mb-2 font-black">Правильный ответ: {feedback.correctAnswer}</p>
+                  <p className="mb-2 font-black">{t("topic.rightIs", { answer: feedback.correctAnswer })}</p>
                 ) : null}
                 <p>{feedback.text}</p>
               </div>
 
               {feedback.nextStep ? (
                 <div className="mt-3 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700 ring-1 ring-slate-200">
-                  <span className="font-black text-pathwise-ink">Следующий шаг: </span>
+                  <span className="font-black text-pathwise-ink">{t("topic.nextStep")}</span>
                   {feedback.nextStep}
                 </div>
               ) : null}
 
               {checking ? (
                 <p className="mt-3 text-xs font-semibold text-pathwise-muted">
-                  Запрашиваем персональный разбор…
+                  {t("topic.fetching")}
                 </p>
               ) : null}
 
               <div className="mt-6 flex flex-wrap gap-3">
                 <button type="button" onClick={goNext} className="pw-btn-primary text-sm">
-                  Следующее задание
+                  {t("topic.nextTask")}
                 </button>
                 <button
                   type="button"
@@ -335,7 +337,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
                   }}
                   className="pw-btn-secondary text-sm"
                 >
-                  Спросить репетитора
+                  {t("topic.askTutor")}
                 </button>
               </div>
             </div>
@@ -343,7 +345,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
             <div key={task.id} className="pw-reveal">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-pathwise-accent-strong">
-                  Задание {solvedCount + 1} из {topic.tasks.length}
+                  {t("topic.taskOf", { a: solvedCount + 1, b: topic.tasks.length })}
                 </p>
                 <DifficultyBadge difficulty={task.difficulty} />
               </div>
@@ -358,14 +360,14 @@ export function TopicPractice({ topicId }: { topicId: string }) {
                 <p className="text-lg font-black leading-7 text-pathwise-ink">{task.prompt}</p>
                 <SpeakButton
                   className="shrink-0"
-                  label="Прослушать задание"
+                  label={t("topic.listenTask")}
                   text={[task.passage, task.prompt, ...(task.options ?? [])]
                     .filter(Boolean)
                     .join(". ")}
                 />
               </div>
               <p className="mt-2 text-sm leading-6 text-pathwise-muted">
-                Почему это задание: {whyThisTask(task, topic, weak)}
+                {t("learn.why", { reason: whyThisTask(task, topic, weak, locale) })}
               </p>
               <AnswerField task={task} value={answer} onChange={setAnswer} />
 
@@ -376,20 +378,20 @@ export function TopicPractice({ topicId }: { topicId: string }) {
                   disabled={answer === "" || checking}
                   className="pw-btn-primary pw-press text-sm transition disabled:opacity-50"
                 >
-                  {checking ? "Проверяем…" : "Проверить ответ"}
+                  {checking ? t("topic.checking") : t("topic.check")}
                 </button>
                 <span className="text-xs font-semibold text-pathwise-muted">
-                  Навык: {task.skill} · ~{task.minutes} мин
+                  {t("topic.skillMin", { skill: task.skill, n: task.minutes })}
                 </span>
               </div>
             </div>
           ) : (
             <EmptyState
-              title="Тема пройдена полностью"
-              description="Все задания решены верно. Возьми следующую рекомендованную тему или вернись сюда позже для повторения."
+              title={t("topic.done")}
+              description={t("topic.doneHint")}
               action={
                 <Link href="/learning" className="pw-btn-primary text-sm">
-                  К рекомендациям
+                  {t("topic.toRecs")}
                 </Link>
               }
             />
@@ -401,8 +403,8 @@ export function TopicPractice({ topicId }: { topicId: string }) {
         <div className="grid gap-5 lg:grid-cols-[1.3fr_0.7fr]">
           <ContentCard>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-lg font-black tracking-tight text-pathwise-ink">Конспект темы</h3>
-              <SpeakButton label="Прослушать конспект" text={topic.theory.join(" ")} />
+              <h3 className="text-lg font-black tracking-tight text-pathwise-ink">{t("topic.notes")}</h3>
+              <SpeakButton label={t("topic.listenNotes")} text={topic.theory.join(" ")} />
             </div>
             <div className="mt-4 grid gap-3">
               {topic.theory.map((paragraph, index) => (
@@ -417,7 +419,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
             </div>
 
             <h4 className="mt-7 text-sm font-black uppercase tracking-[0.14em] text-pathwise-muted">
-              Навыки темы
+              {t("topic.skills")}
             </h4>
             <div className="mt-3 flex flex-wrap gap-2">
               {topic.skills.map((skill) => (
@@ -429,17 +431,17 @@ export function TopicPractice({ topicId }: { topicId: string }) {
           </ContentCard>
 
           <ContentCard>
-            <h3 className="text-lg font-black tracking-tight text-pathwise-ink">Материалы</h3>
+            <h3 className="text-lg font-black tracking-tight text-pathwise-ink">{t("topic.materials")}</h3>
             <div className="mt-4 grid gap-3">
               {topic.materials.length === 0 ? (
-                <p className="text-sm text-pathwise-muted">Материалы к теме пока не добавлены.</p>
+                <p className="text-sm text-pathwise-muted">{t("topic.noMaterials")}</p>
               ) : (
                 topic.materials.map((material) => (
                   <div key={material.title} className="rounded-2xl border border-slate-200 bg-white p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <Pill tone="accent">{MATERIAL_KIND_LABELS[material.kind]}</Pill>
+                      <Pill tone="accent">{t(`material.${material.kind}`)}</Pill>
                       <span className="text-xs font-bold text-pathwise-muted">
-                        {material.minutes} мин
+                        {t("topic.min", { n: material.minutes })}
                       </span>
                     </div>
                     <p className="mt-3 text-sm font-black text-pathwise-ink">{material.title}</p>
@@ -461,7 +463,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
       {sameSubject.length > 0 ? (
         <ContentCard>
           <h3 className="text-lg font-black tracking-tight text-pathwise-ink">
-            Другие темы предмета
+            {t("topic.other")}
           </h3>
           <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {sameSubject.slice(0, 6).map((item) => (

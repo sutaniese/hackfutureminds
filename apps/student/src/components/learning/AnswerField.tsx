@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/i18n/I18nProvider";
 import type { Task } from "@/lib/learning/types";
 
 /**
@@ -22,10 +23,11 @@ export function AnswerField({
   correctValue?: string;
   showResult?: boolean;
 }) {
+  const { t } = useI18n();
   if (task.type === "single" && task.options) {
     return (
       <fieldset className="mt-5 grid gap-2.5" disabled={disabled}>
-        <legend className="sr-only">Варианты ответа</legend>
+        <legend className="sr-only">{t("answer.options")}</legend>
         {task.options.map((option, index) => {
           const optionValue = String(index);
           const selected = value === optionValue;
@@ -58,7 +60,7 @@ export function AnswerField({
               />
               <span className="min-w-0 flex-1">{option}</span>
               {isCorrect ? (
-                <span className="shrink-0 text-xs font-black text-emerald-700">верно</span>
+                <span className="shrink-0 text-xs font-black text-emerald-700">{t("answer.okMark")}</span>
               ) : null}
             </label>
           );
@@ -73,7 +75,7 @@ export function AnswerField({
         htmlFor={`answer-${task.id}`}
         className="text-xs font-bold uppercase tracking-[0.14em] text-pathwise-muted"
       >
-        {task.type === "numeric" ? "Ответ числом" : "Короткий ответ"}
+        {task.type === "numeric" ? t("answer.numeric") : t("answer.short")}
       </label>
       <input
         id={`answer-${task.id}`}
@@ -88,7 +90,7 @@ export function AnswerField({
       />
       {showResult && correctValue ? (
         <p className="mt-2 text-xs font-bold text-pathwise-muted">
-          Правильный ответ: <span className="text-pathwise-ink">{correctValue}</span>
+          {t("topic.rightIs", { answer: correctValue })}
         </p>
       ) : null}
     </div>
