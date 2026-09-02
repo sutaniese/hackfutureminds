@@ -21,6 +21,7 @@ import { recordAttempt, upsertRosterEntry } from "@/lib/learning/store";
 import { attemptsLabel, ofTasksLabel } from "@/lib/learning/plural";
 import { MATERIAL_KIND_LABELS, isAnswerCorrect, taskCorrectLabel } from "@/lib/learning/types";
 import type { Task } from "@/lib/learning/types";
+import { whyThisTask } from "@/lib/learning/why-this";
 import { AnswerField } from "./AnswerField";
 import { DifficultyBadge, EmptyState, Pill, ProgressBar, StatTile } from "./LearningUI";
 import { SpeakButton } from "./SpeakButton";
@@ -63,6 +64,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
     () => (topic && !feedback ? nextTask(topic, state) : null),
     [feedback, state, topic],
   );
+  const weak = useMemo(() => weakSpots(topics, state, 8), [state, topics]);
 
   const syncRoster = useCallback(() => {
     if (!user?.email || !profile || !topic) return;
@@ -362,6 +364,9 @@ export function TopicPractice({ topicId }: { topicId: string }) {
                     .join(". ")}
                 />
               </div>
+              <p className="mt-2 text-sm leading-6 text-pathwise-muted">
+                Почему это задание: {whyThisTask(task, topic, weak)}
+              </p>
               <AnswerField task={task} value={answer} onChange={setAnswer} />
 
               <div className="mt-6 flex flex-wrap items-center gap-3">

@@ -9,6 +9,8 @@ import {
 } from '@/lib/learning/store'
 import { plural, tasksLabel } from '@/lib/learning/plural'
 import type { Difficulty, Grade, Task, Topic } from '@/lib/learning/types'
+import { isSupabaseConfigured } from '@/lib/supabase/env'
+import { deleteCustomTopicRemote, listClassesRemote, publishCustomTopic } from '@/lib/learning/remote'
 
 const GRADES: Grade[] = [7, 8, 9, 10, 11, 12]
 
@@ -67,11 +69,24 @@ export function TopicBuilder() {
   const [tasks, setTasks] = useState<DraftTask[]>([emptyTask(0)])
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [classes, setClasses] = useState<Array<{ id: string; name: string; inviteCode: string }>>([])
+  const [classId, setClassId] = useState('')
+  const [publishing, setPublishing] = useState(false)
 
   useEffect(() => {
     const sync = () => setCustom(readCustomTopics())
     sync()
     return subscribeLearning(sync)
+  }, [])
+
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return
+    void listClassesRemote()
+      .then((list) => {
+        setClasses(list)
+        setClassId((prev) => prev || list[0]?.id || '')
+      })
+      .catch(() => undefined)
   }, [])
 
   const toggleGrade = useCallback((grade: Grade) => {
@@ -94,7 +109,7 @@ export function TopicBuilder() {
   }, [])
 
   const onSubmit = useCallback(
-    (event: FormEvent) => {
+    async (event: FormEvent) => {
       event.preventDefault()
       setError(null)
       setMessage(null)
@@ -105,6 +120,10 @@ export function TopicBuilder() {
       }
       if (grades.length === 0) {
         setError('Выберите хотя бы один класс.')
+        return
+      }
+      if (isSupabaseConfigured() && !classId) {
+        setError('Сначала создайте класс в кабинете учителя — тема публикуется в конкретный класс.')
         return
       }
 
@@ -162,13 +181,23 @@ export function TopicBuilder() {
         custom: true,
       }
 
-      saveCustomTopic(topic)
-      setMessage(
-        `Тема «${topic.title}» опубликована: ${tasksLabel(builtTasks.length)} ${plural(builtTasks.length, "доступно", "доступны", "доступны")} ученикам.`,
-      )
-      resetForm()
+      setPublishing(true)
+      try {
+        if (isSupabaseConfigured() && classId) {
+          await publishCustomTopic(classId, topic)
+        }
+        saveCustomTopic(topic)
+        setMessage(
+          `Тема «${topic.title}» опубликована: ${tasksLabel(builtTasks.length)} ${plural(builtTasks.length, "доступно", "доступны", "доступны")} ученикам класса.`,
+        )
+        resetForm()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Не удалось опубликовать тему.')
+      } finally {
+        setPublishing(false)
+      }
     },
-    [grades, resetForm, skills, subjectId, summary, tasks, theory, title],
+    [classId, grades, resetForm, skills, subjectId, summary, tasks, theory, title],
   )
 
   return (
@@ -176,8 +205,7 @@ export function TopicBuilder() {
       <section className="pw-card p-6">
         <h2 className="text-lg font-semibold text-pathwise-ink">Конструктор темы</h2>
         <p className="mt-1 text-sm text-pathwise-muted">
-          Новая тема сразу появляется в рекомендациях у учеников выбранных классов и попадает в
-          адаптивный подбор заданий.
+          Тема пишется в класс и сразу появляется в плане учеников этого класса — не только в этом браузере.
         </p>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-6">
@@ -212,6 +240,27 @@ export function TopicBuilder() {
               />
             </div>
           </div>
+
+          {isSupabaseConfigured() ? (
+            <div>
+              <label htmlFor="builder-class" className="text-sm font-semibold text-pathwise-ink">
+                Класс, куда публикуем
+              </label>
+              <select
+                id="builder-class"
+                value={classId}
+                onChange={(event) => setClassId(event.target.value)}
+                className="pw-input mt-2 w-full px-3 py-3 text-sm"
+              >
+                <option value="">— выберите класс —</option>
+                {classes.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name} ({item.inviteCode})
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
 
           <div>
             <span className="text-sm font-semibold text-pathwise-ink">Классы</span>
@@ -395,8 +444,8 @@ export function TopicBuilder() {
           {error ? <p className="text-sm font-semibold text-[#E75555]">{error}</p> : null}
           {message ? <p className="text-sm font-semibold text-emerald-600">{message}</p> : null}
 
-          <button type="submit" className="pw-btn-primary text-sm">
-            Опубликовать тему
+          <button type="submit" disabled={publishing} className="pw-btn-primary text-sm disabled:opacity-50">
+            {publishing ? 'Публикуем…' : 'Опубликовать тему'}
           </button>
         </form>
       </section>
@@ -430,7 +479,10 @@ export function TopicBuilder() {
                   </Link>
                   <button
                     type="button"
-                    onClick={() => deleteCustomTopic(topic.id)}
+                    onClick={() => {
+                      deleteCustomTopic(topic.id)
+                      if (isSupabaseConfigured()) void deleteCustomTopicRemote(topic.id)
+                    }}
                     className="text-xs font-bold text-[#E75555] underline-offset-2 hover:underline"
                   >
                     Удалить

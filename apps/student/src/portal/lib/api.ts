@@ -63,10 +63,10 @@ export const api = {
   listClasses: () => jsonFetch<{ classes: ServerClass[] }>('/api/classes').then((r) => r.classes),
   createClass: (name: string) =>
     jsonFetch<{ class: ServerClass }>('/api/classes', { method: 'POST', body: JSON.stringify({ name }) }).then((r) => r.class),
-  joinClass: (inviteCode: string, studentId: string) =>
-    jsonFetch<{ class: ServerClass; student: ServerStudent }>('/api/classes/join', {
+  joinClass: (inviteCode: string, studentId?: string) =>
+    jsonFetch<{ class: ServerClass; student?: ServerStudent }>('/api/classes/join', {
       method: 'POST',
-      body: JSON.stringify({ inviteCode, studentId }),
+      body: JSON.stringify(studentId ? { inviteCode, studentId } : { inviteCode }),
     }),
   deleteClass: (id: string) =>
     jsonFetch<{ ok: boolean }>(`/api/classes/${encodeURIComponent(id)}`, { method: 'DELETE' }),
@@ -88,11 +88,16 @@ export const api = {
     jsonFetch<{ conversation: Conversation }>(
       `/api/agent/history?studentId=${encodeURIComponent(studentId)}`,
     ).then((r) => r.conversation),
-  chat: (studentId: string, message: string) =>
-    jsonFetch<{ reply: string; source: 'ai' | 'fallback'; savedNote?: { fileName: string } }>(
-      '/api/agent/chat',
-      { method: 'POST', body: JSON.stringify({ studentId, message }) },
-    ),
+  chat: (studentId: string, message: string, classId?: string) =>
+    jsonFetch<{
+      reply: string
+      source: 'ai' | 'fallback'
+      savedNote?: { fileName: string }
+      published?: { id: string; title: string } | null
+    }>('/api/agent/chat', {
+      method: 'POST',
+      body: JSON.stringify({ studentId, classId, message }),
+    }),
   clearChat: (studentId: string) =>
     jsonFetch<{ ok: boolean }>('/api/agent/clear', { method: 'POST', body: JSON.stringify({ studentId }) }),
 }

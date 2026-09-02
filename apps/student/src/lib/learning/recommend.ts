@@ -1,7 +1,7 @@
 import { topicsForSubject } from "./catalog";
 import { daysLabel, tasksLabel } from "./plural";
+import { emptyTopicState } from "./empty-state";
 import type { DiagnosticResult, LearningProfile, LearningState, ScorePair, TopicState } from "./store";
-import { emptyTopicState } from "./store";
 import type { Difficulty, Grade, Task, Topic } from "./types";
 
 /**

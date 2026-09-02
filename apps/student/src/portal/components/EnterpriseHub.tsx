@@ -45,6 +45,9 @@ export function EnterpriseHub() {
 
   return (
     <div className="space-y-8">
+      <p className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+        Макет white-label / CRM. В live-демо жюри этот раздел не используется.
+      </p>
       <section className="pw-card p-6">
         <h2 className="text-lg font-semibold text-pathwise-ink">White-label (tenant_id)</h2>
         <p className="mt-1 text-sm text-pathwise-muted">

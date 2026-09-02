@@ -4,7 +4,7 @@
 
 export const BRAND = {
   /** Public product name (Kazakh latin spelling preferred in UI). */
-  productName: "PathWise",
+  productName: "teñ.",
   /** Short brand mark used in the header logo when the asset isn't available. */
   brandMark: "teñ",
   /** Visible tagline used in headers, share-cards, and PDF reports. */

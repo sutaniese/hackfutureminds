@@ -9,7 +9,21 @@ export const metadata: Metadata = {
     template: "%s | teñ.",
   },
   description:
-    "teñ. — карта направлений, гранты, портфолио. Мобильно в первую очередь.",
+    "teñ. — персональное обучение, карта направлений, гранты. Мобильно в первую очередь.",
+  applicationName: "teñ.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "teñ.",
+    statusBarStyle: "default",
+  },
+  icons: {
+    apple: "/apple-touch-icon.png",
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+  },
 };
 
 export const viewport: Viewport = {

@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   getCurrentUser,
+  hydrateAuth,
+  isAuthHydrated,
   loginUser,
   logoutUser,
   registerUser,
@@ -11,6 +13,7 @@ import {
   type PublicUser,
   type RegisterInput,
 } from "@/lib/auth";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 export type AuthStatus = "loading" | "guest" | "authed";
 
@@ -19,14 +22,28 @@ export function useAuth() {
   const [status, setStatus] = useState<AuthStatus>("loading");
 
   useEffect(() => {
-    const sync = () => {
-      const current = getCurrentUser();
+    let cancelled = false;
+    const apply = (current: PublicUser | null) => {
+      if (cancelled) return;
       setUser(current);
       setStatus(current ? "authed" : "guest");
     };
-    sync();
+
+    const sync = () => apply(getCurrentUser());
+
+    if (isSupabaseConfigured() && !isAuthHydrated()) {
+      void hydrateAuth()
+        .then((current) => apply(current))
+        .catch(() => apply(null));
+    } else {
+      sync();
+    }
+
     const unsub = subscribeAuth(sync);
-    return () => unsub();
+    return () => {
+      cancelled = true;
+      unsub();
+    };
   }, []);
 
   const login = useCallback(async (input: LoginInput) => {

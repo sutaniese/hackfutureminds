@@ -1,11 +1,14 @@
 import { AUTH_EVENT, getCurrentUser } from "@/lib/auth";
+import { isDemoRosterEnabled, isSupabaseConfigured } from "@/lib/supabase/env";
 import { BASE_TOPICS } from "./catalog";
+import { EMPTY_STATE, emptyTopicState } from "./empty-state";
 import type { Difficulty, Grade, LearningGoalId, Topic } from "./types";
 
+export { EMPTY_STATE, emptyTopicState };
+
 /**
- * Хранилище учебного прогресса — localStorage, как и остальной state
- * платформы (аккаунты, профили, геймификация). Backend появится позже,
- * контракт функций при этом не изменится.
+ * Учебный прогресс: localStorage как быстрый кэш + Supabase, когда env задан.
+ * Без Supabase остаётся локальный fallback (один браузер, не два устройства).
  */
 
 export const LEARNING_PROFILE_KEY = "ten-learning-profile";
@@ -59,6 +62,8 @@ export type TopicState = {
   /** Серия верных ответов подряд на текущем уровне. */
   streak: number;
   lastAt: number;
+  /** Unix ms, когда пора повторить тему (3/5/7 дней). */
+  nextReviewAt?: number;
 };
 
 export type LearningState = {
@@ -82,8 +87,12 @@ export type StudentLearningSnapshot = {
   solvedTasks: number;
   weakTopics: string[];
   updatedAt: number;
-  /** Демо-ученик из посева — чтобы панель учителя не была пустой. */
+  /** Только если включён NEXT_PUBLIC_DEMO_ROSTER=1. */
   demo?: boolean;
+  lastActivityAt?: number;
+  nextReviews?: Record<string, number>;
+  missedTasks?: Array<{ topicId: string; taskId: string; skill: string; prompt: string }>;
+  clipStats?: { watched: number; dropped: number; stuck: number };
 };
 
 export const LEVEL_LABELS: Record<1 | 2 | 3 | 4, string> = {
@@ -91,12 +100,6 @@ export const LEVEL_LABELS: Record<1 | 2 | 3 | 4, string> = {
   2: "Базовый",
   3: "Уверенный",
   4: "Продвинутый",
-};
-
-export const EMPTY_STATE: LearningState = {
-  diagnostic: null,
-  topics: {},
-  attempts: [],
 };
 
 const MAX_ATTEMPTS = 200;
@@ -202,6 +205,7 @@ export function writeLearningProfile(profile: Omit<LearningProfile, "updatedAt">
   const next: LearningProfile = { ...profile, updatedAt: Date.now() };
   writeJson(scopedKey(LEARNING_PROFILE_KEY), next);
   emitLearningChange();
+  scheduleRemoteSync();
   return next;
 }
 
@@ -219,19 +223,43 @@ export function readLearningState(): LearningState {
 function writeLearningState(state: LearningState): LearningState {
   writeJson(scopedKey(LEARNING_STATE_KEY), state);
   emitLearningChange();
+  scheduleRemoteSync();
   return state;
 }
 
-export function emptyTopicState(topicId: string): TopicState {
-  return {
-    topicId,
-    solved: [],
-    attempts: 0,
-    correct: 0,
-    difficulty: 1,
-    streak: 0,
-    lastAt: 0,
-  };
+let remoteCustomTopics: Topic[] = [];
+
+export function applyRemoteCustomTopics(topics: Topic[]): void {
+  remoteCustomTopics = Array.isArray(topics) ? topics : [];
+  emitLearningChange();
+}
+
+export function applyRemoteLearning(input: {
+  profile?: LearningProfile | null;
+  state?: LearningState | null;
+  topics?: Topic[];
+}): void {
+  if (input.profile) writeJson(scopedKey(LEARNING_PROFILE_KEY), input.profile);
+  if (input.state) writeJson(scopedKey(LEARNING_STATE_KEY), input.state);
+  if (input.topics) remoteCustomTopics = input.topics;
+  emitLearningChange();
+}
+
+let syncTimer: number | null = null;
+
+function scheduleRemoteSync(): void {
+  if (!hasWindow() || !isSupabaseConfigured() || !getCurrentUser()) return;
+  if (syncTimer) window.clearTimeout(syncTimer);
+  syncTimer = window.setTimeout(() => {
+    const profile = readLearningProfile();
+    const state = readLearningState();
+    void fetch("/api/learning/progress", {
+      method: "PUT",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile, state }),
+    }).catch(() => undefined);
+  }, 450);
 }
 
 export function saveDiagnostic(result: DiagnosticResult): LearningState {
@@ -281,6 +309,7 @@ export function recordAttempt(attempt: Omit<Attempt, "at">): LearningState {
       difficulty,
       streak: attempt.correct && streak >= 2 ? 0 : streak,
       lastAt: at,
+      nextReviewAt: at + (attempt.correct ? 5 : 3) * DAY_MS,
     },
   };
 
@@ -310,6 +339,7 @@ export function seedDueReview(topicId: string, daysAgo = 10): LearningState {
         ...current,
         attempts: Math.max(current.attempts, 1),
         lastAt,
+        nextReviewAt: Date.now() - 86_400_000,
       },
     },
   });
@@ -342,9 +372,13 @@ export function deleteCustomTopic(topicId: string): Topic[] {
   return next;
 }
 
-/** Полный каталог: базовые темы MVP плюс темы, добавленные учителем. */
+/** Полный каталог: базовые темы MVP плюс темы учителя (локально и/или из Supabase). */
 export function readAllTopics(): Topic[] {
-  return [...BASE_TOPICS, ...readCustomTopics()];
+  const byId = new Map<string, Topic>();
+  for (const topic of [...BASE_TOPICS, ...readCustomTopics(), ...remoteCustomTopics]) {
+    byId.set(topic.id, topic);
+  }
+  return [...byId.values()];
 }
 
 /* ------------------------- журнал класса (учитель) ---------------------- */
@@ -363,8 +397,8 @@ export function upsertRosterEntry(snapshot: StudentLearningSnapshot): void {
 }
 
 /**
- * Демо-класс: 6 учеников с разным уровнем. Нужен, чтобы панель учителя
- * показывала реальную статистику до того, как ученики зайдут сами.
+ * Фикстуры для локальной отладки. В продакшене выключены:
+ * включаются только при NEXT_PUBLIC_DEMO_ROSTER=1.
  */
 export const DEMO_ROSTER: StudentLearningSnapshot[] = [
   {
@@ -453,9 +487,12 @@ export const DEMO_ROSTER: StudentLearningSnapshot[] = [
   },
 ];
 
-/** Журнал класса: демо-ученики плюс реальные аккаунты этого браузера. */
+/** Журнал класса: только реальные записи. Демо — исключительно за флагом. */
 export function readClassRoster(): StudentLearningSnapshot[] {
-  const real = Object.values(readRoster());
+  const real = Object.values(readRoster()).filter((item) => !item.demo);
+  if (!isDemoRosterEnabled()) {
+    return real.sort((a, b) => b.mastery - a.mastery);
+  }
   const realEmails = new Set(real.map((item) => item.email));
   const demo = DEMO_ROSTER.filter((item) => !realEmails.has(item.email));
   return [...real, ...demo].sort((a, b) => b.mastery - a.mastery);

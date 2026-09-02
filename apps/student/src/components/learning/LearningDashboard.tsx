@@ -23,7 +23,9 @@ import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { ProgressRing } from "@/components/motion/ProgressRing";
 import { EmptyState, Pill, ProgressBar, StatTile } from "./LearningUI";
 import { ReminderBanner } from "./ReminderBanner";
+import { ClassJoinCard } from "./ClassJoinCard";
 import { useLearning } from "./useLearning";
+import { whyThisTopic } from "@/lib/learning/why-this";
 
 type PlanWeek = { index: number; title: string; goals: string[] };
 type PlanPayload = { headline: string; focus: string[]; weeks: PlanWeek[]; source: "ai" | "local" };
@@ -40,7 +42,7 @@ function deadlineTone(days: number | null): "good" | "accent" | "warn" {
 }
 
 export function LearningDashboard() {
-  const { profile, state, topics, ready } = useLearning();
+  const { profile, state, topics, ready, inviteCode } = useLearning();
   const [plan, setPlan] = useState<PlanPayload | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
@@ -115,15 +117,18 @@ export function LearningDashboard() {
 
   if (!profile) {
     return (
-      <EmptyState
-        title="Личный кабинет появится после диагностики"
-        description="Укажи класс, предмет и цель, пройди 8 коротких вопросов — и система соберёт персональный план, рекомендации и список слабых мест."
-        action={
-          <Link href="/learning/diagnostics" className="pw-btn-primary text-sm">
-            Пройти диагностику
-          </Link>
-        }
-      />
+      <div className="flex flex-col gap-5">
+        <ClassJoinCard currentCode={inviteCode} />
+        <EmptyState
+          title="Личный кабинет появится после диагностики"
+          description="Укажи класс, предмет и цель, пройди 8 коротких вопросов — и система соберёт персональный план, рекомендации и список слабых мест."
+          action={
+            <Link href="/learning/diagnostics" className="pw-btn-primary text-sm">
+              Пройти диагностику
+            </Link>
+          }
+        />
+      </div>
     );
   }
 
@@ -134,6 +139,15 @@ export function LearningDashboard() {
   return (
     <div className="flex flex-col gap-5">
       <ReminderBanner days={days} reviews={reviews} />
+      <ClassJoinCard currentCode={inviteCode} />
+      <div className="flex flex-wrap gap-3">
+        <Link href="/learning/clips" className="pw-btn-primary text-sm no-underline">
+          Клипы
+        </Link>
+        <Link href="/learning/diagnostics" className="pw-btn-secondary text-sm no-underline">
+          Диагностика
+        </Link>
+      </div>
 
       <ContentCard className="overflow-hidden">
         <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
@@ -260,7 +274,7 @@ export function LearningDashboard() {
                       </Pill>
                     </div>
                     <p className="mt-2 text-sm leading-6 text-pathwise-muted">
-                      Почему сейчас: {item.reason}.
+                      Почему это задание: {whyThisTopic(item, weak)}
                     </p>
                     <div className="mt-3">
                       <ProgressBar value={mastery} delay={index * 90 + 200} />
@@ -438,6 +452,42 @@ export function LearningDashboard() {
           <p className="mt-5 text-sm text-pathwise-muted">
             План появится, как только по предмету будут доступны темы.
           </p>
+        )}
+      </ContentCard>
+
+      <ContentCard>
+        <h3 className="text-lg font-black tracking-tight text-pathwise-ink">Повторение 3 / 5 / 7 дней</h3>
+        <p className="mt-1 text-sm text-pathwise-muted">
+          Слабую тему возвращаем через 3 дня, уверенную — через 5, закрытую — через неделю.
+        </p>
+        {reviews.length === 0 ? (
+          <p className="mt-4 text-sm text-pathwise-muted">
+            Даты появятся после первых заданий. После диагностики слабая тема уже стоит в очереди.
+          </p>
+        ) : (
+          <div className="mt-4 grid gap-2">
+            {reviews.map((item) => {
+              const next = new Date(Date.now() + Math.max(0, item.intervalDays - item.daysSince) * 86_400_000);
+              const dateLabel = next.toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
+              return (
+                <Link
+                  key={item.topic.id}
+                  href={`/learning/topic/${item.topic.id}`}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 no-underline"
+                >
+                  <div>
+                    <p className="text-sm font-bold text-pathwise-ink">{item.topic.title}</p>
+                    <p className="text-xs font-semibold text-pathwise-muted">
+                      интервал {item.intervalDays} дн. · повтор {dateLabel}
+                    </p>
+                  </div>
+                  <Pill tone={item.urgency === "due" ? "warn" : "accent"}>
+                    {item.urgency === "due" ? "пора" : "скоро"}
+                  </Pill>
+                </Link>
+              );
+            })}
+          </div>
         )}
       </ContentCard>
 

@@ -265,8 +265,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-pathwise-muted">
           {isLogin
-            ? "Войдите, чтобы открыть страницы вашей роли. Аккаунт хранится локально в браузере."
-            : "Заведите локальный аккаунт. Роль выбирается один раз и заменяет текущий выбор на главной."}
+            ? "Войдите, чтобы открыть страницы вашей роли. Аккаунт хранится в Supabase, если сервер настроен, иначе локально в этом браузере."
+            : "Заведите аккаунт teñ. Роль выбирается один раз и не меняется. Учитель и ученик на разных устройствах видят один класс."}
         </p>
 
         <form onSubmit={handleSubmit} className="mt-6 grid gap-4">
@@ -317,7 +317,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
             />
             {!isLogin ? (
               <span className="mt-1.5 block text-xs text-pathwise-muted">
-                Пароль хранится локально, как PBKDF2-хеш с солью.
+                Пароль хранится в Supabase Auth (или локально как PBKDF2, если env пустой).
               </span>
             ) : null}
           </label>
