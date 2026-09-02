@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ContentCard, PageHero } from "@/components/ui/PageHero";
 import { readLearningProfile, readLearningState } from "@/lib/learning/store";
+import { resolveActiveLearningGoal } from "@/lib/learning/goal-priority";
 import {
   buildPersonalRoadmap,
+  goalTitleFor,
   inferTrack,
   readinessScore,
   type RoadmapNode,
@@ -13,7 +15,9 @@ import {
 import { readCurrentStudentProfile } from "@/lib/student-profile-store";
 import { isOnboardingComplete, readCurrentOnboarding } from "@/lib/student-progress";
 import { readTargetUniversity } from "@/portal/lib/targetUniversity";
-import type { OnboardingAnswers, WorkPreference } from "@/types/onboarding";
+import type { OnboardingAnswers } from "@/types/onboarding";
+import { useI18n } from "@/i18n/I18nProvider";
+import { subjectTitle } from "@/lib/learning/catalog";
 
 const TONE: Record<RoadmapNode["tone"], { fill: string; stroke: string; soft: string; text: string }> = {
   purple: { fill: "#6C63FF", stroke: "#564DE6", soft: "bg-[#6C63FF]/10", text: "text-[#5B54D8]" },
@@ -22,15 +26,8 @@ const TONE: Record<RoadmapNode["tone"], { fill: string; stroke: string; soft: st
   slate: { fill: "#64748B", stroke: "#475569", soft: "bg-slate-100", text: "text-slate-700" },
 };
 
-function workStyleLabel(style: WorkPreference | null) {
-  if (style === "people") return "лидерство и люди";
-  if (style === "data") return "анализ и исследование";
-  if (style === "hands") return "лаборатории и прототипы";
-  if (style === "ideas") return "стратегия и концепции";
-  return "смешанный формат";
-}
-
 export function RoadmapView() {
+  const { t, locale } = useI18n();
   const [answers, setAnswers] = useState<OnboardingAnswers | null>(null);
   const [ready, setReady] = useState(false);
   const [activeId, setActiveId] = useState("vision");
@@ -40,32 +37,31 @@ export function RoadmapView() {
     setReady(true);
   }, []);
 
-  const diagnostic = typeof window === "undefined" ? null : readLearningState().diagnostic;
-  const profile = typeof window === "undefined" ? null : readLearningProfile();
-  const generated = typeof window === "undefined" ? null : readCurrentStudentProfile()?.generated ?? null;
-  const targetUniversity = typeof window === "undefined" ? null : readTargetUniversity();
+  const diagnostic = ready ? readLearningState().diagnostic : null;
+  const profile = ready ? readLearningProfile() : null;
+  const generated = ready ? readCurrentStudentProfile()?.generated ?? null : null;
+  const targetUniversity = ready ? readTargetUniversity() : null;
+  const goal = resolveActiveLearningGoal(profile, answers);
+  const subject = diagnostic ? subjectTitle(diagnostic.subjectId) : profile ? subjectTitle(profile.subjectId) : "—";
 
   const nodes = useMemo(
     () =>
       buildPersonalRoadmap({
         answers,
-        diagnostic: ready ? readLearningState().diagnostic : null,
-        profile: ready ? readLearningProfile() : null,
-        generated: ready ? readCurrentStudentProfile()?.generated ?? null : null,
-        targetUniversity: ready ? readTargetUniversity() : null,
+        diagnostic,
+        profile,
+        generated,
+        targetUniversity,
+        locale,
       }),
-    [answers, ready],
+    [answers, diagnostic, generated, locale, profile, targetUniversity],
   );
   const track = useMemo(
-    () => inferTrack(answers, ready ? readLearningState().diagnostic : null, ready ? readCurrentStudentProfile()?.generated ?? null : null),
-    [answers, ready],
+    () => inferTrack(answers, diagnostic, generated, locale, goal),
+    [answers, diagnostic, generated, goal, locale],
   );
   const active = nodes.find((node) => node.id === activeId) ?? nodes[0];
-  const score = readinessScore({
-    answers,
-    diagnostic: ready ? readLearningState().diagnostic : null,
-    generated: ready ? readCurrentStudentProfile()?.generated ?? null : null,
-  });
+  const score = readinessScore({ answers, diagnostic, generated, profile });
   const onboardingDone = isOnboardingComplete(answers);
 
   if (!ready) {
@@ -74,35 +70,30 @@ export function RoadmapView() {
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHero
-        kicker="Roadmap"
-        title="Персональная дорожная карта"
-        description="Маршрут собран из вашей анкеты, диагностики и карьерного плана — не из общего шаблона."
-      >
+      <PageHero kicker={t("roadmap.kicker")} title={t("roadmap.title")} description={t("roadmap.desc")}>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <HeroMetric label="Готовность" value={`${score}%`} />
-          <HeroMetric label="Трек" value={track.label} />
-          <HeroMetric label="Фокус" value={workStyleLabel(answers?.workPreference ?? null)} />
+          <HeroMetric label={t("roadmap.goal")} value={goalTitleFor(locale, goal)} />
+          <HeroMetric label={t("roadmap.subject")} value={subject} />
+          <HeroMetric label={t("roadmap.ready")} value={`${score}%`} />
         </div>
+        <p className="mt-3 text-xs font-semibold text-pathwise-muted">{track.label}</p>
       </PageHero>
 
-      {!onboardingDone ? (
+      {!onboardingDone && !profile ? (
         <ContentCard className="border-l-4 border-l-[#6C63FF]">
-          <p className="text-sm font-semibold text-pathwise-ink">Чтобы персонализировать карту, заполните анкету.</p>
-          <p className="mt-1 text-sm text-pathwise-muted">
-            Новые ученики начинают здесь. Если анкета уже пройдена под другим аккаунтом — войдите в него.
-          </p>
+          <p className="text-sm font-semibold text-pathwise-ink">{t("roadmap.needOnboard")}</p>
+          <p className="mt-1 text-sm text-pathwise-muted">{t("roadmap.needOnboardHint")}</p>
           <Link href="/onboarding" className="pw-btn-primary mt-4 inline-flex !min-h-12 !px-5">
-            Заполнить анкету
+            {t("roadmap.fill")}
           </Link>
         </ContentCard>
       ) : null}
 
-      <section className="grid gap-5 xl:grid-cols-[1.25fr_0.75fr]" aria-label="Interactive roadmap graph">
+      <section className="grid gap-5 xl:grid-cols-[1.25fr_0.75fr]" aria-label={t("roadmap.aria")}>
         <ContentCard className="overflow-hidden p-0">
           <div className="border-b border-slate-200 px-5 py-4">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-pathwise-accent-strong">Future graph</p>
-            <p className="mt-1 text-sm text-pathwise-muted">Нажмите узел, чтобы открыть задачи.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-pathwise-accent-strong">{t("roadmap.graph")}</p>
+            <p className="mt-1 text-sm text-pathwise-muted">{t("roadmap.tap")}</p>
           </div>
           <div className="relative min-h-[30rem] overflow-hidden bg-white p-4 sm:p-6">
             <div className="pointer-events-none absolute inset-0 z-0 opacity-70 [background-image:radial-gradient(circle_at_1px_1px,rgb(100_116_139_/_0.16)_1px,transparent_0)] [background-size:24px_24px]" />
@@ -173,7 +164,7 @@ export function RoadmapView() {
           </ContentCard>
 
           <ContentCard>
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-pathwise-muted">Следующие шаги</p>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-pathwise-muted">{t("roadmap.next")}</p>
             <div className="mt-4 grid gap-3">
               {active.actions.map((action, index) => (
                 <div key={action} className="flex gap-3 rounded-2xl border border-slate-200 bg-white p-3">

@@ -57,6 +57,18 @@ export function parseGenerateRequest(body: unknown): GenerateRequest {
     ? b.language
     : "en") as GenerateLanguage;
 
+  const rawGoal = b.learningGoal;
+  const learningGoal =
+    rawGoal === "ent" ||
+    rawGoal === "olympiad" ||
+    rawGoal === "review" ||
+    rawGoal === "school" ||
+    rawGoal === "abroad"
+      ? rawGoal
+      : rawGoal === null
+        ? null
+        : undefined;
+
   let onboarding: OnboardingAnswers | null = null;
   if ("onboarding" in b) {
     if (b.onboarding === null) {
@@ -75,6 +87,7 @@ export function parseGenerateRequest(body: unknown): GenerateRequest {
     city,
     budget_monthly: bud,
     language: lang,
+    learningGoal: learningGoal ?? null,
     onboarding,
   };
 }

@@ -5,14 +5,16 @@ import { usePathname } from 'next/navigation'
 import { useEffect, type ReactNode } from 'react'
 import {
   ROLE_ENTRY_PATHS,
-  ROLE_LABELS,
+  ROLE_LABEL_KEYS,
   ROLE_NAV_SECTIONS,
   isSiteNavActive,
 } from '@/lib/site-nav'
 import { RoleRouteGuard } from '@/components/shell/RoleRouteGuard'
 import { RouteTransition } from '@/components/shell/RouteTransition'
+import { LanguageSwitcher } from '@/components/shell/LanguageSwitcher'
 import { useSelectedRole } from '@/components/shell/useSelectedRole'
 import { useAuth } from '@/components/shell/useAuth'
+import { useI18n } from '@/i18n/I18nProvider'
 import { withAssetBase } from '../lib/publicUrl'
 import { useTenantTheme } from '../enterprise/TenantThemeContext'
 import { SITE_NAME } from '../site'
@@ -42,6 +44,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname() || '/'
   const { role, ready } = useSelectedRole()
   const { user, status, logout } = useAuth()
+  const { t } = useI18n()
   const sections = role ? ROLE_NAV_SECTIONS[role] : []
   const accountLabel = user?.name?.trim() || user?.email || ''
 
@@ -80,24 +83,25 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
             <div className="min-w-0 flex-1">
               <p className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-pathwise-accent-strong">
-                {role ? `Роль: ${ROLE_LABELS[role]}` : 'Вход по роли'}
+                {role ? t("role.kicker", { role: t(ROLE_LABEL_KEYS[role]) }) : t("role.none")}
               </p>
               <p className="truncate text-sm font-semibold text-pathwise-ink">
                 {user
                   ? accountLabel
                   : role
-                    ? 'Показываем только доступные разделы'
-                    : 'Выберите студента, родителя или учителя на главной'}
+                    ? t("role.sectionsHint")
+                    : t("role.pickHint")}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              <LanguageSwitcher />
               {status === 'authed' && user ? (
                 <Link
                   href={ROLE_ENTRY_PATHS[user.role]}
                   className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-pathwise-muted no-underline transition hover:bg-white hover:text-slate-900"
                 >
-                  Кабинет
+                  {t("nav.cabinet")}
                 </Link>
               ) : null}
               {status === 'authed' ? (
@@ -106,7 +110,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   onClick={logout}
                   className="pw-btn-primary inline-flex min-h-12 items-center justify-center px-4 text-sm"
                 >
-                  Выйти
+                  {t("nav.logout")}
                 </button>
               ) : status === 'guest' ? (
                 <>
@@ -114,13 +118,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
                     href="/login"
                     className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-foreground no-underline transition hover:bg-white"
                   >
-                    Войти
+                    {t("nav.login")}
                   </Link>
                   <Link
                     href="/register"
                     className="pw-btn-primary inline-flex min-h-12 items-center justify-center px-4 text-sm no-underline"
                   >
-                    Регистрация
+                    {t("nav.register")}
                   </Link>
                 </>
               ) : null}
@@ -132,18 +136,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
               {ready && sections.length === 0 ? (
                 <div className="flex flex-wrap items-center gap-2">
                   <Link href="/" className={navClass(pathname === '/')}>
-                    Выбрать вход
+                    {t("nav.pickEntry")}
                   </Link>
                 </div>
               ) : null}
               {sections.map((section) => (
-                <div key={section.title} className="flex min-w-0 items-center gap-3">
+                <div key={section.titleKey} className="flex min-w-0 items-center gap-3">
                   <span className="hidden shrink-0 whitespace-nowrap rounded-full bg-slate-50 px-3 py-2 text-[0.68rem] font-black uppercase tracking-[0.12em] text-pathwise-muted ring-1 ring-slate-200 sm:inline-flex">
-                    {section.title}
+                    {t(section.titleKey)}
                   </span>
                   <nav
                     className="-mx-1 flex min-w-0 flex-1 gap-2 overflow-x-auto px-1 pb-1"
-                    aria-label={section.title}
+                    aria-label={t(section.titleKey)}
                   >
                     {section.links.map((link) => (
                       <Link
@@ -152,7 +156,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                         className={navClass(isSiteNavActive(pathname, link))}
                         aria-current={isSiteNavActive(pathname, link) ? 'page' : undefined}
                       >
-                        {link.label}
+                        {t(link.labelKey)}
                       </Link>
                     ))}
                   </nav>
@@ -191,7 +195,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               {tenant.logoMark}
             </span>
           )}
-          <span>карьерная навигация для школьников Казахстана · MVP</span>
+          <span>{t("hub.footer")}</span>
         </div>
       </footer>
     </div>

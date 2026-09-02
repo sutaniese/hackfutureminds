@@ -7,14 +7,14 @@ import { isSpeechSupported, speakText, stopSpeaking } from "@/lib/speech";
 /** Кнопка «прослушать»: озвучивает конспект или условие задания. */
 export function SpeakButton({
   text,
-  label = "Прослушать",
+  label,
   className = "",
 }: {
   text: string;
   label?: string;
   className?: string;
 }) {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const [supported, setSupported] = useState(false);
   const [speaking, setSpeaking] = useState(false);
 
@@ -67,7 +67,7 @@ export function SpeakButton({
           </svg>
         )}
       </span>
-      {speaking ? "Остановить" : label}
+      {speaking ? t("speak.stop") : label ?? t("speak.listen")}
     </button>
   );
 }

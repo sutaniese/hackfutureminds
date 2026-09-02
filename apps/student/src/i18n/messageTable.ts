@@ -1,4 +1,5 @@
 import type { Locale } from "./locales";
+import { CHROME_MESSAGES } from "./chromeMessages";
 
 /* Single source: Russian / English / Kazakh for the same app key. */
 const TR = (ru: string, en: string, kk: string) => ({ ru, en, kk });
@@ -633,6 +634,11 @@ const T = {
   ),
 } as const;
 
+const ALL_MESSAGES: Record<string, { ru: string; en: string; kk: string }> = {
+  ...T,
+  ...CHROME_MESSAGES,
+};
+
 function fill(s: string, p?: Record<string, string | number>): string {
   if (!p) return s;
   return s.replace(/\{\{(\w+)\}\}/g, (_, k) =>
@@ -646,7 +652,7 @@ export function buildMessageMaps(): Record<Locale, Record<string, string>> {
     en: {},
     kk: {},
   };
-  for (const [k, v] of Object.entries(T) as [string, { ru: string; en: string; kk: string }][]) {
+  for (const [k, v] of Object.entries(ALL_MESSAGES) as [string, { ru: string; en: string; kk: string }][]) {
     out.ru[k] = v.ru;
     out.en[k] = v.en;
     out.kk[k] = v.kk;
@@ -669,5 +675,5 @@ export function tFor(
 }
 
 export function tKeys(): string[] {
-  return Object.keys(T);
+  return Object.keys(ALL_MESSAGES);
 }

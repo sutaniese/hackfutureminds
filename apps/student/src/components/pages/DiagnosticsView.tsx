@@ -2,21 +2,18 @@
 
 import { DiagnosticsFlow } from "@/components/learning/DiagnosticsFlow";
 import { PageHero } from "@/components/ui/PageHero";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export function DiagnosticsView() {
+  const { t } = useI18n();
   return (
     <div className="flex flex-col gap-5">
-      <PageHero
-        compact
-        kicker="Диагностика"
-        title="Определим твой уровень за 8 вопросов"
-        description="Выбери класс, предмет и цель. Дальше система задаст вопросы, подстраивая сложность под ответы, и покажет, какие темы просели."
-      >
+      <PageHero compact kicker={t("diag.kicker")} title={t("diag.title")} description={t("diag.desc")}>
         <div className="mt-5 flex flex-wrap gap-2">
           {[
-            ["8", "адаптивных вопросов"],
-            ["7-12", "классы"],
-            ["AI", "разбор ошибок"],
+            ["8", t("diag.stat.q")],
+            ["7-12", t("diag.stat.g")],
+            ["AI", t("diag.stat.ai")],
           ].map(([value, label], index) => (
             <span
               key={label}

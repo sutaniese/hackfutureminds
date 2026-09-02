@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ROLE_ENTRY_PATHS,
-  ROLE_LABELS,
+  ROLE_LABEL_KEYS,
   type UserRole,
 } from "@/lib/site-nav";
 import { useAuth } from "@/components/shell/useAuth";
@@ -307,7 +307,7 @@ export function HomeView() {
                 {user?.name?.trim() || user?.email}
               </span>
               <span className="rounded-full bg-[#6C63FF]/10 px-3 py-1 text-xs font-bold text-[#6C63FF]">
-                {user ? ROLE_LABELS[user.role] : ""}
+                {user ? t(ROLE_LABEL_KEYS[user.role]) : ""}
               </span>
             </div>
           ) : null}

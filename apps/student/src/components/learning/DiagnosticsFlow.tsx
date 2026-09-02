@@ -105,7 +105,7 @@ function pickQuestion(
 export function DiagnosticsFlow() {
   const router = useRouter();
   const { user } = useAuth();
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const { awardXp, earnBadge, setProfileCompletion } = useUserProgress();
 
   const [stage, setStage] = useState<Stage>("profile");
@@ -296,32 +296,26 @@ export function DiagnosticsFlow() {
       <div className="flex flex-col gap-5">
         <ContentCard key={profileStep} className="pw-reveal">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-pathwise-accent-strong">
-            Шаг 1 из 3 · {stepNumber} / 3
+            {t("diag.step1")}
           </p>
           <h2 className="mt-3 text-2xl font-black tracking-tight text-pathwise-ink">
             {profileStep === "grade"
-              ? locale === "kk"
-                ? "Сыныбың қайсы?"
-                : "Какой у тебя класс?"
+              ? t("diag.askGrade")
               : profileStep === "subject"
-                ? locale === "kk"
-                  ? "Қай пәнді көтергің келеді?"
-                  : "Какой предмет подтянуть?"
-                : locale === "kk"
-                  ? "Оқу мақсатың қандай?"
-                  : "Какая цель обучения?"}
+                ? t("diag.askSubject")
+                : t("diag.askGoal")}
           </h2>
           <p className="mt-2 text-sm leading-6 text-pathwise-muted">
             {profileStep === "grade"
-              ? "Карточка сменится — дальше выберешь предмет. Класс задаёт пул заданий диагностики."
+              ? t("diag.hintGrade")
               : profileStep === "subject"
-                ? "От предмета зависит каталог тем и стартовая сложность вопросов."
-                : "Цель и дата экзамена собирают план и напоминания в кабинете."}
+                ? t("diag.hintSubject")
+                : t("diag.hintGoal")}
           </p>
 
           {profileStep === "grade" ? (
             <div className="mt-6">
-              <p className="text-sm font-black text-pathwise-ink">Класс</p>
+              <p className="text-sm font-black text-pathwise-ink">{t("diag.grade")}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {GRADES.map((item) => (
                   <button
@@ -345,16 +339,16 @@ export function DiagnosticsFlow() {
                   onClick={() => setProfileStep("subject")}
                   className="pw-btn-primary text-sm"
                 >
-                  Дальше: предмет
+                  {t("diag.nextSubject")}
                 </button>
-                <p className="text-xs font-semibold text-pathwise-muted">Выбран {grade} класс</p>
+                <p className="text-xs font-semibold text-pathwise-muted">{t("diag.pickedGrade", { n: grade })}</p>
               </div>
             </div>
           ) : null}
 
           {profileStep === "subject" ? (
             <div className="mt-6">
-              <p className="text-sm font-black text-pathwise-ink">Предмет</p>
+              <p className="text-sm font-black text-pathwise-ink">{t("diag.subject")}</p>
               <div className="mt-3 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
                 {SUBJECTS.map((subject) => {
                   const active = subject.id === subjectId;
@@ -393,14 +387,14 @@ export function DiagnosticsFlow() {
                   onClick={() => setProfileStep("grade")}
                   className="pw-btn-secondary text-sm"
                 >
-                  Назад
+                  {t("diag.back")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setProfileStep("goal")}
                   className="pw-btn-primary text-sm"
                 >
-                  Дальше: цель
+                  {t("diag.nextGoal")}
                 </button>
                 <p className="text-xs font-semibold text-pathwise-muted">
                   {topicsLabel(subjectTopicCount)} · {selectedSubject?.title ?? subjectTitle(subjectId)}
@@ -411,8 +405,8 @@ export function DiagnosticsFlow() {
 
           {profileStep === "goal" ? (
             <div className="mt-6">
-              <p className="text-sm font-black text-pathwise-ink">Цель обучения</p>
-              <p className="mt-1 text-xs text-pathwise-muted">Можно выбрать несколько.</p>
+              <p className="text-sm font-black text-pathwise-ink">{t("diag.goal")}</p>
+              <p className="mt-1 text-xs text-pathwise-muted">{t("diag.goalHint")}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {LEARNING_GOALS.map((goal) => {
                   const active = goals.includes(goal.id);
@@ -422,14 +416,14 @@ export function DiagnosticsFlow() {
                       type="button"
                       onClick={() => toggleGoal(goal.id)}
                       aria-pressed={active}
-                      title={goal.hint}
+                      title={t(`goal.${goal.id}.hint`)}
                       className={`min-h-12 rounded-full border px-4 text-sm font-bold transition ${
                         active
                           ? "border-[#6C63FF] bg-[#6C63FF]/10 text-[#554dd6]"
                           : "border-slate-200 bg-white text-pathwise-ink hover:border-[#6C63FF]/50"
                       }`}
                     >
-                      {goal.title}
+                      {t(goal.id === "ent" ? "goal.ent" : `goal.${goal.id}`)}
                     </button>
                   );
                 })}
@@ -438,10 +432,10 @@ export function DiagnosticsFlow() {
               <div className="mt-7 grid gap-4 sm:grid-cols-2">
                 <div>
                   <label htmlFor="exam-date" className="text-sm font-black text-pathwise-ink">
-                    Дата экзамена или дедлайна
+                    {t("diag.exam")}
                   </label>
                   <p className="mt-1 text-xs text-pathwise-muted">
-                    По умолчанию — через 3 недели, чтобы в кабинете сразу появились напоминания.
+                    {t("diag.examHint")}
                   </p>
                   <input
                     id="exam-date"
@@ -452,7 +446,7 @@ export function DiagnosticsFlow() {
                   />
                 </div>
                 <div>
-                  <p className="text-sm font-black text-pathwise-ink">Сколько минут в день готов заниматься</p>
+                  <p className="text-sm font-black text-pathwise-ink">{t("diag.minutes")}</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {MINUTES_OPTIONS.map((value) => (
                       <button
@@ -466,7 +460,7 @@ export function DiagnosticsFlow() {
                             : "border-slate-200 bg-white text-pathwise-ink hover:border-[#6C63FF]/50"
                         }`}
                       >
-                        {value} мин
+                        {t("plural.min", { n: value })}
                       </button>
                     ))}
                   </div>
@@ -479,13 +473,17 @@ export function DiagnosticsFlow() {
                   onClick={() => setProfileStep("subject")}
                   className="pw-btn-secondary text-sm"
                 >
-                  Назад
+                  {t("diag.back")}
                 </button>
                 <button type="button" onClick={startTest} className="pw-btn-primary text-sm">
-                  Начать диагностику
+                  {t("diag.start")}
                 </button>
                 <p className="text-xs font-semibold text-pathwise-muted">
-                  {DIAGNOSTIC_SIZE} вопросов · {topicsLabel(subjectTopicCount)} по предмету «{subjectTitle(subjectId)}»
+                  {t("diag.meta", {
+                    n: DIAGNOSTIC_SIZE,
+                    topics: topicsLabel(subjectTopicCount),
+                    subject: subjectTitle(subjectId),
+                  })}
                 </p>
               </div>
             </div>
@@ -502,9 +500,9 @@ export function DiagnosticsFlow() {
       return (
         <ContentCard>
           <p className="text-sm text-pathwise-muted">
-            Не удалось подобрать следующий вопрос.{" "}
+            {t("diag.noNext")}{" "}
             <button type="button" className="font-bold text-[#554dd6]" onClick={() => finish(records)}>
-              Показать результат
+              {t("diag.showResult")}
             </button>
           </p>
         </ContentCard>
@@ -518,26 +516,24 @@ export function DiagnosticsFlow() {
         <ContentCard>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-pathwise-accent-strong">
-              {locale === "kk" ? "2-қадам · диагностика" : "Шаг 2 из 3 · диагностика"}
-            </p>
-            <Pill tone="accent">
-              {locale === "kk" ? "Сұрақ" : "Вопрос"} {answered + 1} {locale === "kk" ? "ішінен" : "из"}{" "}
-              {DIAGNOSTIC_SIZE}
-            </Pill>
+            {t("diag.step2")}
+          </p>
+          <Pill tone="accent">
+            {t("diag.qOf", { a: answered + 1, b: DIAGNOSTIC_SIZE })}
+          </Pill>
           </div>
           <div className="mt-4">
-            <ProgressBar value={progress} label={`Пройдено ${answered} из ${DIAGNOSTIC_SIZE}`} />
+            <ProgressBar value={progress} label={t("diag.progress", { a: answered, b: DIAGNOSTIC_SIZE })} />
           </div>
           <p className="mt-3 text-xs font-semibold text-pathwise-muted">
-            Сложность подстраивается: ответил верно — следующий вопрос сложнее, ошибся — легче.
-            Результат и разбор появятся в конце.
+            {t("diag.adapt")}
           </p>
         </ContentCard>
 
         <ContentCard key={current.id} className="pw-reveal">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs font-black uppercase tracking-[0.14em] text-pathwise-accent-strong">
-              Вопрос {answered + 1} из {DIAGNOSTIC_SIZE}
+              {t("diag.qOf", { a: answered + 1, b: DIAGNOSTIC_SIZE })}
             </p>
             <DifficultyBadge difficulty={current.difficulty} />
           </div>
@@ -555,10 +551,10 @@ export function DiagnosticsFlow() {
               disabled={answer === ""}
               className="pw-btn-primary pw-press text-sm transition disabled:opacity-50"
             >
-              {answered + 1 === DIAGNOSTIC_SIZE ? "Завершить" : "Ответить"}
+              {answered + 1 === DIAGNOSTIC_SIZE ? t("diag.done") : t("diag.answer")}
             </button>
             <span className="text-xs font-semibold text-pathwise-muted">
-              Тема: {current.skill}
+              {t("diag.topicSkill", { skill: current.skill })}
             </span>
           </div>
         </ContentCard>
@@ -586,27 +582,26 @@ export function DiagnosticsFlow() {
       <div className="flex flex-col gap-5">
         <ContentCard>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-pathwise-accent-strong">
-            Шаг 3 из 3 · результат
+            {t("diag.step3")}
           </p>
           <h2 className="mt-3 text-2xl font-black tracking-tight text-pathwise-ink">
-            Твой уровень: {LEVEL_LABELS[result.level]}
+            {t("diag.yourLevel", { level: t(`level.${result.level}`) })}
           </h2>
           <p className="mt-2 text-sm leading-6 text-pathwise-muted">
-            Предмет «{subjectTitle(result.subjectId)}», {result.grade} класс. Система запомнила
-            результат и подобрала стартовую сложность для каждой темы.
+            {t("diag.resultHint", { subject: subjectTitle(result.subjectId), grade: result.grade })}
           </p>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            <StatTile label="Верных ответов" value={`${result.correct} из ${result.total}`} tone="accent" />
-            <StatTile label="Точность" value={`${accuracy}%`} tone={accuracy >= 70 ? "good" : "warn"} />
-            <StatTile label="Уровень" value={LEVEL_LABELS[result.level]} />
+            <StatTile label={t("diag.correctOf")} value={t("diag.of", { a: result.correct, b: result.total })} tone="accent" />
+            <StatTile label={t("learn.accuracy")} value={`${accuracy}%`} tone={accuracy >= 70 ? "good" : "warn"} />
+            <StatTile label={t("diag.levelShort")} value={t(`level.${result.level}`)} />
           </div>
         </ContentCard>
 
         <ContentCard>
-          <h3 className="text-lg font-black tracking-tight text-pathwise-ink">Разбор по темам</h3>
+          <h3 className="text-lg font-black tracking-tight text-pathwise-ink">{t("diag.byTopic")}</h3>
           <p className="mt-1 text-sm text-pathwise-muted">
-            Темы отсортированы от самых слабых — с них и начнём.
+            {t("diag.byTopicHint")}
           </p>
           <div className="mt-5 grid gap-3">
             {topicRows.map((row) => (
@@ -614,7 +609,7 @@ export function DiagnosticsFlow() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm font-black text-pathwise-ink">{row.title}</p>
                   <Pill tone={row.percent >= 70 ? "good" : row.percent >= 40 ? "accent" : "warn"}>
-                    {row.score.correct} из {row.score.total}
+                    {t("diag.of", { a: row.score.correct, b: row.score.total })}
                   </Pill>
                 </div>
                 <div className="mt-3">
@@ -630,7 +625,7 @@ export function DiagnosticsFlow() {
 
         {records.length > 0 ? (
         <ContentCard>
-          <h3 className="text-lg font-black tracking-tight text-pathwise-ink">Разбор вопросов</h3>
+          <h3 className="text-lg font-black tracking-tight text-pathwise-ink">{t("diag.byQuestion")}</h3>
           <div className="mt-4 grid gap-3">
             {records.map((record, index) => (
               <details
@@ -643,12 +638,12 @@ export function DiagnosticsFlow() {
                       {index + 1}. {record.task.prompt}
                     </span>
                     <Pill tone={record.correct ? "good" : "warn"}>
-                      {record.correct ? "верно" : "ошибка"}
+                      {record.correct ? t("learn.correct") : t("learn.wrong")}
                     </Pill>
                   </span>
                 </summary>
                 <p className="mt-3 text-sm font-bold text-pathwise-ink">
-                  Правильный ответ: {taskCorrectLabel(record.task)}
+                  {t("diag.rightAnswer", { answer: taskCorrectLabel(record.task) })}
                 </p>
                 <p className="mt-2 text-sm leading-6 text-pathwise-muted">{record.task.explanation}</p>
               </details>
@@ -663,10 +658,10 @@ export function DiagnosticsFlow() {
             onClick={() => router.push("/learning")}
             className="pw-btn-primary text-sm"
           >
-            Открыть личный кабинет
+            {t("diag.openDash")}
           </button>
           <Link href="/roadmap" className="pw-btn-secondary text-sm">
-            К дорожной карте
+            {t("diag.toRoadmap")}
           </Link>
         </div>
       </div>
@@ -675,7 +670,7 @@ export function DiagnosticsFlow() {
 
   return (
     <ContentCard>
-      <p className="text-sm text-pathwise-muted">Готовим диагностику…</p>
+      <p className="text-sm text-pathwise-muted">{t("diag.preparing")}</p>
     </ContentCard>
   );
 }

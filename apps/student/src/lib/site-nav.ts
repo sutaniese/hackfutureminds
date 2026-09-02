@@ -1,11 +1,11 @@
 export type SiteNavLink = {
   href: string;
-  label: string;
+  labelKey: string;
   end?: boolean;
 };
 
 export type SiteNavSection = {
-  title: string;
+  titleKey: string;
   links: SiteNavLink[];
 };
 
@@ -13,10 +13,17 @@ export type UserRole = "student" | "parent" | "teacher";
 
 export const ROLE_STORAGE_KEY = "pathwise-selected-role";
 
+/** Russian fallbacks for non-UI (CSV / server). UI should use `role.{id}` via i18n. */
 export const ROLE_LABELS: Record<UserRole, string> = {
-  student: "Студент",
+  student: "Ученик",
   parent: "Родитель",
   teacher: "Учитель",
+};
+
+export const ROLE_LABEL_KEYS: Record<UserRole, string> = {
+  student: "role.student",
+  parent: "role.parent",
+  teacher: "role.teacher",
 };
 
 export const ROLE_ENTRY_PATHS: Record<UserRole, string> = {
@@ -28,39 +35,40 @@ export const ROLE_ENTRY_PATHS: Record<UserRole, string> = {
 export const ROLE_NAV_SECTIONS: Record<UserRole, SiteNavSection[]> = {
   student: [
     {
-      title: "Студент",
+      titleKey: "hub.nav.student",
       links: [
-        { href: "/", label: "Главная", end: true },
-        { href: "/onboarding", label: "Старт" },
-        { href: "/learning", label: "Обучение" },
-        { href: "/results", label: "План" },
-        { href: "/roadmap", label: "Roadmap" },
-        { href: "/grants", label: "Гранты" },
-        { href: "/portfolio", label: "Портфолио" },
-        { href: "/profile", label: "Профиль" },
-        { href: "/support", label: "Поддержка" },
+        { href: "/", labelKey: "nav.home", end: true },
+        { href: "/onboarding", labelKey: "nav.onboarding" },
+        { href: "/learning", labelKey: "nav.learning" },
+        { href: "/learning/class", labelKey: "nav.class" },
+        { href: "/results", labelKey: "nav.results" },
+        { href: "/roadmap", labelKey: "nav.roadmap" },
+        { href: "/grants", labelKey: "nav.grants" },
+        { href: "/portfolio", labelKey: "nav.portfolio" },
+        { href: "/profile", labelKey: "nav.profile" },
+        { href: "/support", labelKey: "nav.support" },
       ],
     },
   ],
   parent: [
     {
-      title: "Родитель",
+      titleKey: "hub.nav.parent",
       links: [
-        { href: "/hub/roditeli", label: "Кабинет" },
-        { href: "/hub/agent", label: "AI-наставник", end: true },
-        { href: "/hub/vuzy", label: "Университеты" },
+        { href: "/hub/roditeli", labelKey: "nav.cabinet" },
+        { href: "/hub/agent", labelKey: "nav.agent", end: true },
+        { href: "/hub/vuzy", labelKey: "nav.universities" },
       ],
     },
   ],
   teacher: [
     {
-      title: "Учитель",
+      titleKey: "hub.nav.teacher",
       links: [
-        { href: "/hub/uchitelya", label: "Кабинет" },
-        { href: "/hub/obuchenie", label: "Обучение" },
-        { href: "/hub/uchenik", label: "Ученики" },
-        { href: "/hub/agent", label: "AI-наставник", end: true },
-        { href: "/hub/vuzy", label: "Университеты" },
+        { href: "/hub/uchitelya", labelKey: "nav.cabinet" },
+        { href: "/hub/obuchenie", labelKey: "nav.teacherLearn" },
+        { href: "/hub/uchenik", labelKey: "nav.students" },
+        { href: "/hub/agent", labelKey: "nav.agent", end: true },
+        { href: "/hub/vuzy", labelKey: "nav.universities" },
       ],
     },
   ],
@@ -77,6 +85,9 @@ export function isStudentOnlyPath(pathname: string): boolean {
 
 export function isSiteNavActive(pathname: string, link: SiteNavLink) {
   if (link.end) return pathname === link.href;
+  if (link.href === "/learning") {
+    return pathname === "/learning" || (pathname.startsWith("/learning/") && !pathname.startsWith("/learning/class"));
+  }
   return pathname === link.href || pathname.startsWith(`${link.href}/`);
 }
 

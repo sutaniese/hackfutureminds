@@ -9,7 +9,6 @@ import {
   buildStudyPlan,
   daysUntil,
   learningSummary,
-  priorityLabel,
   recommendTopics,
   reviewQueue,
   topicMastery,
@@ -17,7 +16,6 @@ import {
   weakSpots,
 } from "@/lib/learning/recommend";
 import { LEVEL_LABELS } from "@/lib/learning/store";
-import { attemptsLabel, daysLabel, ofTasksLabel, tasksLabel } from "@/lib/learning/plural";
 import { LEARNING_GOALS } from "@/lib/learning/types";
 import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { ProgressRing } from "@/components/motion/ProgressRing";
@@ -26,6 +24,8 @@ import { ReminderBanner } from "./ReminderBanner";
 import { ClassJoinCard } from "./ClassJoinCard";
 import { useLearning } from "./useLearning";
 import { whyThisTopic } from "@/lib/learning/why-this";
+import { useI18n } from "@/i18n/I18nProvider";
+import { goalLabel, localizedCount, ofTasksI18n } from "@/lib/i18n-labels";
 
 type PlanWeek = { index: number; title: string; goals: string[] };
 type PlanPayload = { headline: string; focus: string[]; weeks: PlanWeek[]; source: "ai" | "local" };
@@ -42,6 +42,7 @@ function deadlineTone(days: number | null): "good" | "accent" | "warn" {
 }
 
 export function LearningDashboard() {
+  const { t, locale } = useI18n();
   const { profile, state, topics, ready, inviteCode } = useLearning();
   const [plan, setPlan] = useState<PlanPayload | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
@@ -93,17 +94,17 @@ export function LearningDashboard() {
       if (data.error) throw new Error(data.error);
       setPlan(data);
     } catch (error) {
-      setPlanError(error instanceof Error ? error.message : "Не удалось собрать план");
+      setPlanError(error instanceof Error ? error.message : t("learn.planFail"));
       setPlan({
         headline: localPlan.headline,
-        focus: weak.map((spot) => `Закрыть пробел: ${spot.skill}`),
+        focus: weak.map((spot) => t("learn.closeGap", { skill: spot.skill })),
         weeks: localPlan.weeks,
         source: "local",
       });
     } finally {
       setPlanLoading(false);
     }
-  }, [days, localPlan, profile, state.diagnostic, weak]);
+  }, [days, localPlan, profile, state.diagnostic, t, weak]);
 
   // План собирается автоматически при первом заходе с готовым профилем.
   useEffect(() => {
@@ -118,13 +119,13 @@ export function LearningDashboard() {
   if (!profile) {
     return (
       <div className="flex flex-col gap-5">
-        <ClassJoinCard currentCode={inviteCode} />
+        <ClassJoinCard currentCode={inviteCode} compact />
         <EmptyState
-          title="Личный кабинет появится после диагностики"
-          description="Укажи класс, предмет и цель, пройди 8 коротких вопросов — и система соберёт персональный план, рекомендации и список слабых мест."
+          title={t("learn.empty.title")}
+          description={t("learn.empty.body")}
           action={
             <Link href="/learning/diagnostics" className="pw-btn-primary text-sm">
-              Пройти диагностику
+              {t("learn.takeDiag")}
             </Link>
           }
         />
@@ -139,13 +140,16 @@ export function LearningDashboard() {
   return (
     <div className="flex flex-col gap-5">
       <ReminderBanner days={days} reviews={reviews} />
-      <ClassJoinCard currentCode={inviteCode} />
+      <ClassJoinCard currentCode={inviteCode} compact />
       <div className="flex flex-wrap gap-3">
+        <Link href="/learning/class" className="pw-btn-secondary text-sm no-underline">
+          {t("learn.classLink")}
+        </Link>
         <Link href="/learning/clips" className="pw-btn-primary text-sm no-underline">
-          Клипы
+          {t("learn.clips")}
         </Link>
         <Link href="/learning/diagnostics" className="pw-btn-secondary text-sm no-underline">
-          Диагностика
+          {t("learn.diag")}
         </Link>
       </div>
 
@@ -155,7 +159,7 @@ export function LearningDashboard() {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-xs font-black uppercase tracking-[0.16em] text-pathwise-accent-strong">
-                  Профиль ученика
+                  {t("learn.profile")}
                 </p>
                 <h2 className="mt-2 flex flex-wrap items-center gap-3 text-2xl font-black tracking-tight text-pathwise-ink">
                   {subject ? (
@@ -167,17 +171,17 @@ export function LearningDashboard() {
                       {subject.mark}
                     </span>
                   ) : null}
-                  {subjectTitle(profile.subjectId)} · {profile.grade} класс
+                  {subjectTitle(profile.subjectId)} · {t("learn.grade", { n: profile.grade })}
                 </h2>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {profile.goals.map((goal) => (
                     <Pill key={goal} tone="accent">
-                      {goalTitle(goal)}
+                      {goalLabel(t, goal)}
                     </Pill>
                   ))}
-                  <Pill>{profile.minutesPerDay} мин в день</Pill>
+                  <Pill>{t("plural.min", { n: profile.minutesPerDay })}</Pill>
                   {state.diagnostic ? (
-                    <Pill tone="good">Уровень: {LEVEL_LABELS[state.diagnostic.level]}</Pill>
+                    <Pill tone="good">{t("learn.levelPill", { label: t(`level.${state.diagnostic.level}`) })}</Pill>
                   ) : null}
                 </div>
               </div>
@@ -185,13 +189,13 @@ export function LearningDashboard() {
                 href="/learning/diagnostics"
                 className="pw-btn-secondary pw-press shrink-0 text-sm"
               >
-                Изменить профиль
+                {t("learn.editProfile")}
               </Link>
             </div>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               <StatTile
-                label="Точность"
+                label={t("learn.accuracy")}
                 delay={60}
                 value={
                   summary.accuracy === null ? (
@@ -200,26 +204,26 @@ export function LearningDashboard() {
                     <AnimatedNumber value={summary.accuracy} suffix="%" delay={200} />
                   )
                 }
-                hint={attemptsLabel(summary.attempts)}
+                hint={localizedCount(locale, "attempts", summary.attempts)}
                 tone={summary.accuracy !== null && summary.accuracy >= 70 ? "good" : "warn"}
               />
               <StatTile
-                label="Темы в работе"
+                label={t("learn.activeTopics")}
                 delay={120}
                 value={<AnimatedNumber value={summary.activeTopics} delay={260} />}
-                hint={`завершено ${summary.completedTopics}`}
+                hint={t("learn.completedHint", { n: summary.completedTopics })}
               />
               <StatTile
-                label={profile.examDate ? "До цели" : "Дедлайн"}
+                label={profile.examDate ? t("learn.untilGoal") : t("learn.deadline")}
                 delay={180}
                 value={
                   days !== null && days >= 0
-                    ? daysLabel(days)
+                    ? localizedCount(locale, "days", days)
                     : profile.examDate
-                      ? "прошёл"
-                      : "не задан"
+                      ? t("learn.passed")
+                      : t("learn.notSet")
                 }
-                hint={profile.examDate || "укажите дату в профиле"}
+                hint={profile.examDate || t("learn.examHint")}
                 tone={deadlineTone(days)}
               />
             </div>
@@ -228,8 +232,8 @@ export function LearningDashboard() {
           <div className="pw-reveal flex justify-center lg:pl-4" style={{ "--d": "220ms" } as React.CSSProperties}>
             <ProgressRing
               value={summary.mastery}
-              label="Освоено"
-              caption={`${summary.solvedTasks} из ${ofTasksLabel(summary.totalTasks)}`}
+              label={t("learn.mastery")}
+              caption={`${summary.solvedTasks} / ${ofTasksI18n(locale, summary.totalTasks)}`}
             />
           </div>
         </div>
@@ -240,18 +244,18 @@ export function LearningDashboard() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 className="text-lg font-black tracking-tight text-pathwise-ink">
-                Рекомендованные темы
+                {t("learn.recs")}
               </h3>
               <p className="mt-1 text-sm text-pathwise-muted">
-                Подобраны по результатам диагностики, классу и цели обучения.
+                {t("learn.recsHint")}
               </p>
             </div>
-            <Pill tone="accent">AI-персонализация</Pill>
+            <Pill tone="accent">{t("learn.ai")}</Pill>
           </div>
 
           {recommendations.length === 0 ? (
             <p className="mt-5 text-sm text-pathwise-muted">
-              По этому предмету пока нет тем. Попросите учителя добавить материал через панель.
+              {t("learn.noTopics")}
             </p>
           ) : (
             <div className="mt-5 grid gap-3">
@@ -270,30 +274,30 @@ export function LearningDashboard() {
                         {item.topic.title}
                       </p>
                       <Pill tone={item.priority === "high" ? "warn" : item.priority === "medium" ? "accent" : "muted"}>
-                        {priorityLabel(item.priority)}
+                        {t(`priority.${item.priority}`)}
                       </Pill>
                     </div>
                     <p className="mt-2 text-sm leading-6 text-pathwise-muted">
-                      Почему это задание: {whyThisTopic(item, weak)}
+                      {t("learn.why", { reason: whyThisTopic(item, weak, locale) })}
                     </p>
                     <div className="mt-3">
                       <ProgressBar value={mastery} delay={index * 90 + 200} />
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-pathwise-muted">
-                      <span>{tasksLabel(item.topic.tasks.length)}</span>
+                      <span>{localizedCount(locale, "tasks", item.topic.tasks.length)}</span>
                       <span aria-hidden>·</span>
-                      <span>освоено {mastery}%</span>
+                      <span>{t("learn.masteredPct", { n: mastery })}</span>
                       <span aria-hidden>·</span>
-                      <span>текущий уровень {topicState.difficulty}</span>
+                      <span>{t("learn.currentLevel", { n: topicState.difficulty })}</span>
                       {item.topic.custom ? (
                         <>
                           <span aria-hidden>·</span>
-                          <span className="text-[#554dd6]">добавлено учителем</span>
+                          <span className="text-[#554dd6]">{t("learn.teacherAdded")}</span>
                         </>
                       ) : null}
                     </div>
                     <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-black text-[#6C63FF]">
-                      Перейти к теме
+                      {t("learn.openTopic")}
                       <span
                         aria-hidden
                         className="transition-transform duration-300 group-hover:translate-x-1"
@@ -310,14 +314,13 @@ export function LearningDashboard() {
 
         <div className="grid content-start gap-5">
           <ContentCard>
-            <h3 className="text-lg font-black tracking-tight text-pathwise-ink">Слабые места</h3>
+            <h3 className="text-lg font-black tracking-tight text-pathwise-ink">{t("learn.weak")}</h3>
             <p className="mt-1 text-sm text-pathwise-muted">
-              Навыки с точностью ниже 70% — по диагностике и решённым заданиям.
+              {t("learn.weakHint")}
             </p>
             {weak.length === 0 ? (
               <p className="mt-4 rounded-2xl bg-emerald-500/10 p-4 text-sm font-semibold leading-6 text-emerald-800">
-                Пока слабых мест не выявлено. Решай задания дальше — система следит за точностью
-                по каждому навыку.
+                {t("learn.weakEmpty")}
               </p>
             ) : (
               <div className="mt-4 grid gap-2.5">
@@ -338,7 +341,7 @@ export function LearningDashboard() {
                         href={`/learning/topic/${spot.topicId}`}
                         className="mt-3 inline-flex text-xs font-black text-[#6C63FF]"
                       >
-                        Отработать →
+                        {t("learn.drill")}
                       </Link>
                     ) : null}
                   </div>
@@ -348,36 +351,39 @@ export function LearningDashboard() {
           </ContentCard>
 
           <ContentCard>
-            <h3 className="text-lg font-black tracking-tight text-pathwise-ink">Ближайшие цели</h3>
+            <h3 className="text-lg font-black tracking-tight text-pathwise-ink">{t("learn.nearGoals")}</h3>
             <div className="mt-4 grid gap-2.5">
               {profile.examDate ? (
                 <div className="rounded-2xl border border-slate-200 bg-white p-3.5">
                   <p className="text-sm font-black text-pathwise-ink">
-                    {profile.goals.map(goalTitle).join(", ") || "Учебная цель"}
+                    {profile.goals.map((goal) => goalLabel(t, goal)).join(", ") || t("goal.unset")}
                   </p>
                   <p className="mt-1 text-xs font-semibold text-pathwise-muted">
-                    Дата: {profile.examDate}
+                    {t("learn.date", { date: profile.examDate })}
                   </p>
                   <p className="mt-2 text-sm font-black text-[#6C63FF]">
-                    {days !== null && days >= 0 ? `Осталось ${daysLabel(days)}` : "Дата уже прошла"}
+                    {days !== null && days >= 0 ? t("learn.left", { days: localizedCount(locale, "days", days) }) : t("learn.datePassed")}
                   </p>
                 </div>
               ) : (
                 <p className="text-sm leading-6 text-pathwise-muted">
-                  Дата цели не указана. Добавь её в профиле — план перестроится под оставшееся
-                  время, а напоминания станут точнее.
+                  {t("learn.noDate")}
                 </p>
               )}
               {recommendations.slice(0, 2).map((item) => (
                 <div key={item.topic.id} className="rounded-2xl bg-slate-50 p-3.5 ring-1 ring-slate-200">
                   <p className="text-xs font-bold uppercase tracking-[0.12em] text-pathwise-muted">
-                    Следующий шаг
+                    {t("learn.nextStep")}
                   </p>
                   <p className="mt-1 text-sm font-bold leading-6 text-pathwise-ink">
-                    {item.topic.title}: решить{" "}
-                    {tasksLabel(
-                      item.topic.tasks.length - topicStateOf(state, item.topic.id).solved.length,
-                    )}
+                    {t("learn.solveRest", {
+                      title: item.topic.title,
+                      tasks: localizedCount(
+                        locale,
+                        "tasks",
+                        item.topic.tasks.length - topicStateOf(state, item.topic.id).solved.length,
+                      ),
+                    })}
                   </p>
                 </div>
               ))}
@@ -389,15 +395,15 @@ export function LearningDashboard() {
       <ContentCard id="plan">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-lg font-black tracking-tight text-pathwise-ink">План подготовки</h3>
+            <h3 className="text-lg font-black tracking-tight text-pathwise-ink">{t("learn.plan")}</h3>
             <p className="mt-1 text-sm text-pathwise-muted">
-              {activePlan?.headline ?? "План соберётся после диагностики."}
+              {activePlan?.headline ?? t("learn.planSoon")}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {activePlan ? (
               <Pill tone={activePlan.source === "ai" ? "accent" : "muted"}>
-                {activePlan.source === "ai" ? "Составлен AI" : "Локальный расчёт"}
+                {activePlan.source === "ai" ? t("learn.planAi") : t("learn.planLocal")}
               </Pill>
             ) : null}
             <button
@@ -406,14 +412,14 @@ export function LearningDashboard() {
               disabled={planLoading || !localPlan}
               className="pw-btn-secondary text-sm disabled:opacity-50"
             >
-              {planLoading ? "Собираем…" : "Пересобрать план"}
+              {planLoading ? t("learn.building") : t("learn.rebuild")}
             </button>
           </div>
         </div>
 
         {planError ? (
           <p className="mt-3 text-xs font-semibold text-[#c63d3d]">
-            AI недоступен ({planError}) — показан план, рассчитанный локально.
+            {t("learn.planFallback", { error: planError })}
           </p>
         ) : null}
 
@@ -432,7 +438,7 @@ export function LearningDashboard() {
             {activePlan.weeks.map((week) => (
               <div key={week.index} className="rounded-2xl border border-slate-200 bg-white p-4">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-pathwise-accent-strong">
-                  Неделя {week.index}
+                  {t("learn.week", { n: week.index })}
                 </p>
                 <p className="mt-2 text-sm font-black leading-6 text-pathwise-ink">{week.title}</p>
                 <ul className="mt-3 grid gap-2">
@@ -450,25 +456,28 @@ export function LearningDashboard() {
           </div>
         ) : (
           <p className="mt-5 text-sm text-pathwise-muted">
-            План появится, как только по предмету будут доступны темы.
+            {t("learn.planEmpty")}
           </p>
         )}
       </ContentCard>
 
       <ContentCard>
-        <h3 className="text-lg font-black tracking-tight text-pathwise-ink">Повторение 3 / 5 / 7 дней</h3>
+        <h3 className="text-lg font-black tracking-tight text-pathwise-ink">{t("learn.srs")}</h3>
         <p className="mt-1 text-sm text-pathwise-muted">
-          Слабую тему возвращаем через 3 дня, уверенную — через 5, закрытую — через неделю.
+          {t("learn.srsHint")}
         </p>
         {reviews.length === 0 ? (
           <p className="mt-4 text-sm text-pathwise-muted">
-            Даты появятся после первых заданий. После диагностики слабая тема уже стоит в очереди.
+            {t("learn.srsEmpty")}
           </p>
         ) : (
           <div className="mt-4 grid gap-2">
             {reviews.map((item) => {
               const next = new Date(Date.now() + Math.max(0, item.intervalDays - item.daysSince) * 86_400_000);
-              const dateLabel = next.toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
+              const dateLabel = next.toLocaleDateString(
+                locale === "kk" ? "kk-KZ" : locale === "en" ? "en-GB" : "ru-RU",
+                { day: "numeric", month: "short" },
+              );
               return (
                 <Link
                   key={item.topic.id}
@@ -478,11 +487,11 @@ export function LearningDashboard() {
                   <div>
                     <p className="text-sm font-bold text-pathwise-ink">{item.topic.title}</p>
                     <p className="text-xs font-semibold text-pathwise-muted">
-                      интервал {item.intervalDays} дн. · повтор {dateLabel}
+                      {t("learn.srsMeta", { n: item.intervalDays, date: dateLabel })}
                     </p>
                   </div>
                   <Pill tone={item.urgency === "due" ? "warn" : "accent"}>
-                    {item.urgency === "due" ? "пора" : "скоро"}
+                    {item.urgency === "due" ? t("learn.dueNow") : t("learn.dueSoon")}
                   </Pill>
                 </Link>
               );
@@ -493,7 +502,7 @@ export function LearningDashboard() {
 
       {state.attempts.length > 0 ? (
         <ContentCard>
-          <h3 className="text-lg font-black tracking-tight text-pathwise-ink">Последняя активность</h3>
+          <h3 className="text-lg font-black tracking-tight text-pathwise-ink">{t("learn.activity")}</h3>
           <div className="mt-4 grid gap-2">
             {state.attempts.slice(0, 6).map((attempt) => {
               const topic = topics.find((item) => item.id === attempt.topicId);
@@ -507,11 +516,11 @@ export function LearningDashboard() {
                       {topic?.title ?? attempt.topicId}
                     </p>
                     <p className="text-xs font-semibold text-pathwise-muted">
-                      {attempt.skill} · уровень {attempt.difficulty}
+                      {t("learn.skillLevel", { skill: attempt.skill, n: attempt.difficulty })}
                     </p>
                   </div>
                   <Pill tone={attempt.correct ? "good" : "warn"}>
-                    {attempt.correct ? "верно" : "ошибка"}
+                    {attempt.correct ? t("learn.correct") : t("learn.wrong")}
                   </Pill>
                 </div>
               );

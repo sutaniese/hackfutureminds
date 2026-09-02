@@ -1,17 +1,19 @@
 'use client'
 
 import { useState } from 'react'
+import { useI18n } from '@/i18n/I18nProvider'
 import { StudentEditor } from '../components/StudentEditor'
 import { PortalPageHero } from '../components/PortalPageHero'
 import { api } from '../lib/api'
 import { useStudents } from '../state/StudentContext'
 
 export function StudentsPage() {
+  const { t } = useI18n()
   const { students, loading, error, activeStudentId, setActiveStudentId, removeLocal, reload } = useStudents()
   const [mode, setMode] = useState<'edit' | 'new'>('edit')
 
   async function handleDelete(id: string) {
-    if (!confirm('Удалить ученика и его заметки?')) return
+    if (!confirm(t('students.deleteConfirm'))) return
     await api.deleteStudent(id)
     removeLocal(id)
     await reload()
@@ -20,13 +22,13 @@ export function StudentsPage() {
   return (
     <>
       <PortalPageHero
-        kicker="Ученики"
-        title="Профили, планы и заметки в одном месте"
-        description="Создавайте учеников, редактируйте карьерные данные и храните контекст, который видит AI-наставник."
+        kicker={t('students.kicker')}
+        title={t('students.title')}
+        description={t('students.desc')}
         stats={[
-          { value: String(students.length), label: 'профилей' },
-          { value: activeStudentId ? '1' : '0', label: 'выбран' },
-          { value: 'AI', label: 'память прогресса' },
+          { value: String(students.length), label: t('students.statProfiles') },
+          { value: activeStudentId ? '1' : '0', label: t('students.statSelected') },
+          { value: 'AI', label: t('students.statMemory') },
         ]}
       />
 
@@ -38,18 +40,18 @@ export function StudentsPage() {
               onClick={() => setMode('new')}
               className="pw-primary-btn pw-focus min-h-[40px] flex-1 px-3 py-2 text-sm"
             >
-              + Новый ученик
+              {t('students.new')}
             </button>
             <button
               type="button"
               onClick={() => setMode('edit')}
               className="pw-secondary-btn pw-focus min-h-[40px] rounded-xl px-3 py-2 text-sm"
             >
-              Редактировать
+              {t('students.edit')}
             </button>
           </div>
-          <p className="mt-3 text-xs uppercase tracking-wide text-pathwise-muted">Список</p>
-          {loading && <p className="mt-2 text-sm text-pathwise-muted">Загрузка…</p>}
+          <p className="mt-3 text-xs uppercase tracking-wide text-pathwise-muted">{t('students.list')}</p>
+          {loading && <p className="mt-2 text-sm text-pathwise-muted">{t('students.loading')}</p>}
           {error && <p className="mt-2 text-sm text-rose-600">{error}</p>}
           <ul className="mt-2 space-y-1">
             {students.map((s) => (
@@ -75,7 +77,7 @@ export function StudentsPage() {
                   type="button"
                   onClick={() => handleDelete(s.id)}
                   className="rounded-lg border border-rose-200 px-2 py-1 text-xs font-medium text-red-100 hover:bg-[#FF6B6B]/10"
-                  aria-label={`Удалить ${s.displayName}`}
+                  aria-label={t('students.deleteAria', { name: s.displayName })}
                 >
                   ✕
                 </button>
@@ -83,7 +85,7 @@ export function StudentsPage() {
             ))}
             {students.length === 0 && !loading && (
               <li className="rounded-xl bg-white px-3 py-4 text-sm text-pathwise-muted">
-                Учеников пока нет. Создайте первого.
+                {t('students.empty')}
               </li>
             )}
           </ul>

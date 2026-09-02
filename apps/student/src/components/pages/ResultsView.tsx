@@ -3,19 +3,43 @@
 import { ResultsGenerateClient } from "@/components/results/ResultsGenerateClient";
 import { PageHero } from "@/components/ui/PageHero";
 import { useI18n } from "@/i18n/I18nProvider";
+import { resolveActiveLearningGoal } from "@/lib/learning/goal-priority";
+import { readLearningProfile } from "@/lib/learning/store";
+import { readCurrentOnboarding } from "@/lib/student-progress";
+import { useEffect, useState } from "react";
 
 export function ResultsView() {
   const { t } = useI18n();
+  const [goal, setGoal] = useState<ReturnType<typeof resolveActiveLearningGoal>>(null);
+
+  useEffect(() => {
+    setGoal(resolveActiveLearningGoal(readLearningProfile(), readCurrentOnboarding()));
+  }, []);
+
+  const olympiad = goal === "olympiad";
+  const school = goal === "school" || goal === "review";
+  const title = olympiad
+    ? t("results.pageTitle.olympiad")
+    : school
+      ? t("results.pageTitle.school")
+      : t("results.pageTitle");
+  const sub = olympiad ? t("results.sub.olympiad") : school ? t("results.sub.school") : t("results.sub");
+  const tags = olympiad
+    ? ["results.tag.olympiad", "results.tag.review"]
+    : school
+      ? ["results.tag.school", "results.tag.review"]
+      : ["results.tag.career", "results.tag.money", "results.tag.grants", "results.tag.resume"];
+
   return (
     <div className="flex flex-col gap-5">
-      <PageHero compact kicker="Карьера" title="Карьерный план" description={t("results.sub")}>
+      <PageHero compact kicker={t("results.kicker")} title={title} description={sub}>
         <div className="mt-5 flex flex-wrap gap-2">
-          {["карьера", "финансы", "гранты", "резюме"].map((item) => (
+          {tags.map((item) => (
             <span
               key={item}
               className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-pathwise-ink ring-1 ring-pathwise-line/80"
             >
-              {item}
+              {t(item)}
             </span>
           ))}
         </div>
