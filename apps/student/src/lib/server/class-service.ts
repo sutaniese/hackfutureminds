@@ -28,7 +28,6 @@ type ClassRecord = {
 export async function listClassesForUser(user: AuthedUser): Promise<ClassRow[]> {
   void user;
   const supabase = await createServerSupabase();
-  const supabase = await createServerSupabase();
   if (!supabase) throw new HttpError(503, "Supabase is not configured.");
 
   const { data, error } = await supabase
