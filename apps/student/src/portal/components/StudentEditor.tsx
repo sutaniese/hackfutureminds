@@ -101,7 +101,7 @@ export function StudentEditor({ studentId, onSaved }: Props) {
       if (inviteCode.trim()) {
         try {
           const r = await api.joinClass(inviteCode.trim(), saved.id)
-          upsertLocal(r.student)
+          if (r.student) upsertLocal(r.student)
           setInfo(`Сохранено и добавлено в класс «${r.class.name}».`)
         } catch (err) {
           setInfo(`Сохранено, но в класс не добавили: ${err instanceof Error ? err.message : 'ошибка'}`)

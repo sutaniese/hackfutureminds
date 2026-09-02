@@ -15,6 +15,8 @@
     "dev:student": "npm run dev --workspace apps/student",
     "build": "npm run build --workspace apps/student",
     "build:student": "npm run build --workspace apps/student",
-    "lint:student": "npm run lint --workspace apps/student"
+    "lint:student": "npm run lint --workspace apps/student",
+    "test": "npm run test --workspace apps/student",
+    "typecheck": "npm run typecheck --workspace apps/student"
   }
 }

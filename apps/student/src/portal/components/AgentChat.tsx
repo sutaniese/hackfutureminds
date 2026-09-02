@@ -1,6 +1,15 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import { api, type ChatMessage } from '../lib/api'
 import { useStudents } from '../state/StudentContext'
+import { isSupabaseConfigured } from '@/lib/supabase/env'
+import { pullClassBoard } from '@/lib/learning/remote'
+
+type BoardStudent = {
+  id: string
+  name?: string
+  email: string
+  classId?: string
+}
 
 export function AgentChat() {
   const { activeStudent, students, activeStudentId, setActiveStudentId } = useStudents()
@@ -9,17 +18,52 @@ export function AgentChat() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [source, setSource] = useState<'ai' | 'fallback' | null>(null)
+  const [publishedTitle, setPublishedTitle] = useState<string | null>(null)
+  const [boardStudents, setBoardStudents] = useState<BoardStudent[]>([])
+  const [classId, setClassId] = useState<string>('')
   const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!activeStudentId || !activeStudent) {
+    if (!isSupabaseConfigured()) return
+    let cancelled = false
+    void pullClassBoard()
+      .then((board) => {
+        if (cancelled) return
+        setClassId(board.classes[0]?.id ?? '')
+        setBoardStudents(
+          board.students.map((s) => ({
+            id: s.id,
+            name: s.name || s.snapshot.name,
+            email: s.email,
+            classId: board.classes[0]?.id,
+          })),
+        )
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const roster = isSupabaseConfigured()
+    ? boardStudents.map((s) => ({ id: s.id, displayName: s.name || s.email }))
+    : students.map((s) => ({ id: s.id, displayName: s.displayName }))
+
+  const selected =
+    roster.find((s) => s.id === activeStudentId) ??
+    (activeStudent ? { id: activeStudent.id, displayName: activeStudent.displayName } : null)
+
+  useEffect(() => {
+    if (!activeStudentId) {
       setMessages([])
       return
     }
     let cancelled = false
     void (async () => {
       try {
-        await api.upsertStudent(activeStudent)
+        if (!isSupabaseConfigured() && activeStudent) {
+          await api.upsertStudent(activeStudent)
+        }
         const conv = await api.chatHistory(activeStudentId)
         if (!cancelled) setMessages(conv.messages)
       } catch (err) {
@@ -37,17 +81,21 @@ export function AgentChat() {
 
   async function handleSend(e: FormEvent) {
     e.preventDefault()
-    if (!activeStudentId || !activeStudent || !input.trim() || busy) return
+    if (!activeStudentId || !selected || !input.trim() || busy) return
     const text = input.trim()
     setInput('')
     setError(null)
+    setPublishedTitle(null)
     const userMsg: ChatMessage = { role: 'user', text, ts: new Date().toISOString() }
     setMessages((prev) => [...prev, userMsg])
     setBusy(true)
     try {
-      await api.upsertStudent(activeStudent)
-      const r = await api.chat(activeStudentId, text)
+      if (!isSupabaseConfigured() && activeStudent) {
+        await api.upsertStudent(activeStudent)
+      }
+      const r = await api.chat(activeStudentId, text, classId || undefined)
       setSource(r.source)
+      if (r.published?.title) setPublishedTitle(r.published.title)
       const reply: ChatMessage = { role: 'assistant', text: r.reply, ts: new Date().toISOString() }
       setMessages((prev) => [...prev, reply])
     } catch (err) {
@@ -72,8 +120,8 @@ export function AgentChat() {
             Чат с AI-наставником
           </h2>
           <p className="text-xs text-pathwise-muted">
-            Агент помнит профиль ученика, результаты диагностики и заметки по прогрессу.
-            Учитель может спросить, где пробелы и что делать дальше.
+            Агент получает compact pack выбранного ученика и класса — не всю базу. Можно попросить
+            «кто застрял на Ньютоне», «план на 20 минут» или «черновик 3 заданий и опубликуй».
           </p>
         </div>
         <div className="flex flex-wrap items-end gap-2">
@@ -87,7 +135,7 @@ export function AgentChat() {
             className="pw-input px-3 py-2 text-sm"
           >
             <option value="">— ученик не выбран —</option>
-            {students.map((s) => (
+            {roster.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.displayName}
               </option>
@@ -104,11 +152,14 @@ export function AgentChat() {
         </div>
       </header>
 
-      {!activeStudent && (
-        <p className="mt-4 text-sm text-pathwise-muted">Выберите ученика — наставник подгрузит его профиль и результаты.</p>
+      {!selected && (
+        <p className="mt-4 text-sm text-pathwise-muted">
+          Выберите ученика класса — наставник подгрузит compact pack с его пробелами. Список пуст,
+          пока никто не вступил по коду.
+        </p>
       )}
 
-      {activeStudent && (
+      {selected && (
         <>
           <div
             ref={listRef}
@@ -118,7 +169,7 @@ export function AgentChat() {
           >
             {messages.length === 0 && (
               <p className="m-auto text-center text-sm text-pathwise-muted">
-                Поздоровайтесь с агентом. Он уже знает профиль ученика «{activeStudent.displayName}».
+                Поздоровайтесь с агентом. Он уже знает профиль ученика «{selected.displayName}».
               </p>
             )}
             {messages.map((m, i) => (
@@ -135,7 +186,7 @@ export function AgentChat() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Спросите: «какой прогресс у ученика?», «сохрани заметку: …»"
+              placeholder="Кто застрял на Ньютоне? Сделай 20-мин план. Набросай 3 задания и опубликуй."
               className="pw-input min-h-[48px] flex-1 px-4 py-2 text-sm"
               disabled={busy}
               aria-label="Сообщение агенту"
@@ -158,6 +209,9 @@ export function AgentChat() {
                 </strong>
               </span>
             )}
+            {publishedTitle ? (
+              <span className="font-semibold text-emerald-700">Опубликовано в класс: «{publishedTitle}»</span>
+            ) : null}
             {error && <span className="text-rose-600">{error}</span>}
           </div>
         </>

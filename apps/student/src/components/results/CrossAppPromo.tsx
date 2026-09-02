@@ -48,7 +48,7 @@ export function CrossAppPromo() {
         Семья и школа
       </h2>
       <p className="text-xs text-pathwise-muted">
-        Открой портал PathWise — родителям и учителям, чтобы поддержать твой план.
+        Открой кабинет teñ. — родителям и учителям, чтобы поддержать твой план.
       </p>
 
       <ul className="mt-3 grid gap-3 sm:grid-cols-3">

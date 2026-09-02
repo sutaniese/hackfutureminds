@@ -137,37 +137,39 @@ export function TeacherDashboard() {
               {c.name}
             </button>
           ))}
-          {classes.length === 0 && <p className="text-sm text-pathwise-muted">Классов пока нет — создайте ниже.</p>}
+          {classes.length === 0 && (
+            <p className="text-sm text-pathwise-muted">Классов пока нет — создайте ниже.</p>
+          )}
         </div>
 
-        {activeServerClass && (
-          <div className="mt-6 grid gap-6 lg:grid-cols-2">
-            <form
-              onSubmit={onCreateClass}
-              className="rounded-2xl border border-dashed border-pathwise-line bg-white p-4"
-              aria-label="Создать новый класс"
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <form
+            onSubmit={onCreateClass}
+            className="rounded-2xl border border-dashed border-pathwise-line bg-white p-4"
+            aria-label="Создать новый класс"
+          >
+            <h3 className="text-sm font-semibold text-pathwise-ink">Новый класс</h3>
+            <label htmlFor="new-class-name" className="mt-3 block text-xs font-medium text-pathwise-muted">
+              Название класса
+            </label>
+            <input
+              id="new-class-name"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className="pw-input mt-1 w-full px-3 py-2 text-sm"
+            />
+            <button
+              type="submit"
+              className="pw-btn-primary mt-4 inline-flex min-h-[48px] items-center justify-center px-4 py-2 text-sm"
             >
-              <h3 className="text-sm font-semibold text-pathwise-ink">Новый класс</h3>
-              <label htmlFor="new-class-name" className="mt-3 block text-xs font-medium text-pathwise-muted">
-                Название класса
-              </label>
-              <input
-                id="new-class-name"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="pw-input mt-1 w-full px-3 py-2 text-sm"
-              />
-              <button
-                type="submit"
-                className="pw-btn-primary mt-4 inline-flex min-h-[48px] items-center justify-center px-4 py-2 text-sm"
-              >
-                Создать класс и сгенерировать код
-              </button>
-              <p className="mt-2 text-xs text-pathwise-muted">
-                Класс получает код приглашения. Ученики видятся в сводке, AI помнит их результаты.
-              </p>
-            </form>
+              Создать класс и сгенерировать код
+            </button>
+            <p className="mt-2 text-xs text-pathwise-muted">
+              Класс получает код приглашения. Ученик с телефона вводит его в кабинете — и появляется на доске.
+            </p>
+          </form>
 
+          {activeServerClass ? (
             <div className="rounded-2xl border border-[#6C63FF]/30 bg-[#6C63FF]/10 p-4">
               <h3 className="text-sm font-semibold text-pathwise-ink">Текущий класс</h3>
               <p className="mt-2 text-sm text-pathwise-muted">Название</p>
@@ -192,14 +194,21 @@ export function TeacherDashboard() {
                 <button
                   type="button"
                   onClick={() => onDeleteClass(activeServerClass.id)}
-                  className="rounded-lg border border-[#FF6B6B]/30 px-2 py-1 text-xs font-medium text-red-100 hover:bg-[#FF6B6B]/10"
+                  className="rounded-lg border border-[#FF6B6B]/30 px-2 py-1 text-xs font-medium text-red-700 hover:bg-[#FF6B6B]/10"
                 >
                   Удалить класс
                 </button>
               </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="rounded-2xl border border-pathwise-line bg-slate-50 p-4">
+              <h3 className="text-sm font-semibold text-pathwise-ink">Код приглашения</h3>
+              <p className="mt-2 text-sm text-pathwise-muted">
+                После создания класса здесь появится код вида TN-XXXXXX. Скопируйте его ученику.
+              </p>
+            </div>
+          )}
+        </div>
       </section>
 
       {activeLegacy && (

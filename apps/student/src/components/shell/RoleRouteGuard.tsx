@@ -80,6 +80,7 @@ export function RoleRouteGuard({ children }: { children: React.ReactNode }) {
 
   // Auto-redirect guests away from private pages to /login (preserves redirect target).
   useEffect(() => {
+    if (status === "loading") return;
     if (status !== "guest") return;
     if (isPublicPath(pathname)) return;
     const redirect = encodeURIComponent(pathname);

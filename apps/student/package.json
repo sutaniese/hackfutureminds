@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "postinstall": "node scripts/ensure-optional-natives.cjs",
     "cap:sync": "node ../../node_modules/@capacitor/cli/bin/capacitor sync",
     "cap:open:android": "node ../../node_modules/@capacitor/cli/bin/capacitor open android",
@@ -21,6 +22,8 @@
   "dependencies": {
     "@capacitor/core": "^6.2.0",
     "@pathwise/shared": "*",
+    "@supabase/ssr": "^0.12.5",
+    "@supabase/supabase-js": "^2.114.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.2",
     "jszip": "^3.10.1",
@@ -41,7 +44,8 @@
     "eslint-config-next": "15.5.15",
     "node-mocks-http": "^1.17.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.11"
   },
   "optionalDependencies": {
     "@tailwindcss/oxide-linux-x64-gnu": "^4.2.4",
