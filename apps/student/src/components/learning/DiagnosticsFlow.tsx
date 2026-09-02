@@ -16,7 +16,6 @@ import {
   type DiagnosticRecord,
 } from "@/lib/learning/recommend";
 import {
-  LEVEL_LABELS,
   readAllTopics,
   readLearningProfile,
   readLearningState,
@@ -75,8 +74,6 @@ function writeDraft(draft: Draft | null): void {
   }
 }
 
-const PROFILE_STEPS: ProfileStep[] = ["grade", "subject", "goal"];
-
 function defaultExamDate(daysAhead = 21): string {
   const date = new Date();
   date.setDate(date.getDate() + daysAhead);
@@ -84,10 +81,6 @@ function defaultExamDate(daysAhead = 21): string {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
-}
-
-function profileStepIndex(step: ProfileStep): number {
-  return PROFILE_STEPS.indexOf(step) + 1;
 }
 
 function pickQuestion(
@@ -289,7 +282,6 @@ export function DiagnosticsFlow() {
   /* ------------------------------ шаг 1: профиль ------------------------------ */
 
   if (stage === "profile") {
-    const stepNumber = profileStepIndex(profileStep);
     const selectedSubject = SUBJECTS.find((item) => item.id === subjectId);
 
     return (
