@@ -8,7 +8,7 @@ import { SpeakButton } from "@/components/learning/SpeakButton";
 import { AnswerField } from "@/components/learning/AnswerField";
 import { Pill } from "@/components/learning/LearningUI";
 import { BAKED_CLIPS, localClipForTopic } from "@/lib/learning/clips";
-import { CLIP_BEAT_LABELS, type LearningClip } from "@/lib/learning/clips/types";
+import type { LearningClip } from "@/lib/learning/clips/types";
 import { findTask, findTopic } from "@/lib/learning/catalog";
 import { isAnswerCorrect } from "@/lib/learning/types";
 import { recordClipEvent } from "@/lib/learning/remote";
@@ -16,13 +16,13 @@ import { weakSpots } from "@/lib/learning/recommend";
 import { useLearning } from "./useLearning";
 
 const PRESET = [
-  { topicId: "math-quadratic", label: "Квадратные уравнения" },
-  { topicId: "phys-newton", label: "Ньютон" },
-  { topicId: "inf-python", label: "Python" },
-];
+  { topicId: "math-quadratic", labelKey: "clips.preset.quad" },
+  { topicId: "phys-newton", labelKey: "clips.preset.newton" },
+  { topicId: "inf-python", labelKey: "clips.preset.python" },
+] as const;
 
 export function ClipPlayer() {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const { topics, state, profile } = useLearning();
   const clipLocale = locale === "kk" ? "kk" : "ru";
   const [clip, setClip] = useState<LearningClip | null>(() =>
@@ -101,7 +101,7 @@ export function ClipPlayer() {
 
   const caption = useMemo(() => beat?.text ?? "", [beat]);
 
-  if (!clip || !beat) return <ContentCard>Клипы загружаются…</ContentCard>;
+  if (!clip || !beat) return <ContentCard>{t("clips.loading")}</ContentCard>;
 
   return (
     <div className="flex flex-col items-center gap-5">
@@ -117,7 +117,7 @@ export function ClipPlayer() {
                 : "border-slate-200 bg-white"
             }`}
           >
-            {item.topicId === "math-quadratic" && clipLocale === "kk" ? "Квадрат теңдеулер" : item.label}
+            {t(item.labelKey)}
           </button>
         ))}
         <button
@@ -125,7 +125,7 @@ export function ClipPlayer() {
           onClick={() => void loadTopic(profile?.subjectId === "informatics" ? "inf-python" : "math-progression", true)}
           className="min-h-11 rounded-full border border-slate-200 bg-white px-4 text-sm font-bold"
         >
-          Живой клип (Groq)
+          {t("clips.live")}
         </button>
       </div>
 
@@ -135,12 +135,16 @@ export function ClipPlayer() {
             <div className="h-full bg-[#6C63FF]" style={{ width: `${progress}%` }} />
           </div>
           <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#a99cff]">
-            {CLIP_BEAT_LABELS[beat.kind]} · {beatIndex + 1}/4
+            {t("clips.beatLine", {
+              label: t(`clip.beat.${beat.kind}`),
+              a: beatIndex + 1,
+              b: clip.beats.length,
+            })}
           </p>
           <h2 className="mt-3 text-2xl font-black leading-tight">{clip.title}</h2>
           <p className="mt-6 text-lg font-semibold leading-8 text-white/95">{caption}</p>
           <div className="mt-6">
-            <SpeakButton text={caption} label={locale === "kk" ? "Тыңдау" : "Прослушать"} />
+            <SpeakButton text={caption} label={t("clips.listen")} />
           </div>
 
           {beat.kind === "check" && quiz ? (
@@ -157,11 +161,11 @@ export function ClipPlayer() {
                 }}
                 className="pw-btn-primary mt-3 w-full text-sm disabled:opacity-50"
               >
-                Ответить
+                {t("clips.answer")}
               </button>
               {quizDone !== null ? (
                 <p className={`mt-2 text-sm font-bold ${quizDone ? "text-emerald-600" : "text-[#E75555]"}`}>
-                  {quizDone ? "Верно — берём следующий слабый навык." : "Ошибка — этот навык ещё раз."}
+                  {quizDone ? t("clips.ok") : t("clips.bad")}
                 </p>
               ) : null}
             </div>
@@ -175,7 +179,7 @@ export function ClipPlayer() {
                 }}
                 className="min-h-12 flex-1 rounded-full bg-white/10 text-sm font-bold"
               >
-                Сначала
+                {t("clips.restart")}
               </button>
               <button
                 type="button"
@@ -187,7 +191,7 @@ export function ClipPlayer() {
                 }}
                 className="min-h-12 flex-[2] rounded-full bg-[#6C63FF] text-sm font-bold"
               >
-                Дальше
+                {t("clips.next")}
               </button>
             </div>
           )}
@@ -195,15 +199,14 @@ export function ClipPlayer() {
       </div>
 
       <p className="text-xs text-pathwise-muted">
-        Источник: {source === "baked" ? "готовые клипы в репозитории" : source === "ai" ? "Groq по конспекту" : "локальный сценарий"}.
-        Видео API нет.
+        {t("clips.sourceLine", { source: t(`clips.source.${source}`) })}
       </p>
       {clip.topicId ? (
         <Link href={`/learning/topic/${clip.topicId}`} className="text-sm font-bold text-[#554dd6]">
-          Открыть тему →
+          {t("clips.openTopic")}
         </Link>
       ) : null}
-      {loading ? <Pill tone="accent">Собираем клип…</Pill> : null}
+      {loading ? <Pill tone="accent">{t("clips.building")}</Pill> : null}
     </div>
   );
 }

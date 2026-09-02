@@ -1,7 +1,9 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useI18n } from "@/i18n/I18nProvider";
 import { cn } from "@/lib/cn";
 import type { Difficulty } from "@/lib/learning/types";
-import { DIFFICULTY_LABELS } from "@/lib/learning/types";
 
 /** Мелкие переиспользуемые блоки учебного модуля — в стиле pw-card. */
 
@@ -52,6 +54,7 @@ export function ProgressBar({
   /** Задержка старта заливки — для каскада в списках. */
   delay?: number;
 }) {
+  const { t } = useI18n();
   const safe = Math.max(0, Math.min(100, Math.round(value)));
   return (
     <div
@@ -60,7 +63,7 @@ export function ProgressBar({
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={safe}
-      aria-label={label ?? `Прогресс ${safe}%`}
+      aria-label={label ?? t("progress.pct", { n: safe })}
     >
       <div
         className="pw-fill h-full rounded-full transition-[width] duration-700 ease-out"
@@ -101,10 +104,11 @@ export function Pill({
 }
 
 export function DifficultyBadge({ difficulty }: { difficulty: Difficulty }) {
+  const { t } = useI18n();
   const tone = difficulty === 3 ? "warn" : difficulty === 2 ? "accent" : "good";
   return (
     <Pill tone={tone}>
-      Уровень {difficulty} · {DIFFICULTY_LABELS[difficulty]}
+      {t("difficulty.badge", { n: difficulty, label: t(`difficulty.${difficulty}`) })}
     </Pill>
   );
 }
