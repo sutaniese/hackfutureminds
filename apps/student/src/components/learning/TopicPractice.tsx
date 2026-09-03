@@ -23,7 +23,7 @@ import { recordAttempt, upsertRosterEntry } from "@/lib/learning/store";
 import { isAnswerCorrect, taskCorrectLabel } from "@/lib/learning/types";
 import type { Task } from "@/lib/learning/types";
 import { whyThisTask } from "@/lib/learning/why-this";
-import { videoClipFor } from "@pathwise/shared";
+import { topicHasWatchableClip } from "@pathwise/shared";
 import { AnswerField } from "./AnswerField";
 import { ClipPlayer } from "./ClipPlayer";
 import { ClipBadge, DifficultyBadge, EmptyState, Pill, ProgressBar, StatTile } from "./LearningUI";
@@ -210,7 +210,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
   const sameSubject = topicsForSubject(topics, topic.subjectId).filter((item) => item.id !== topic.id);
   const solvedCount = topicState?.solved.length ?? 0;
   const clipLocale = locale === "kk" ? "kk" : "ru";
-  const hasClip = Boolean(videoClipFor(topicId, clipLocale));
+  const hasClip = topicHasWatchableClip(topic, clipLocale);
 
   return (
     <div className="flex flex-col gap-5">

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import Link from 'next/link'
+import { liveClipQuizTask, type LiveClipScript } from '@pathwise/shared'
 import { useI18n } from '@/i18n/I18nProvider'
 import { localizedCount } from '@/lib/i18n-labels'
 import { SUBJECTS, subjectTitle } from '@/lib/learning/catalog'
@@ -12,6 +13,7 @@ import {
 import type { Difficulty, Grade, Task, Topic } from '@/lib/learning/types'
 import { isSupabaseConfigured } from '@/lib/supabase/env'
 import { deleteCustomTopicRemote, listClassesRemote, publishCustomTopic } from '@/lib/learning/remote'
+import { ClipBuilderPanel } from './ClipBuilderPanel'
 
 const GRADES: Grade[] = [7, 8, 9, 10, 11, 12]
 
@@ -74,6 +76,7 @@ export function TopicBuilder() {
   const [classes, setClasses] = useState<Array<{ id: string; name: string; inviteCode: string }>>([])
   const [classId, setClassId] = useState('')
   const [publishing, setPublishing] = useState(false)
+  const [liveClip, setLiveClip] = useState<LiveClipScript | null>(null)
 
   useEffect(() => {
     const sync = () => setCustom(readCustomTopics())
@@ -108,6 +111,7 @@ export function TopicBuilder() {
     setTheory('')
     setGrades([9])
     setTasks([emptyTask(0)])
+    setLiveClip(null)
   }, [])
 
   const onSubmit = useCallback(
@@ -132,7 +136,7 @@ export function TopicBuilder() {
       const validTasks = tasks.filter(
         (task) => task.prompt.trim() && task.options.filter((option) => option.trim()).length >= 2,
       )
-      if (validTasks.length === 0) {
+      if (validTasks.length === 0 && !liveClip) {
         setError(t('builder.needTask'))
         return
       }
@@ -162,6 +166,10 @@ export function TopicBuilder() {
         }
       })
 
+      if (liveClip && builtTasks.length === 0) {
+        builtTasks.push(liveClipQuizTask(liveClip, topicId) as Task)
+      }
+
       const theoryParagraphs = theory
         .split(/\n{2,}/)
         .map((item) => item.trim())
@@ -181,6 +189,7 @@ export function TopicBuilder() {
         materials: [],
         tasks: builtTasks,
         custom: true,
+        liveClip: liveClip ?? undefined,
       }
 
       setPublishing(true)
@@ -197,7 +206,7 @@ export function TopicBuilder() {
         setPublishing(false)
       }
     },
-    [classId, grades, resetForm, skills, subjectId, summary, t, tasks, theory, title],
+    [classId, grades, liveClip, resetForm, skills, subjectId, summary, t, tasks, theory, title],
   )
 
   return (
@@ -326,6 +335,14 @@ export function TopicBuilder() {
               className="pw-input mt-2 w-full px-3 py-3 text-sm"
             />
           </div>
+
+          <ClipBuilderPanel
+            defaultSubjectId={subjectId}
+            defaultGrade={grades[0] ?? 9}
+            defaultTitle={title}
+            script={liveClip}
+            onScript={setLiveClip}
+          />
 
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -465,6 +482,11 @@ export function TopicBuilder() {
                   <span className="rounded-full bg-[#6C63FF]/10 px-2.5 py-1 text-[11px] font-bold text-[#554dd6]">
                     {subjectTitle(topic.subjectId)}
                   </span>
+                  {topic.liveClip ? (
+                    <span className="rounded-full bg-[#6C63FF]/10 px-2.5 py-1 text-[11px] font-bold text-[#554dd6]">
+                      {t('clips.badge')}
+                    </span>
+                  ) : null}
                 </div>
                 <p className="mt-2 text-xs leading-5 text-pathwise-muted">{topic.summary}</p>
                 <p className="mt-2 text-xs font-semibold text-pathwise-muted">

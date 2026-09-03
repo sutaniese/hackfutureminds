@@ -1,3 +1,5 @@
+import { videoClipFor, type ClipLocale } from "./clips";
+
 /** Teacher-authored live clip script — played in the browser / Expo, never encoded. */
 
 export const LIVE_CLIP_VISUALS = ["formula", "bullets", "diagram", "compare"] as const;
@@ -234,4 +236,27 @@ export function parseLiveClipScript(
 
 export function topicHasLiveClip(topic: { liveClip?: LiveClipScript | null } | null | undefined): boolean {
   return Boolean(topic?.liveClip?.scenes?.length);
+}
+
+export function topicHasWatchableClip(
+  topic: { id: string; liveClip?: LiveClipScript | null } | null | undefined,
+  locale: ClipLocale,
+): boolean {
+  if (!topic) return false;
+  return Boolean(videoClipFor(topic.id, locale) || topicHasLiveClip(topic));
+}
+
+export function liveClipQuizTask(script: LiveClipScript, topicId: string) {
+  return {
+    id: `${topicId}-live-quiz`,
+    topicId,
+    type: "single" as const,
+    difficulty: 1 as const,
+    skill: script.quiz.skillId,
+    prompt: script.quiz.question,
+    options: [...script.quiz.options],
+    answer: script.quiz.correctIndex,
+    explanation: script.quiz.explanation,
+    minutes: 2,
+  };
 }

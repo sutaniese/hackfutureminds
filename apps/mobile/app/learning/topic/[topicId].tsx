@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
-import { videoClipFor } from "@pathwise/shared";
+import { topicHasWatchableClip } from "@pathwise/shared";
 import { Screen } from "../../../src/components/Screen";
 import { SpeakButton } from "../../../src/components/SpeakButton";
 import { TopicClipPlayer } from "../../../src/components/TopicClipPlayer";
@@ -32,7 +32,7 @@ export default function TopicScreen() {
   const [chat, setChat] = useState<Array<{ role: "user" | "assistant"; text: string }>>([]);
   const [showClip, setShowClip] = useState(false);
   const clipLocale = locale === "kk" ? "kk" : "ru";
-  const hasClip = Boolean(videoClipFor(String(topicId), clipLocale));
+  const hasClip = topicHasWatchableClip(topic, clipLocale);
 
   if (!topic) {
     return (

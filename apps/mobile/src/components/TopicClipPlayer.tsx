@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useEventListener } from "expo";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { clipProductionUrl, videoClipFor } from "@pathwise/shared";
+import { clipProductionUrl, topicHasLiveClip, videoClipFor } from "@pathwise/shared";
+import { LiveClipPlayer } from "./LiveClipPlayer";
 import { Body, Card, Chip, Field, Kicker, PrimaryButton, Title } from "./ui";
 import { useI18n } from "../context/I18nContext";
 import { useLearning } from "../context/LearningContext";
@@ -119,6 +120,10 @@ export function TopicClipPlayer({
     }
     setQuizMsg(t("clips.bad"));
     onWrongAnswer?.();
+  }
+
+  if (topicHasLiveClip(topic) && topic?.liveClip) {
+    return <LiveClipPlayer script={topic.liveClip} topicId={topicId} onWrongAnswer={onWrongAnswer} />;
   }
 
   if (!uri && !loadError) {

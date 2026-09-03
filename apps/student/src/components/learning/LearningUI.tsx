@@ -1,10 +1,12 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { videoClipFor } from "@pathwise/shared";
+import { topicHasWatchableClip } from "@pathwise/shared";
 import { useI18n } from "@/i18n/I18nProvider";
 import { cn } from "@/lib/cn";
+import { findTopic } from "@/lib/learning/catalog";
 import type { Difficulty } from "@/lib/learning/types";
+import { useLearning } from "./useLearning";
 
 /** Мелкие переиспользуемые блоки учебного модуля — в стиле pw-card. */
 
@@ -106,7 +108,9 @@ export function Pill({
 
 export function ClipBadge({ topicId }: { topicId: string }) {
   const { t, locale } = useI18n();
-  if (!videoClipFor(topicId, locale === "kk" ? "kk" : "ru")) return null;
+  const { topics } = useLearning();
+  const topic = findTopic(topics, topicId);
+  if (!topicHasWatchableClip(topic, locale === "kk" ? "kk" : "ru")) return null;
   return <Pill tone="accent">{t("clips.badge")}</Pill>;
 }
 

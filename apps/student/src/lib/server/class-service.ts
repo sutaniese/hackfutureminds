@@ -14,6 +14,15 @@ import { mergeClassExams } from "@/lib/learning/class-overview";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { requireRole, type AuthedUser } from "@/lib/server/require-user";
 import { HttpError } from "@/lib/server/require-user";
+import type { LiveClipScript } from "@pathwise/shared";
+import { topicHasLiveClip } from "@pathwise/shared";
+
+function topicFromRow(row: { topic?: Topic | null; live_clip?: LiveClipScript | null }): Topic | null {
+  const topic = row.topic;
+  if (!topic) return null;
+  if (topic.liveClip || !row.live_clip) return topic;
+  return { ...topic, liveClip: row.live_clip };
+}
 
 export type { StudentClassOverview, StudentExamItem, StudentHomeworkItem };
 export type ClassRow = {
@@ -180,9 +189,11 @@ export async function readOwnProgress(user: AuthedUser) {
   if (classIds.length > 0) {
     const { data: custom } = await supabase
       .from("custom_topics")
-      .select("topic, class_id")
+      .select("topic, live_clip, class_id")
       .in("class_id", classIds);
-    topics = (custom ?? []).map((row: { topic: Topic }) => row.topic).filter(Boolean);
+    topics = (custom ?? [])
+      .map((row: { topic: Topic; live_clip?: LiveClipScript | null }) => topicFromRow(row))
+      .filter((item): item is Topic => Boolean(item));
     const { data: cls } = await supabase
       .from("classes")
       .select("id, invite_code")
@@ -304,16 +315,17 @@ export async function getStudentClassOverview(user: AuthedUser): Promise<Student
       .filter((row: { displayName: string }) => row.displayName.length > 0);
   }
 
-  const { data: custom } = await supabase.from("custom_topics").select("topic").eq("class_id", classId);
+  const { data: custom } = await supabase.from("custom_topics").select("topic, live_clip").eq("class_id", classId);
   const homework: StudentHomeworkItem[] = (custom ?? [])
-    .map((row: { topic: Topic }) => row.topic)
-    .filter(Boolean)
+    .map((row: { topic: Topic; live_clip?: LiveClipScript | null }) => topicFromRow(row))
+    .filter((item): item is Topic => Boolean(item))
     .map((topic: Topic) => ({
       id: topic.id,
       title: topic.title,
       summary: topic.summary,
       author: topic.author,
       status: homeworkStatus(topic, state),
+      hasClip: topicHasLiveClip(topic),
     }));
 
   return {
@@ -372,13 +384,19 @@ export async function publishTopic(user: AuthedUser, classId: string, topic: Top
   requireRole(user, "teacher");
   const supabase = await createServerSupabase();
   if (!supabase) throw new HttpError(503, "Supabase is not configured.");
-  const { error } = await supabase.from("custom_topics").upsert({
+  const payload = {
     id: topic.id,
     class_id: classId,
     teacher_id: user.id,
     topic: { ...topic, custom: true, author: user.name || user.email },
+    live_clip: topic.liveClip ?? null,
     updated_at: new Date().toISOString(),
-  });
+  };
+  let { error } = await supabase.from("custom_topics").upsert(payload);
+  if (error && /live_clip/i.test(error.message)) {
+    const { live_clip: _omit, ...withoutColumn } = payload;
+    ({ error } = await supabase.from("custom_topics").upsert(withoutColumn));
+  }
   if (error) throw new HttpError(500, error.message);
   return { ...topic, custom: true as const, author: user.name || user.email };
 }
@@ -403,10 +421,12 @@ export async function classBoard(user: AuthedUser, classId?: string) {
     return { classes, students: [], heatmap: [] };
   }
 
-  const { data: custom } = await supabase.from("custom_topics").select("topic").eq("class_id", active.id);
+  const { data: custom } = await supabase.from("custom_topics").select("topic, live_clip").eq("class_id", active.id);
   const catalog: Topic[] = [
     ...BASE_TOPICS,
-    ...((custom ?? []).map((row: { topic: Topic }) => row.topic) as Topic[]),
+    ...((custom ?? [])
+      .map((row: { topic: Topic; live_clip?: LiveClipScript | null }) => topicFromRow(row))
+      .filter((item): item is Topic => Boolean(item))),
   ];
 
   if (active.studentIds.length === 0) {
@@ -429,7 +449,7 @@ export async function classBoard(user: AuthedUser, classId?: string) {
     const current = clipsById.get(row.user_id) ?? { watched: 0, dropped: 0, stuck: 0 };
     if (row.event === "complete") current.watched += 1;
     if (row.event === "drop") current.dropped += 1;
-    if (row.event === "quiz_wrong") current.stuck += 1;
+    if (row.event === "quiz_wrong" || row.event === "stuck") current.stuck += 1;
     clipsById.set(row.user_id, current);
   }
 

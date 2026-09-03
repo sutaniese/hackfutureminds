@@ -652,3 +652,14 @@ grant all on table
   public.clip_events,
   public.agent_messages
 to service_role;
+
+-- Teacher-authored live clip JSON (played in the browser / Expo, never encoded to MP4).
+alter table public.custom_topics
+  add column if not exists live_clip jsonb;
+
+comment on column public.custom_topics.live_clip is
+  'Teacher-authored live clip script (scenes JSON). Students in the class can read; teacher owner can write.';
+
+alter table public.clip_events drop constraint if exists clip_events_event_check;
+alter table public.clip_events add constraint clip_events_event_check
+  check (event in ('start', 'complete', 'drop', 'quiz_wrong', 'quiz_right', 'stuck'));

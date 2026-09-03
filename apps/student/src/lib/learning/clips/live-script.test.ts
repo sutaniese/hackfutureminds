@@ -3,6 +3,7 @@ import {
   LIVE_CLIP_MAX_SCENES,
   estimateDurationSec,
   fallbackLiveClip,
+  topicHasWatchableClip,
   totalNarrationWords,
 } from "@pathwise/shared";
 import { coerceLiveClipScript, liveClipFromModelText, liveClipScriptSchema } from "./live-script";
@@ -75,5 +76,11 @@ describe("live clip script", () => {
     expect(script.durationSec).toBeGreaterThanOrEqual(40);
     expect(script.durationSec).toBeLessThanOrEqual(70);
     expect(totalNarrationWords(script.scenes)).toBeLessThanOrEqual(160);
+  });
+
+  it("marks a custom topic with liveClip as watchable", () => {
+    const script = fallbackLiveClip(FALLBACK);
+    expect(topicHasWatchableClip({ id: "custom-demo", liveClip: script }, "ru")).toBe(true);
+    expect(topicHasWatchableClip({ id: "custom-demo" }, "ru")).toBe(false);
   });
 });

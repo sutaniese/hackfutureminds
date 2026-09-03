@@ -1,14 +1,14 @@
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
-import { videoClipFor } from "@pathwise/shared";
+import { topicHasWatchableClip } from "@pathwise/shared";
 import { Screen } from "../../src/components/Screen";
 import { Body, Card, Chip, Kicker, PrimaryButton, SecondaryButton, Stat, Title } from "../../src/components/ui";
 import { useAuth } from "../../src/context/AuthContext";
 import { useI18n } from "../../src/context/I18nContext";
 import { useLearning } from "../../src/context/LearningContext";
 import { apiPost } from "../../src/lib/api";
-import { findSubject } from "../../src/lib/learning/catalog";
+import { findSubject, findTopic } from "../../src/lib/learning/catalog";
 import { localizeTopic } from "../../src/lib/learning/kk-overlay";
 import {
   buildStudyPlan,
@@ -116,7 +116,7 @@ export default function LearningScreen() {
             <Card key={item.topic.id} style={{ padding: 12 }}>
               <Kicker>{t(`priority.${item.priority}`)}</Kicker>
               <Title>{topic.title}</Title>
-              {videoClipFor(item.topic.id, locale === "kk" ? "kk" : "ru") ? (
+              {topicHasWatchableClip(item.topic, locale === "kk" ? "kk" : "ru") ? (
                 <Chip label={t("clips.badge")} selected={false} onPress={() => router.push(`/learning/topic/${item.topic.id}`)} />
               ) : null}
               <Body>{t("learn.why", { reason: whyThisTopic(item, weak, locale) })}</Body>
@@ -135,7 +135,7 @@ export default function LearningScreen() {
           <Card key={item.skill} style={{ padding: 12 }}>
             <Title>{item.skill}</Title>
             <Body>{item.topicTitle} · {item.accuracy}%</Body>
-            {item.topicId && videoClipFor(item.topicId, locale === "kk" ? "kk" : "ru") ? (
+            {item.topicId && topicHasWatchableClip(findTopic(topics, item.topicId), locale === "kk" ? "kk" : "ru") ? (
               <Chip label={t("clips.badge")} selected={false} onPress={() => router.push(`/learning/topic/${item.topicId}`)} />
             ) : null}
             <PrimaryButton label={t("learn.drill")} onPress={() => router.push(`/learning/topic/${item.topicId}`)} />
@@ -161,7 +161,7 @@ export default function LearningScreen() {
             <Body>
               {item.topic.title} · {t("learn.srsMeta", { n: item.intervalDays, date: String(item.daysSince) })}
             </Body>
-            {videoClipFor(item.topic.id, locale === "kk" ? "kk" : "ru") ? (
+            {topicHasWatchableClip(item.topic, locale === "kk" ? "kk" : "ru") ? (
               <Chip label={t("clips.badge")} selected={false} onPress={() => router.push(`/learning/topic/${item.topic.id}`)} />
             ) : null}
           </View>

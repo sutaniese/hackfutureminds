@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { clipPublicPath, videoClipFor } from "@pathwise/shared";
+import { clipPublicPath, topicHasLiveClip, videoClipFor } from "@pathwise/shared";
 import { useI18n } from "@/i18n/I18nProvider";
 import { ContentCard } from "@/components/ui/PageHero";
 import { AnswerField } from "@/components/learning/AnswerField";
 import { Pill } from "@/components/learning/LearningUI";
+import { LiveClipPlayer } from "@/components/learning/live-clip/LiveClipPlayer";
 import { localClipForTopic } from "@/lib/learning/clips";
 import type { LearningClip } from "@/lib/learning/clips/types";
 import { BASE_TOPICS, findTask, findTopic, SUBJECTS } from "@/lib/learning/catalog";
@@ -147,6 +148,22 @@ export function ClipPlayer({
     }
     setPhase("quiz");
   };
+
+  if (topicHasLiveClip(topic) && topic?.liveClip) {
+    return (
+      <div className="flex flex-col items-center gap-5">
+        <div className="w-full max-w-[390px]">
+          <LiveClipPlayer
+            script={topic.liveClip}
+            topicId={topicId}
+            clipId={`live-${topicId}`}
+            onWrongAnswer={onWrongAnswer}
+          />
+        </div>
+        <p className="text-xs text-pathwise-muted">{t("clips.sourceLine", { source: t("clips.source.live") })}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center gap-5">
