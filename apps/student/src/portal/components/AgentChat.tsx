@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
+import { useI18n } from '@/i18n/I18nProvider'
 import { api, type ChatMessage } from '../lib/api'
 import { useStudents } from '../state/StudentContext'
 import { isSupabaseConfigured } from '@/lib/supabase/env'
@@ -12,6 +13,7 @@ type BoardStudent = {
 }
 
 export function AgentChat() {
+  const { t } = useI18n()
   const { activeStudent, students, activeStudentId, setActiveStudentId } = useStudents()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -67,13 +69,13 @@ export function AgentChat() {
         const conv = await api.chatHistory(activeStudentId)
         if (!cancelled) setMessages(conv.messages)
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Ошибка истории')
+        if (!cancelled) setError(err instanceof Error ? err.message : t('teacher.reqFail'))
       }
     })()
     return () => {
       cancelled = true
     }
-  }, [activeStudentId, activeStudent])
+  }, [activeStudentId, activeStudent, t])
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' })
@@ -99,7 +101,7 @@ export function AgentChat() {
       const reply: ChatMessage = { role: 'assistant', text: r.reply, ts: new Date().toISOString() }
       setMessages((prev) => [...prev, reply])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка запроса')
+      setError(err instanceof Error ? err.message : t('teacher.reqFail'))
     } finally {
       setBusy(false)
     }
@@ -115,18 +117,17 @@ export function AgentChat() {
     <section className="pw-card flex min-h-[70dvh] flex-col p-5 md:p-6" aria-labelledby="agent-title">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-pathwise-line pb-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-pathwise-accent-strong">AI-наставник</p>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-pathwise-accent-strong">{t('agent.kicker')}</p>
           <h2 id="agent-title" className="mt-1 text-2xl font-bold text-pathwise-ink">
-            Чат с AI-наставником
+            {t('agent.title')}
           </h2>
           <p className="text-xs text-pathwise-muted">
-            Агент получает compact pack выбранного ученика и класса — не всю базу. Можно попросить
-            «кто застрял на Ньютоне», «план на 20 минут» или «черновик 3 заданий и опубликуй».
+            {t('agent.hint')}
           </p>
         </div>
         <div className="flex flex-wrap items-end gap-2">
           <label htmlFor="agent-student" className="sr-only">
-            Ученик
+            {t('agent.student')}
           </label>
           <select
             id="agent-student"
@@ -134,7 +135,7 @@ export function AgentChat() {
             onChange={(e) => setActiveStudentId(e.target.value || null)}
             className="pw-input px-3 py-2 text-sm"
           >
-            <option value="">— ученик не выбран —</option>
+            <option value="">{t('agent.none')}</option>
             {roster.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.displayName}
@@ -147,15 +148,14 @@ export function AgentChat() {
             disabled={!activeStudentId || messages.length === 0}
             className="min-h-[40px] rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-pathwise-muted hover:bg-white hover:text-slate-900 disabled:opacity-50"
           >
-            Очистить чат
+            {t('agent.clear')}
           </button>
         </div>
       </header>
 
       {!selected && (
         <p className="mt-4 text-sm text-pathwise-muted">
-          Выберите ученика класса — наставник подгрузит compact pack с его пробелами. Список пуст,
-          пока никто не вступил по коду.
+          {t('agent.pick')}
         </p>
       )}
 
@@ -169,7 +169,7 @@ export function AgentChat() {
           >
             {messages.length === 0 && (
               <p className="m-auto text-center text-sm text-pathwise-muted">
-                Поздоровайтесь с агентом. Он уже знает профиль ученика «{selected.displayName}».
+                {t('agent.empty', { name: selected.displayName })}
               </p>
             )}
             {messages.map((m, i) => (
@@ -177,7 +177,7 @@ export function AgentChat() {
             ))}
             {busy && (
               <div className="self-start rounded-2xl bg-white px-4 py-2 text-sm text-pathwise-muted ring-1 ring-pathwise-line">
-                <span className="pw-shimmer rounded-full px-2">агент думает…</span>
+                <span className="pw-shimmer rounded-full px-2">{t('agent.thinking')}</span>
               </div>
             )}
           </div>
@@ -186,31 +186,31 @@ export function AgentChat() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Кто застрял на Ньютоне? Сделай 20-мин план. Набросай 3 задания и опубликуй."
+              placeholder={t('agent.ph')}
               className="pw-input min-h-[48px] flex-1 px-4 py-2 text-sm"
               disabled={busy}
-              aria-label="Сообщение агенту"
+              aria-label={t('agent.aria')}
             />
             <button
               type="submit"
               disabled={busy || !input.trim()}
               className="pw-primary-btn pw-focus px-5 py-2 text-sm disabled:opacity-50"
             >
-              Отправить
+              {t('agent.send')}
             </button>
           </form>
 
           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-pathwise-muted">
             {source && (
               <span>
-                Источник:{' '}
+                {t('agent.source')}{' '}
                 <strong className={source === 'ai' ? 'text-emerald-600' : 'text-amber-600'}>
                   {source === 'ai' ? 'AI' : 'fallback'}
                 </strong>
               </span>
             )}
             {publishedTitle ? (
-              <span className="font-semibold text-emerald-700">Опубликовано в класс: «{publishedTitle}»</span>
+              <span className="font-semibold text-emerald-700">{t('agent.published', { title: publishedTitle })}</span>
             ) : null}
             {error && <span className="text-rose-600">{error}</span>}
           </div>

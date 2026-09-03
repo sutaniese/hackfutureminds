@@ -5,13 +5,14 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import {
   ROLE_ENTRY_PATHS,
-  ROLE_LABELS,
+  ROLE_LABEL_KEYS,
   isPathAllowedForRole,
   roleForPath,
   type UserRole,
 } from "@/lib/site-nav";
 import { useSelectedRole } from "./useSelectedRole";
 import { useAuth } from "./useAuth";
+import { useI18n } from "@/i18n/I18nProvider";
 
 /** Routes that don't require an account or a role. */
 const PUBLIC_PATHS = new Set<string>(["/", "/login", "/register"]);
@@ -41,10 +42,11 @@ function GuardMessage({
   secondaryLabel?: string;
   currentRole?: UserRole | null;
 }) {
+  const { t } = useI18n();
   return (
     <section className="pw-soft-panel rounded-[2rem] p-6 md:p-8">
       <p className="inline-flex rounded-full bg-white/70 px-3 py-1 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-pathwise-accent-strong ring-1 ring-pathwise-line/70">
-        Доступ по роли
+        {t("guard.kicker")}
       </p>
       <h1 className="mt-4 max-w-3xl text-3xl font-black leading-tight text-pathwise-ink md:text-4xl">
         {title}
@@ -54,7 +56,7 @@ function GuardMessage({
       </p>
       {currentRole ? (
         <p className="mt-4 text-sm font-semibold text-pathwise-ink">
-          Сейчас выбрана роль: {ROLE_LABELS[currentRole]}.
+          {t("guard.current", { role: t(ROLE_LABEL_KEYS[currentRole]) })}
         </p>
       ) : null}
       <div className="mt-6 flex flex-wrap gap-3">
@@ -76,6 +78,7 @@ export function RoleRouteGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { role, ready } = useSelectedRole();
   const { user, status } = useAuth();
+  const { t } = useI18n();
   const effectiveRole = role ?? roleForPath(pathname);
 
   // Auto-redirect guests away from private pages to /login (preserves redirect target).
@@ -94,12 +97,12 @@ export function RoleRouteGuard({ children }: { children: React.ReactNode }) {
     const redirect = encodeURIComponent(pathname);
     return (
       <GuardMessage
-        title="Войдите, чтобы продолжить"
-        description="Эта страница доступна только зарегистрированным пользователям. Войдите в аккаунт или создайте новый."
+        title={t("guard.loginTitle")}
+        description={t("guard.loginBody")}
         primaryHref={`/login?redirect=${redirect}`}
-        primaryLabel="Войти"
+        primaryLabel={t("guard.login")}
         secondaryHref={`/register?redirect=${redirect}`}
-        secondaryLabel="Зарегистрироваться"
+        secondaryLabel={t("guard.register")}
       />
     );
   }
@@ -107,10 +110,10 @@ export function RoleRouteGuard({ children }: { children: React.ReactNode }) {
   if (!effectiveRole) {
     return (
       <GuardMessage
-        title="Сначала выберите вход"
-        description="Страницы открываются по ролям: студенту, родителю или учителю. Выберите роль на главной, и мы покажем только нужные разделы."
+        title={t("guard.pickTitle")}
+        description={t("guard.pickBody")}
         primaryHref="/"
-        primaryLabel="Выбрать роль"
+        primaryLabel={t("guard.pick")}
       />
     );
   }
@@ -118,11 +121,11 @@ export function RoleRouteGuard({ children }: { children: React.ReactNode }) {
   if (!isPathAllowedForRole(pathname, effectiveRole)) {
     return (
       <GuardMessage
-        title="Эта страница недоступна для выбранной роли"
-        description="Чтобы не смешивать кабинеты, навигация и страницы разделены по ролям. Вернитесь на главный экран и выберите подходящий вход."
+        title={t("guard.deniedTitle")}
+        description={t("guard.deniedBody")}
         currentRole={effectiveRole}
         primaryHref={ROLE_ENTRY_PATHS[effectiveRole]}
-        primaryLabel="В кабинет"
+        primaryLabel={t("guard.cabinet")}
       />
     );
   }

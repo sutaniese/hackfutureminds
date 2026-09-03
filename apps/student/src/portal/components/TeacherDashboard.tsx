@@ -1,14 +1,15 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { useI18n } from '@/i18n/I18nProvider'
 import { readJsonResponse } from '@/lib/http-json'
 import { downloadClassAchievementsReport } from '../lib/exportClassAchievements'
 import { adaptClass } from '../lib/classAdapter'
 import { api, type ServerClass } from '../lib/api'
-import { SITE_NAME } from '../site'
 import { useStudents } from '../state/StudentContext'
 import type { ClassStudentRow } from '../types/teacher'
 import type { StudentProfile } from '../types/pathwise'
 
 export function TeacherDashboard() {
+  const { t } = useI18n()
   const { students } = useStudents()
   const [classes, setClasses] = useState<ServerClass[]>([])
   const [activeId, setActiveId] = useState<string>('')
@@ -27,9 +28,9 @@ export function TeacherDashboard() {
       setClasses(list)
       setActiveId((prev) => (prev && list.find((c) => c.id === prev) ? prev : list[0]?.id ?? ''))
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Не удалось загрузить классы')
+      setError(e instanceof Error ? e.message : t('teacher.loadFail'))
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     void reload()
@@ -56,19 +57,19 @@ export function TeacherDashboard() {
         setActiveId(created.id)
         setNewName('')
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Не удалось создать класс')
+        setError(err instanceof Error ? err.message : t('teacher.createFail'))
       }
     },
-    [newName],
+    [newName, t],
   )
 
   async function onDeleteClass(id: string) {
-    if (!confirm('Удалить класс?')) return
+    if (!confirm(t('teacher.deleteConfirm'))) return
     try {
       await api.deleteClass(id)
       await reload()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось удалить класс')
+      setError(err instanceof Error ? err.message : t('teacher.deleteFail'))
     }
   }
 
@@ -81,7 +82,7 @@ export function TeacherDashboard() {
     if (!activeLegacy) return
     const row = activeLegacy.students.find((s) => s.id === letterStudentId)
     if (!row) {
-      setLetterMeta('Выберите ученика из списка.')
+      setLetterMeta(t('teacher.pickFirst'))
       return
     }
     setLetterLoading(true)
@@ -101,9 +102,9 @@ export function TeacherDashboard() {
       }
       if (!res.ok) throw new Error(data.error ?? res.statusText)
       setLetterText(data.letter ?? '')
-      setLetterMeta(data.source === 'gemini' ? 'Gemini API' : 'Резервный текст (fallback)')
+      setLetterMeta(data.source === 'gemini' ? t('teacher.gemini') : t('teacher.fallbackLetter'))
     } catch (err) {
-      setLetterMeta(err instanceof Error ? err.message : 'Ошибка запроса')
+      setLetterMeta(err instanceof Error ? err.message : t('teacher.reqFail'))
     } finally {
       setLetterLoading(false)
     }
@@ -113,14 +114,14 @@ export function TeacherDashboard() {
     <div className="space-y-8">
       <section className="rounded-2xl border border-pathwise-line bg-white p-6 shadow-sm" aria-labelledby="teacher-dash-title">
         <h2 id="teacher-dash-title" className="text-lg font-semibold text-pathwise-ink">
-          Учительский дашборд
+          {t('teacher.dash')}
         </h2>
         <p className="mt-1 text-sm text-pathwise-muted">
-          Создание класса, код приглашения, свод по ученикам и инструменты для отчёта директору.
+          {t('teacher.dashHint')}
         </p>
         {error && <p className="mt-2 text-sm text-rose-600">{error}</p>}
 
-        <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Классы">
+        <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label={t('teacher.ariaClasses')}>
           {classes.map((c) => (
             <button
               key={c.id}
@@ -138,7 +139,7 @@ export function TeacherDashboard() {
             </button>
           ))}
           {classes.length === 0 && (
-            <p className="text-sm text-pathwise-muted">Классов пока нет — создайте ниже.</p>
+            <p className="text-sm text-pathwise-muted">{t('teacher.noClasses')}</p>
           )}
         </div>
 
@@ -146,11 +147,11 @@ export function TeacherDashboard() {
           <form
             onSubmit={onCreateClass}
             className="rounded-2xl border border-dashed border-pathwise-line bg-white p-4"
-            aria-label="Создать новый класс"
+            aria-label={t('teacher.ariaCreate')}
           >
-            <h3 className="text-sm font-semibold text-pathwise-ink">Новый класс</h3>
+            <h3 className="text-sm font-semibold text-pathwise-ink">{t('teacher.newClass')}</h3>
             <label htmlFor="new-class-name" className="mt-3 block text-xs font-medium text-pathwise-muted">
-              Название класса
+              {t('teacher.className')}
             </label>
             <input
               id="new-class-name"
@@ -162,19 +163,19 @@ export function TeacherDashboard() {
               type="submit"
               className="pw-btn-primary mt-4 inline-flex min-h-[48px] items-center justify-center px-4 py-2 text-sm"
             >
-              Создать класс и сгенерировать код
+              {t('teacher.create')}
             </button>
             <p className="mt-2 text-xs text-pathwise-muted">
-              Класс получает код приглашения. Ученик с телефона вводит его в кабинете — и появляется на доске.
+              {t('teacher.createHint')}
             </p>
           </form>
 
           {activeServerClass ? (
             <div className="rounded-2xl border border-[#6C63FF]/30 bg-[#6C63FF]/10 p-4">
-              <h3 className="text-sm font-semibold text-pathwise-ink">Текущий класс</h3>
-              <p className="mt-2 text-sm text-pathwise-muted">Название</p>
+              <h3 className="text-sm font-semibold text-pathwise-ink">{t('teacher.current')}</h3>
+              <p className="mt-2 text-sm text-pathwise-muted">{t('teacher.nameField')}</p>
               <p className="text-base font-semibold text-pathwise-ink">{activeServerClass.name}</p>
-              <p className="mt-4 text-sm text-pathwise-muted">Код приглашения</p>
+              <p className="mt-4 text-sm text-pathwise-muted">{t('teacher.inviteCode')}</p>
               <p
                 className="mt-1 font-mono text-2xl font-bold tracking-widest text-pathwise-ink"
                 aria-live="polite"
@@ -189,22 +190,22 @@ export function TeacherDashboard() {
                   }}
                   className="text-sm font-medium text-pathwise-accent underline-offset-2 hover:underline"
                 >
-                  Скопировать код
+                  {t('teacher.copy')}
                 </button>
                 <button
                   type="button"
                   onClick={() => onDeleteClass(activeServerClass.id)}
                   className="rounded-lg border border-[#FF6B6B]/30 px-2 py-1 text-xs font-medium text-red-700 hover:bg-[#FF6B6B]/10"
                 >
-                  Удалить класс
+                  {t('teacher.delete')}
                 </button>
               </div>
             </div>
           ) : (
             <div className="rounded-2xl border border-pathwise-line bg-slate-50 p-4">
-              <h3 className="text-sm font-semibold text-pathwise-ink">Код приглашения</h3>
+              <h3 className="text-sm font-semibold text-pathwise-ink">{t('teacher.inviteCode')}</h3>
               <p className="mt-2 text-sm text-pathwise-muted">
-                После создания класса здесь появится код вида TN-XXXXXX. Скопируйте его ученику.
+                {t('teacher.inviteEmpty')}
               </p>
             </div>
           )}
@@ -219,10 +220,10 @@ export function TeacherDashboard() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h2 id="class-table-title" className="text-lg font-semibold text-pathwise-ink">
-                Сводный дашборд класса
+                {t('teacher.summary')}
               </h2>
               <p className="mt-1 text-sm text-pathwise-muted">
-                Онбординг, направления в {SITE_NAME}, флаг финансовой поддержки.
+                {t('teacher.summaryHint')}
               </p>
             </div>
             <button
@@ -230,7 +231,7 @@ export function TeacherDashboard() {
               onClick={handleExport}
               className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[#d7d3ff] bg-[#f1efff] px-4 py-2 text-sm font-semibold text-white hover:bg-[#ebe9ff]"
             >
-              Экспорт достижений класса (CSV)
+              {t('teacher.export')}
             </button>
           </div>
 
@@ -239,16 +240,16 @@ export function TeacherDashboard() {
               <thead className="bg-white text-xs font-semibold uppercase text-pathwise-muted">
                 <tr>
                   <th scope="col" className="px-4 py-3">
-                    Ученик
+                    {t('teacher.col.student')}
                   </th>
                   <th scope="col" className="px-4 py-3">
-                    Онбординг
+                    {t('teacher.col.onboard')}
                   </th>
                   <th scope="col" className="px-4 py-3">
-                    Направления
+                    {t('teacher.col.tracks')}
                   </th>
                   <th scope="col" className="px-4 py-3">
-                    Фин. помощь
+                    {t('teacher.col.aid')}
                   </th>
                 </tr>
               </thead>
@@ -256,8 +257,7 @@ export function TeacherDashboard() {
                 {activeLegacy.students.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-4 py-8 text-center text-pathwise-muted">
-                      В классе пока нет учеников. Дайте им код <strong>{activeLegacy.inviteCode}</strong> или
-                      привяжите вручную в разделе «Ученики».
+                      {t('teacher.emptyRoster', { code: activeLegacy.inviteCode })}
                     </td>
                   </tr>
                 ) : (
@@ -275,17 +275,16 @@ export function TeacherDashboard() {
           aria-labelledby="rec-letter-title"
         >
           <h2 id="rec-letter-title" className="text-lg font-semibold text-pathwise-ink">
-            Рекомендательное письмо (AI)
+            {t('teacher.letter')}
           </h2>
           <p className="mt-1 text-sm text-pathwise-muted">
-            JSON-профиль выбранного ученика отправляется на{' '}
-            <code className="rounded bg-pathwise-accent-soft px-1">/api/recommendation-letter</code> (Gemini, Next API route).
+            {t('teacher.letterHint')}
           </p>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <div>
               <label htmlFor="letter-student" className="text-sm font-medium text-pathwise-ink">
-                Ученик
+                {t('teacher.pickStudent')}
               </label>
               <select
                 id="letter-student"
@@ -293,7 +292,7 @@ export function TeacherDashboard() {
                 onChange={(e) => setLetterStudentId(e.target.value)}
                 className="pw-input mt-2 w-full px-3 py-3 text-sm"
               >
-                <option value="">— выберите —</option>
+                <option value="">{t('teacher.pick')}</option>
                 {activeLegacy.students.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.profile.displayName}
@@ -302,15 +301,9 @@ export function TeacherDashboard() {
               </select>
             </div>
             <div>
-              <span className="text-sm font-medium text-pathwise-ink">Язык письма</span>
+              <span className="text-sm font-medium text-pathwise-ink">{t('teacher.letterLang')}</span>
               <fieldset className="mt-2 flex flex-wrap gap-3">
-                {(
-                  [
-                    ['kk', 'Қазақша'],
-                    ['ru', 'Русский'],
-                    ['en', 'English'],
-                  ] as const
-                ).map(([code, label]) => (
+                {(['kk', 'ru', 'en'] as const).map((code) => (
                   <label
                     key={code}
                     className="inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-full border border-pathwise-line px-4 py-2 text-sm has-[:checked]:border-[#6C63FF] has-[:checked]:bg-[#6C63FF]/20"
@@ -322,7 +315,7 @@ export function TeacherDashboard() {
                       checked={letterLang === code}
                       onChange={() => setLetterLang(code)}
                     />
-                    {label}
+                    {t(`teacher.lang.${code}`)}
                   </label>
                 ))}
               </fieldset>
@@ -335,7 +328,7 @@ export function TeacherDashboard() {
             disabled={letterLoading || !letterStudentId}
             className="pw-btn-primary mt-4 inline-flex min-h-[48px] items-center justify-center px-5 py-3 text-sm disabled:opacity-50"
           >
-            {letterLoading ? 'Генерация…' : 'Сгенерировать письмо'}
+            {letterLoading ? t('teacher.generating') : t('teacher.generate')}
           </button>
           {letterMeta && <p className="mt-2 text-xs text-pathwise-muted">{letterMeta}</p>}
           {letterText && (
@@ -353,6 +346,7 @@ export function TeacherDashboard() {
 }
 
 function StudentTableRow({ row }: { row: ClassStudentRow }) {
+  const { t } = useI18n()
   return (
     <tr className="hover:bg-white">
       <td className="px-4 py-3 font-medium text-pathwise-ink">{row.profile.displayName}</td>
@@ -362,7 +356,7 @@ function StudentTableRow({ row }: { row: ClassStudentRow }) {
             row.onboardingComplete ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-100 text-amber-900'
           }`}
         >
-          {row.onboardingComplete ? 'завершён' : 'не завершён'}
+          {row.onboardingComplete ? t('teacher.onboardOk') : t('teacher.onboardNo')}
         </span>
       </td>
       <td className="max-w-xs px-4 py-3 text-pathwise-muted">
@@ -371,10 +365,10 @@ function StudentTableRow({ row }: { row: ClassStudentRow }) {
       <td className="px-4 py-3">
         {row.needsFinancialHelp ? (
           <span className="inline-flex rounded-full bg-rose-100 px-2 py-1 text-xs font-semibold text-rose-900">
-            нуждается
+            {t('teacher.needsAid')}
           </span>
         ) : (
-          <span className="text-xs text-pathwise-muted">нет</span>
+          <span className="text-xs text-pathwise-muted">{t('teacher.noAid')}</span>
         )}
       </td>
     </tr>

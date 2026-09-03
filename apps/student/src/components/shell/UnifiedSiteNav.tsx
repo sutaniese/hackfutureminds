@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ROLE_ENTRY_PATHS,
-  ROLE_LABELS,
+  ROLE_LABEL_KEYS,
   ROLE_NAV_SECTIONS,
   isSiteNavActive,
 } from "@/lib/site-nav";
 import { SHELL_PX } from "@/lib/shell-layout";
 import { useSelectedRole } from "./useSelectedRole";
 import { useAuth } from "./useAuth";
+import { useI18n } from "@/i18n/I18nProvider";
 
 function navClass(active: boolean) {
   return `inline-flex min-h-11 shrink-0 items-center justify-center rounded-full px-3.5 py-2 text-sm font-semibold no-underline transition-colors ${
@@ -24,6 +25,7 @@ export function UnifiedSiteNav() {
   const pathname = usePathname() || "/";
   const { role, ready } = useSelectedRole();
   const { user, status, logout } = useAuth();
+  const { t } = useI18n();
   const sections = role ? ROLE_NAV_SECTIONS[role] : [];
 
   const accountLabel = user?.name?.trim() || user?.email || "";
@@ -35,14 +37,14 @@ export function UnifiedSiteNav() {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="min-w-0 lg:w-56">
               <p className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-pathwise-accent-strong">
-                {role ? `Роль: ${ROLE_LABELS[role]}` : "Вход по роли"}
+                {role ? t("role.kicker", { role: t(ROLE_LABEL_KEYS[role]) }) : t("role.none")}
               </p>
               <p className="mt-1 truncate text-sm font-semibold text-pathwise-ink">
                 {user
                   ? accountLabel
                   : role
-                    ? "Показываем только доступные разделы"
-                    : "Выберите студента, родителя или учителя на главной"}
+                    ? t("role.sectionsHint")
+                    : t("role.pickHint")}
               </p>
             </div>
 
@@ -50,18 +52,18 @@ export function UnifiedSiteNav() {
               {ready && sections.length === 0 ? (
                 <div className="flex flex-wrap items-center gap-2">
                   <Link href="/" className={navClass(pathname === "/")}>
-                    Выбрать вход
+                    {t("nav.pickEntry")}
                   </Link>
                 </div>
               ) : null}
               {sections.map((section) => (
-                <div key={section.title} className="flex min-w-0 items-center gap-2">
+                <div key={section.titleKey} className="flex min-w-0 items-center gap-2">
                   <span className="hidden w-16 shrink-0 text-xs font-bold uppercase tracking-[0.12em] text-pathwise-muted sm:block">
-                    {section.title}
+                    {t(section.titleKey)}
                   </span>
                   <nav
                     className="-mx-1 flex min-w-0 flex-1 gap-1 overflow-x-auto px-1 pb-1"
-                    aria-label={section.title}
+                    aria-label={t(section.titleKey)}
                   >
                     {section.links.map((link) => (
                       <Link
@@ -70,7 +72,7 @@ export function UnifiedSiteNav() {
                         aria-current={isSiteNavActive(pathname, link) ? "page" : undefined}
                         className={navClass(isSiteNavActive(pathname, link))}
                       >
-                        {link.label}
+                        {t(link.labelKey)}
                       </Link>
                     ))}
                   </nav>
@@ -84,7 +86,7 @@ export function UnifiedSiteNav() {
                   href={ROLE_ENTRY_PATHS[user.role]}
                   className="inline-flex min-h-11 items-center justify-center rounded-full border border-pathwise-line bg-white/80 px-3.5 py-2 text-sm font-semibold text-pathwise-muted no-underline transition hover:bg-[#f1efff]"
                 >
-                  Кабинет
+                  {t("nav.cabinet")}
                 </Link>
               ) : null}
               {status === "authed" ? (
@@ -93,7 +95,7 @@ export function UnifiedSiteNav() {
                   onClick={logout}
                   className="inline-flex min-h-11 items-center justify-center rounded-full bg-pathwise-accent px-3.5 py-2 text-sm font-semibold text-white shadow-pathwise transition hover:bg-[color:var(--pw-accent-strong)]"
                 >
-                  Выйти
+                  {t("nav.logout")}
                 </button>
               ) : status === "guest" ? (
                 <>
@@ -101,13 +103,13 @@ export function UnifiedSiteNav() {
                     href="/login"
                     className="inline-flex min-h-11 items-center justify-center rounded-full border border-pathwise-line bg-white/80 px-3.5 py-2 text-sm font-semibold text-foreground no-underline transition hover:bg-[#f1efff]"
                   >
-                    Войти
+                    {t("nav.login")}
                   </Link>
                   <Link
                     href="/register"
                     className="inline-flex min-h-11 items-center justify-center rounded-full bg-pathwise-accent px-3.5 py-2 text-sm font-semibold text-white no-underline shadow-pathwise transition hover:bg-[color:var(--pw-accent-strong)]"
                   >
-                    Регистрация
+                    {t("nav.register")}
                   </Link>
                 </>
               ) : null}

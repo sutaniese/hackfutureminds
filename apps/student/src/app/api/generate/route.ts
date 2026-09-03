@@ -169,6 +169,21 @@ function withLiveGrants(
   payload: GenerateRequest,
 ): GenerateResponse {
   const portfolio_block = composePortfolioBlock(payload, response.portfolio_block);
+  const goal = payload.learningGoal;
+  const skipUniversityGrants = goal === "olympiad" || goal === "school" || goal === "review";
+
+  if (skipUniversityGrants) {
+    return {
+      ...response,
+      financial_route: {
+        ...response.financial_route,
+        grants: [],
+        gap: response.financial_route.monthly_cost,
+        coverage_percent: 0,
+      },
+      portfolio_block,
+    };
+  }
 
   if (grants.length === 0) {
     return { ...response, portfolio_block };

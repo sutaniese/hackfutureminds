@@ -21,6 +21,9 @@ export async function tryGenerateWithGroq(
 "financial_route": {"monthly_cost": number, "grants": [{"name": string, "amount": number, "deadline": string, "match": "low"|"medium"|"high"}], "gap": number, "coverage_percent": number},
 "portfolio_block": string}
 Use Kazakhstan market context. 3 career paths, realistic KZT salary band strings, 1-2 plausible vacancy search URLs (e.g. hh.kz). Keep grants plausible.
+If learningGoal is "olympiad": do NOT mention ENT, Bolashak, university grants or admissions. Focus on contest prep in the diagnostic subject.
+If learningGoal is "school" or "review": school catch-up only, no grants.
+If learningGoal is "ent" or "abroad": university and grant copy is appropriate.
 
 Input JSON:
 ${JSON.stringify(request).slice(0, 12_000)}`;

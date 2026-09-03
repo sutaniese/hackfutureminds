@@ -5,6 +5,8 @@ import { buildGenerateRequest } from "@/lib/build-generate-request";
 import { readLastGeneratePayload, writeLastGeneratePayload } from "@/lib/gamification";
 import { syncCurrentStudentProfile } from "@/lib/student-profile-store";
 import { readCurrentOnboarding } from "@/lib/student-progress";
+import { readLearningProfile } from "@/lib/learning/store";
+import { resolveActiveLearningGoal } from "@/lib/learning/goal-priority";
 import { ResultsGamificationBar } from "@/components/results/ResultsGamificationBar";
 import { CrossAppPromo } from "@/components/results/CrossAppPromo";
 import { useUserProgress } from "@/components/gamification/UserProgressProvider";
@@ -114,6 +116,7 @@ export function ResultsGenerateClient() {
     const body = buildGenerateRequest(o, {
       language: locale,
       mapSubjectId: (id) => mapSubjectLabel(t, id),
+      learningGoal: resolveActiveLearningGoal(readLearningProfile(), o),
     });
     try {
       const res = await fetch(apiUrl("/api/generate"), {
@@ -222,16 +225,16 @@ export function ResultsGenerateClient() {
         /* Без анкеты план собрать нечем — объясняем это и ведём в анкету,
            вместо неактивной кнопки без причины. */
         <div className="pw-reveal rounded-[1.5rem] border border-dashed border-slate-300 bg-white p-8 text-center">
-          <p className="text-base font-black text-pathwise-ink">План появится после анкеты</p>
+          <p className="text-base font-black text-pathwise-ink">{t("results.afterOnboard")}</p>
           <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-pathwise-muted">
             {t("results.noOnboard")} {t("results.andFinish")}
           </p>
           <div className="mt-5 flex flex-wrap justify-center gap-3">
             <a href="/onboarding" className="pw-btn-primary pw-press text-sm no-underline">
-              Заполнить анкету
+              {t("roadmap.fill")}
             </a>
             <a href="/learning" className="pw-btn-secondary pw-press text-sm no-underline">
-              Перейти к обучению
+              {t("results.toLearn")}
             </a>
           </div>
         </div>

@@ -17,6 +17,7 @@ export function buildGenerateRequest(
   opts: {
     targetUniversity?: string;
     language?: "en" | "kk" | "ru";
+    learningGoal?: "ent" | "olympiad" | "review" | "school" | "abroad" | null;
     /** i18n: return translated label for a subject id */
     mapSubjectId?: (id: string) => string;
   }
@@ -38,6 +39,7 @@ export function buildGenerateRequest(
     city: o.city || "Almaty",
     budget_monthly: bud > 0 ? bud : 80_000,
     language: opts.language || "en",
+    learningGoal: opts.learningGoal ?? null,
     onboarding: o,
   };
 }

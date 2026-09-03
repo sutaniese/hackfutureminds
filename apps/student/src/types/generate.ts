@@ -15,6 +15,8 @@ export type GenerateRequest = {
   city: string;
   budget_monthly: number;
   language: GenerateLanguage;
+  /** Diagnostic / learning-profile goal. Wins over onboarding for career copy. */
+  learningGoal?: "ent" | "olympiad" | "review" | "school" | "abroad" | null;
   /** Optional: full step-3 context for richer matching in step 5 */
   onboarding?: OnboardingAnswers | null;
 };

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { ROLE_ENTRY_PATHS, ROLE_LABELS, roleForPath, type UserRole } from "@/lib/site-nav";
+import { ROLE_ENTRY_PATHS, ROLE_LABEL_KEYS, roleForPath, type UserRole } from "@/lib/site-nav";
 import {
   AuthFailure,
   isStrongEnoughPassword,
@@ -15,28 +15,21 @@ import {
 import { upsertStudentProfileSnapshot } from "@/lib/student-profile-store";
 import { readSessionOnboarding, studentContinuePath } from "@/lib/student-progress";
 import { useAuth } from "@/components/shell/useAuth";
+import { useI18n } from "@/i18n/I18nProvider";
 
 type Mode = "login" | "register";
 
-const ROLE_OPTIONS: ReadonlyArray<{ value: UserRole; description: string }> = [
-  { value: "student", description: "Анкета, план, гранты, портфолио." },
-  { value: "parent", description: "Кабинет родителя: бюджет, отчёт, профессии." },
-  { value: "teacher", description: "Класс, инвайт-коды, рекомендательные письма." },
-];
-
-const SUPPORT_OPTIONS: ReadonlyArray<{
-  value: DisabilitySupportType;
-  label: string;
-}> = [
-  { value: "visual", label: "Зрение" },
-  { value: "hearing", label: "Слух" },
-  { value: "mobility", label: "Передвижение" },
-  { value: "learning", label: "Обучение / дислексия" },
-  { value: "neurodivergent", label: "Нейроотличия" },
-  { value: "chronic", label: "Хроническое состояние" },
-  { value: "speech", label: "Речь / коммуникация" },
-  { value: "mental-health", label: "Психологическая поддержка" },
-  { value: "other", label: "Другое" },
+const ROLE_VALUES: UserRole[] = ["student", "parent", "teacher"];
+const SUPPORT_VALUES: DisabilitySupportType[] = [
+  "visual",
+  "hearing",
+  "mobility",
+  "learning",
+  "neurodivergent",
+  "chronic",
+  "speech",
+  "mental-health",
+  "other",
 ];
 
 const MAX_DOCUMENT_BYTES = 5 * 1024 * 1024;
@@ -44,10 +37,10 @@ const MAX_DOCUMENT_BYTES = 5 * 1024 * 1024;
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Не удалось прочитать документ."));
+    reader.onerror = () => reject(new Error("read-fail"));
     reader.onload = () => {
       if (typeof reader.result === "string") resolve(reader.result);
-      else reject(new Error("Документ пустой или повреждён."));
+      else reject(new Error("empty"));
     };
     reader.readAsDataURL(file);
   });
@@ -61,16 +54,19 @@ function safeRedirect(value: string | null | undefined): string | null {
   return value;
 }
 
-function authErrorMessage(err: unknown): string {
+function authErrorMessage(err: unknown, t: (k: string) => string): string {
   if (err instanceof AuthFailure) return err.message;
+  if (err instanceof Error && err.message === "read-fail") return t("auth.readFail");
+  if (err instanceof Error && err.message === "empty") return t("auth.docEmpty");
   if (err instanceof Error && err.message) return err.message;
-  return "Что-то пошло не так. Попробуйте ещё раз.";
+  return t("auth.generic");
 }
 
 export function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, register } = useAuth();
+  const { t } = useI18n();
 
   const redirect = useMemo(
     () => safeRedirect(searchParams?.get("redirect")),
@@ -130,7 +126,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
       | null;
 
     if (!response.ok) {
-      throw new Error(payload?.error || "AI не смог оценить документ.");
+      throw new Error(payload?.error || t("auth.docFail"));
     }
     return payload?.evaluation;
   }
@@ -142,7 +138,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
     }
 
     if (file.size > MAX_DOCUMENT_BYTES) {
-      setError("Документ должен быть меньше 5 MB.");
+      setError(t("auth.docBig"));
       setSupportDocument(null);
       return;
     }
@@ -164,7 +160,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         evaluation,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "AI не смог оценить документ.");
+      setError(err instanceof Error ? err.message : t("auth.docFail"));
       setSupportDocument({
         ...meta,
         evaluation: {
@@ -190,15 +186,15 @@ export function AuthForm({ mode }: { mode: Mode }) {
     setError(null);
 
     if (!isValidEmail(email)) {
-      setError("Введите корректный email.");
+      setError(t("auth.badEmail"));
       return;
     }
     if (!isStrongEnoughPassword(password)) {
-      setError("Пароль должен содержать не меньше 6 символов.");
+      setError(t("auth.badPassword"));
       return;
     }
     if (!isLogin && role === "student" && hasSupportNeeds && supportTypes.length === 0) {
-      setError("Выберите хотя бы один тип поддержки или отметьте, что поддержка не нужна.");
+      setError(t("auth.needSupportType"));
       return;
     }
 
@@ -247,7 +243,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
       router.replace(target);
       router.refresh();
     } catch (err) {
-      setError(authErrorMessage(err));
+      setError(authErrorMessage(err, t));
     } finally {
       setSubmitting(false);
     }
@@ -258,22 +254,20 @@ export function AuthForm({ mode }: { mode: Mode }) {
       <div className="pointer-events-none absolute -right-16 -top-20 h-52 w-52 rounded-full bg-pathwise-accent/10 " />
       <div className="relative">
         <p className="inline-flex rounded-full bg-white px-3 py-1 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-pathwise-accent-strong ring-1 ring-pathwise-line/70">
-          {isLogin ? "Вход" : "Регистрация"}
+          {isLogin ? t("auth.loginKicker") : t("auth.registerKicker")}
         </p>
         <h1 className="mt-4 max-w-3xl text-3xl font-black leading-tight text-pathwise-ink md:text-4xl">
-          {isLogin ? "С возвращением" : "Создаём аккаунт"}
+          {isLogin ? t("auth.loginTitle") : t("auth.registerTitle")}
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-pathwise-muted">
-          {isLogin
-            ? "Войдите, чтобы открыть страницы вашей роли. Аккаунт хранится в Supabase, если сервер настроен, иначе локально в этом браузере."
-            : "Заведите аккаунт teñ. Роль выбирается один раз и не меняется. Учитель и ученик на разных устройствах видят один класс."}
+          {isLogin ? t("auth.loginBody") : t("auth.registerBody")}
         </p>
 
         <form onSubmit={handleSubmit} className="mt-6 grid gap-4">
           {!isLogin ? (
             <label className="block">
               <span className="text-xs font-bold uppercase tracking-[0.14em] text-pathwise-muted">
-                Имя (необязательно)
+                {t("auth.name")}
               </span>
               <input
                 type="text"
@@ -281,7 +275,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="mt-1.5 block w-full rounded-2xl border border-pathwise-line bg-white/85 px-4 py-3 text-sm text-pathwise-ink shadow-sm outline-none transition focus:border-pathwise-accent focus:ring-2 focus:ring-pathwise-accent/30"
-                placeholder="Например, Айгерим"
+                placeholder={t("auth.namePh")}
               />
             </label>
           ) : null}
@@ -303,7 +297,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
           <label className="block">
             <span className="text-xs font-bold uppercase tracking-[0.14em] text-pathwise-muted">
-              Пароль
+              {t("auth.password")}
             </span>
             <input
               type="password"
@@ -313,11 +307,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="mt-1.5 block w-full rounded-2xl border border-pathwise-line bg-white/85 px-4 py-3 text-sm text-pathwise-ink shadow-sm outline-none transition focus:border-pathwise-accent focus:ring-2 focus:ring-pathwise-accent/30"
-              placeholder="Минимум 6 символов"
+              placeholder={t("auth.passwordPh")}
             />
             {!isLogin ? (
               <span className="mt-1.5 block text-xs text-pathwise-muted">
-                Пароль хранится в Supabase Auth (или локально как PBKDF2, если env пустой).
+                {t("auth.passwordHint")}
               </span>
             ) : null}
           </label>
@@ -325,17 +319,17 @@ export function AuthForm({ mode }: { mode: Mode }) {
           {!isLogin ? (
             <fieldset className="rounded-2xl border border-pathwise-line bg-white p-4">
               <legend className="px-2 text-xs font-bold uppercase tracking-[0.14em] text-pathwise-muted">
-                Роль
+                {t("auth.role")}
               </legend>
               <p className="px-1 pb-3 text-xs text-pathwise-muted">
-                Выберите, как вы будете пользоваться платформой. Роль заменит текущий выбор на главной.
+                {t("auth.roleHint")}
               </p>
               <div className="grid gap-2">
-                {ROLE_OPTIONS.map((opt) => {
-                  const active = role === opt.value;
+                {ROLE_VALUES.map((value) => {
+                  const active = role === value;
                   return (
                     <label
-                      key={opt.value}
+                      key={value}
                       className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition ${
                         active
                           ? "border-pathwise-accent bg-pathwise-accent-soft/70"
@@ -345,17 +339,17 @@ export function AuthForm({ mode }: { mode: Mode }) {
                       <input
                         type="radio"
                         name="role"
-                        value={opt.value}
+                        value={value}
                         checked={active}
-                        onChange={() => setRole(opt.value)}
+                        onChange={() => setRole(value)}
                         className="mt-1 h-4 w-4 accent-pathwise-accent"
                       />
                       <span className="flex flex-col">
                         <span className="text-sm font-bold text-pathwise-ink">
-                          {ROLE_LABELS[opt.value]}
+                          {t(ROLE_LABEL_KEYS[value])}
                         </span>
                         <span className="mt-0.5 text-xs text-pathwise-muted">
-                          {opt.description}
+                          {t(`auth.role.${value}`)}
                         </span>
                       </span>
                     </label>
@@ -368,7 +362,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           {!isLogin && role === "student" ? (
             <fieldset className="rounded-2xl border border-pathwise-line bg-white p-4">
               <legend className="px-2 text-xs font-bold uppercase tracking-[0.14em] text-pathwise-muted">
-                Индивидуальная поддержка
+                {t("auth.support")}
               </legend>
               <label className="mt-2 flex cursor-pointer items-start gap-3 rounded-xl border border-pathwise-line bg-slate-50 p-3">
                 <input
@@ -379,11 +373,10 @@ export function AuthForm({ mode }: { mode: Mode }) {
                 />
                 <span>
                   <span className="block text-sm font-bold text-pathwise-ink">
-                    У меня есть инвалидность или особые образовательные потребности
+                    {t("auth.supportNeed")}
                   </span>
                   <span className="mt-1 block text-xs leading-5 text-pathwise-muted">
-                    Можно выбрать тип поддержки и приложить подтверждающий документ:
-                    справку, заключение, ИПРА, школьную записку или другой файл.
+                    {t("auth.supportHint")}
                   </span>
                 </span>
               </label>
@@ -392,16 +385,16 @@ export function AuthForm({ mode }: { mode: Mode }) {
                 <div className="mt-4 grid gap-4">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.14em] text-pathwise-muted">
-                      Что нужно учитывать?
+                      {t("auth.supportWhat")}
                     </p>
                     <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                      {SUPPORT_OPTIONS.map((option) => {
-                        const active = supportTypes.includes(option.value);
+                      {SUPPORT_VALUES.map((value) => {
+                        const active = supportTypes.includes(value);
                         return (
                           <button
-                            key={option.value}
+                            key={value}
                             type="button"
-                            onClick={() => toggleSupportType(option.value)}
+                            onClick={() => toggleSupportType(value)}
                             aria-pressed={active}
                             className={`min-h-12 rounded-xl border px-3 py-2 text-left text-xs font-bold transition ${
                               active
@@ -409,7 +402,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
                                 : "border-pathwise-line bg-white text-pathwise-ink hover:border-pathwise-accent/60"
                             }`}
                           >
-                            {option.label}
+                            {t(`auth.support.${value}`)}
                           </button>
                         );
                       })}
@@ -418,7 +411,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
                   <label className="block">
                     <span className="text-xs font-bold uppercase tracking-[0.14em] text-pathwise-muted">
-                      Подтверждающий документ
+                      {t("auth.doc")}
                     </span>
                     <input
                       type="file"
@@ -427,12 +420,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
                       className="mt-1.5 block w-full rounded-2xl border border-pathwise-line bg-white px-4 py-3 text-sm text-pathwise-ink shadow-sm file:mr-3 file:rounded-full file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-pathwise-ink"
                     />
                     <span className="mt-1.5 block text-xs text-pathwise-muted">
-                      Изображения анализируются через AI. PDF/DOCX сохраняются как
-                      метаданные и помечаются для ручной проверки.
+                      {t("auth.docHint")}
                     </span>
                     {documentEvaluating ? (
                       <span className="mt-2 block rounded-2xl bg-[#f1efff] px-3 py-2 text-xs font-bold text-[#554dd6]">
-                        AI оценивает документ…
+                        {t("auth.docAi")}
                       </span>
                     ) : null}
                     {supportDocument ? (
@@ -441,10 +433,10 @@ export function AuthForm({ mode }: { mode: Mode }) {
                         {supportDocument.evaluation ? (
                           <div className="mt-2 space-y-1 text-slate-600">
                             <p>
-                              <span className="font-bold">AI статус:</span>{" "}
+                              <span className="font-bold">{t("auth.docStatus")}</span>{" "}
                               {supportDocument.evaluation.status === "reviewed"
-                                ? "оценено"
-                                : "нужна ручная проверка"}
+                                ? t("auth.docOk")
+                                : t("auth.docHuman")}
                             </p>
                             <p>{supportDocument.evaluation.summary}</p>
                           </div>
@@ -455,14 +447,14 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
                   <label className="block">
                     <span className="text-xs font-bold uppercase tracking-[0.14em] text-pathwise-muted">
-                      Комментарий для персональной страницы
+                      {t("auth.notes")}
                     </span>
                     <textarea
                       value={supportNotes}
                       onChange={(event) => setSupportNotes(event.target.value)}
                       rows={3}
                       className="mt-1.5 block w-full resize-none rounded-2xl border border-pathwise-line bg-white px-4 py-3 text-sm text-pathwise-ink shadow-sm outline-none transition focus:border-pathwise-accent focus:ring-2 focus:ring-pathwise-accent/30"
-                      placeholder="Например: нужны материалы крупным шрифтом, больше времени на тесты, онлайн-консультации."
+                      placeholder={t("auth.notesPh")}
                     />
                   </label>
                 </div>
@@ -485,20 +477,20 @@ export function AuthForm({ mode }: { mode: Mode }) {
             className="pw-primary-btn pw-focus mt-1 px-5 text-sm disabled:cursor-not-allowed disabled:opacity-60"
           >
             {documentEvaluating
-              ? "Оцениваем документ…"
+              ? t("auth.docBusy")
               : submitting
               ? isLogin
-                ? "Входим…"
-                : "Создаём…"
+                ? t("auth.busyLogin")
+                : t("auth.busyRegister")
               : isLogin
-                ? "Войти"
-                : "Создать аккаунт"}
+                ? t("auth.submitLogin")
+                : t("auth.submitRegister")}
           </button>
 
           <p className="text-center text-xs text-pathwise-muted">
             {isLogin ? (
               <>
-                Нет аккаунта?{" "}
+                {t("auth.noAccount")}{" "}
                 <Link
                   href={
                     redirect
@@ -507,12 +499,12 @@ export function AuthForm({ mode }: { mode: Mode }) {
                   }
                   className="font-bold text-pathwise-accent-strong"
                 >
-                  Зарегистрироваться
+                  {t("auth.goRegister")}
                 </Link>
               </>
             ) : (
               <>
-                Уже зарегистрированы?{" "}
+                {t("auth.hasAccount")}{" "}
                 <Link
                   href={
                     redirect
@@ -521,7 +513,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
                   }
                   className="font-bold text-pathwise-accent-strong"
                 >
-                  Войти
+                  {t("auth.goLogin")}
                 </Link>
               </>
             )}

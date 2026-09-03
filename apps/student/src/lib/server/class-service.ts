@@ -2,12 +2,19 @@ import { generateInviteCode } from "@/lib/learning/invite";
 import { snapshotFromProgress } from "@/lib/learning/snapshot";
 import { BASE_TOPICS, findTask, findTopic } from "@/lib/learning/catalog";
 import { EMPTY_STATE } from "@/lib/learning/empty-state";
+import { isTopicComplete, topicStateOf } from "@/lib/learning/recommend";
 import type { LearningProfile, LearningState } from "@/lib/learning/store";
 import type { Topic } from "@/lib/learning/types";
+import type {
+  StudentClassOverview,
+  StudentExamItem,
+  StudentHomeworkItem,
+} from "@/lib/learning/class-overview";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { requireRole, type AuthedUser } from "@/lib/server/require-user";
 import { HttpError } from "@/lib/server/require-user";
 
+export type { StudentClassOverview, StudentExamItem, StudentHomeworkItem };
 export type ClassRow = {
   id: string;
   name: string;
@@ -189,6 +196,131 @@ export async function readOwnProgress(user: AuthedUser) {
     topics,
     classId,
     inviteCode,
+  };
+}
+
+function homeworkStatus(topic: Topic, state: LearningState): StudentHomeworkItem["status"] {
+  if (isTopicComplete(topic, state)) return "done";
+  const topicState = topicStateOf(state, topic.id);
+  if (topicState.attempts > 0) return "in_progress";
+  return "assigned";
+}
+
+export async function getStudentClassOverview(user: AuthedUser): Promise<StudentClassOverview> {
+  requireRole(user, "student");
+  const supabase = await createServerSupabase();
+  if (!supabase) {
+    return {
+      configured: false,
+      class: null,
+      memberCount: 0,
+      classmates: [],
+      homework: [],
+      exams: [],
+    };
+  }
+
+  const { data: memberships } = await supabase
+    .from("class_members")
+    .select("class_id")
+    .eq("student_id", user.id);
+  const classIds = (memberships ?? []).map((m: { class_id: string }) => m.class_id);
+  const classId = classIds[0] ?? null;
+
+  const [{ data: profile }, { data: stateRow }] = await Promise.all([
+    supabase.from("learning_profiles").select("*").eq("user_id", user.id).maybeSingle(),
+    supabase.from("learning_state").select("*").eq("user_id", user.id).maybeSingle(),
+  ]);
+  const state = asState(stateRow ?? null);
+  const learningProfile = profile ? asProfile(profile) : null;
+
+  const exams: StudentExamItem[] = [];
+  if (learningProfile?.examDate) {
+    exams.push({ title: learningProfile.examDate, date: learningProfile.examDate, source: "profile" });
+  }
+
+  if (!classId) {
+    return {
+      configured: true,
+      class: null,
+      memberCount: 0,
+      classmates: [],
+      homework: [],
+      exams,
+    };
+  }
+
+  const { data: cls } = await supabase
+    .from("classes")
+    .select("id, name, invite_code, teacher_id")
+    .eq("id", classId)
+    .maybeSingle();
+
+  let teacherName: string | null = null;
+  if (cls?.teacher_id) {
+    const { data: teacher } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", cls.teacher_id)
+      .maybeSingle();
+    teacherName = teacher?.display_name ?? null;
+  }
+
+  const { data: countRaw } = await supabase.rpc("student_class_member_count", { p_class_id: classId });
+  let memberCount = typeof countRaw === "number" ? countRaw : 0;
+  if (!memberCount) {
+    const { count } = await supabase
+      .from("class_members")
+      .select("student_id", { count: "exact", head: true })
+      .eq("class_id", classId);
+    memberCount = count ?? 1;
+  }
+
+  const { data: members } = await supabase
+    .from("class_members")
+    .select("student_id")
+    .eq("class_id", classId);
+  const otherIds = (members ?? [])
+    .map((row: { student_id: string }) => row.student_id)
+    .filter((id: string) => id !== user.id);
+
+  let classmates: { displayName: string }[] = [];
+  if (otherIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", otherIds);
+    classmates = (profiles ?? [])
+      .map((row: { display_name: string | null }) => ({ displayName: row.display_name?.trim() ?? "" }))
+      .filter((row: { displayName: string }) => row.displayName.length > 0);
+  }
+
+  const { data: custom } = await supabase.from("custom_topics").select("topic").eq("class_id", classId);
+  const homework: StudentHomeworkItem[] = (custom ?? [])
+    .map((row: { topic: Topic }) => row.topic)
+    .filter(Boolean)
+    .map((topic: Topic) => ({
+      id: topic.id,
+      title: topic.title,
+      summary: topic.summary,
+      author: topic.author,
+      status: homeworkStatus(topic, state),
+    }));
+
+  return {
+    configured: true,
+    class: cls
+      ? {
+          id: cls.id,
+          name: cls.name,
+          inviteCode: cls.invite_code,
+          teacherName,
+        }
+      : null,
+    memberCount,
+    classmates,
+    homework,
+    exams,
   };
 }
 

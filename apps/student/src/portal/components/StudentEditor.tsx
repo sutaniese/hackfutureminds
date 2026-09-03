@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { useI18n } from '@/i18n/I18nProvider'
 import { api, type ServerStudent } from '../lib/api'
 import { useStudents } from '../state/StudentContext'
 
@@ -10,6 +11,7 @@ type Props = {
 const INTERESTS_DEFAULT = 'математика, физика, программирование'
 
 export function StudentEditor({ studentId, onSaved }: Props) {
+  const { t } = useI18n()
   const { students, upsertLocal, setActiveStudentId } = useStudents()
   const initial = useMemo(
     () => students.find((s) => s.id === studentId) ?? null,
@@ -68,7 +70,7 @@ export function StudentEditor({ studentId, onSaved }: Props) {
     try {
       const payload: Partial<ServerStudent> = {
         id: initial?.id,
-        displayName: displayName.trim() || 'Без имени',
+        displayName: displayName.trim() || t('editor.unnamed'),
         age: Number.isFinite(age) ? age : 16,
         city: city.trim(),
         language,
@@ -102,16 +104,20 @@ export function StudentEditor({ studentId, onSaved }: Props) {
         try {
           const r = await api.joinClass(inviteCode.trim(), saved.id)
           if (r.student) upsertLocal(r.student)
-          setInfo(`Сохранено и добавлено в класс «${r.class.name}».`)
+          setInfo(t('editor.savedJoin', { name: r.class.name }))
         } catch (err) {
-          setInfo(`Сохранено, но в класс не добавили: ${err instanceof Error ? err.message : 'ошибка'}`)
+          setInfo(
+            t('editor.savedJoinFail', {
+              error: err instanceof Error ? err.message : t('err.generic'),
+            }),
+          )
         }
       } else {
-        setInfo('Сохранено. AI-наставник увидит эти данные.')
+        setInfo(t('editor.saved'))
       }
       onSaved?.(saved)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось сохранить')
+      setError(err instanceof Error ? err.message : t('editor.saveFail'))
     } finally {
       setBusy(false)
     }
@@ -121,17 +127,17 @@ export function StudentEditor({ studentId, onSaved }: Props) {
     <form
       onSubmit={onSubmit}
       className="rounded-2xl border border-pathwise-line bg-white p-6 shadow-sm"
-      aria-label={initial ? 'Редактирование ученика' : 'Онбординг нового ученика'}
+      aria-label={initial ? t('editor.ariaEdit') : t('editor.ariaNew')}
     >
       <h2 className="text-lg font-semibold text-pathwise-ink">
-        {initial ? `Редактировать: ${initial.displayName}` : 'Добавить нового ученика'}
+        {initial ? t('editor.editName', { name: initial.displayName }) : t('editor.add')}
       </h2>
       <p className="mt-1 text-xs text-pathwise-muted">
-        Поля сохраняются в профиле ученика и становятся памятью AI-наставника.
+        {t('editor.hint')}
       </p>
 
       <div className="mt-5 grid gap-4 md:grid-cols-2">
-        <Field label="Имя">
+        <Field label={t('editor.name')}>
           <input
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
@@ -139,7 +145,7 @@ export function StudentEditor({ studentId, onSaved }: Props) {
             className="input"
           />
         </Field>
-        <Field label="Возраст">
+        <Field label={t('editor.age')}>
           <input
             type="number"
             min={10}
@@ -149,23 +155,24 @@ export function StudentEditor({ studentId, onSaved }: Props) {
             className="input"
           />
         </Field>
-        <Field label="Город">
+        <Field label={t('editor.city')}>
           <input value={city} onChange={(e) => setCity(e.target.value)} className="input" />
         </Field>
-        <Field label="Язык">
+        <Field label={t('editor.language')}>
           <select value={language} onChange={(e) => setLanguage(e.target.value as 'kk' | 'ru' | 'en')} className="input">
-            <option value="kk">Қазақша</option>
-            <option value="ru">Русский</option>
+            <option value="kk">{t('teacher.lang.kk')}</option>
+            <option value="ru">{t('teacher.lang.ru')}</option>
+            <option value="en">{t('teacher.lang.en')}</option>
             <option value="en">English</option>
           </select>
         </Field>
-        <Field label="Целевой вуз" full>
+        <Field label={t('editor.target')} full>
           <input value={target} onChange={(e) => setTarget(e.target.value)} className="input" />
         </Field>
-        <Field label="Главное направление">
+        <Field label={t('editor.career')}>
           <input value={primary} onChange={(e) => setPrimary(e.target.value)} className="input" />
         </Field>
-        <Field label="Месячная стоимость учёбы (₸)">
+        <Field label={t('editor.cost')}>
           <input
             type="number"
             min={0}
@@ -174,10 +181,10 @@ export function StudentEditor({ studentId, onSaved }: Props) {
             className="input"
           />
         </Field>
-        <Field label="Интересы (через запятую)" full>
+        <Field label={t('editor.interests')} full>
           <input value={interests} onChange={(e) => setInterests(e.target.value)} className="input" />
         </Field>
-        <Field label="Достижения (по строке на каждое)" full>
+        <Field label={t('editor.achievements')} full>
           <textarea
             rows={3}
             value={achievements}
@@ -185,7 +192,7 @@ export function StudentEditor({ studentId, onSaved }: Props) {
             className="input"
           />
         </Field>
-        <Field label="Код приглашения класса (необязательно)">
+        <Field label={t('editor.invite')}>
           <input
             value={inviteCode}
             onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
@@ -195,7 +202,7 @@ export function StudentEditor({ studentId, onSaved }: Props) {
         </Field>
         <label className="mt-1 inline-flex items-center gap-2 text-sm text-pathwise-ink">
           <input type="checkbox" checked={needsHelp} onChange={(e) => setNeedsHelp(e.target.checked)} />
-          Нуждается в финансовой помощи
+          {t('editor.aid')}
         </label>
       </div>
 
@@ -205,7 +212,7 @@ export function StudentEditor({ studentId, onSaved }: Props) {
           disabled={busy}
           className="min-h-[44px] rounded-xl bg-pathwise-accent px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
         >
-          {busy ? 'Сохраняю…' : initial ? 'Сохранить изменения' : 'Создать и привязать'}
+          {busy ? t('editor.saving') : initial ? t('editor.save') : t('editor.create')}
         </button>
         {info && <span className="text-xs text-emerald-700">{info}</span>}
         {error && <span className="text-xs text-rose-600">{error}</span>}

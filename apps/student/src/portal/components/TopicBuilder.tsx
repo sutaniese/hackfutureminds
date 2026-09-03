@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import Link from 'next/link'
+import { useI18n } from '@/i18n/I18nProvider'
+import { localizedCount } from '@/lib/i18n-labels'
 import { SUBJECTS, subjectTitle } from '@/lib/learning/catalog'
 import {
   deleteCustomTopic,
@@ -7,7 +9,6 @@ import {
   saveCustomTopic,
   subscribeLearning,
 } from '@/lib/learning/store'
-import { plural, tasksLabel } from '@/lib/learning/plural'
 import type { Difficulty, Grade, Task, Topic } from '@/lib/learning/types'
 import { isSupabaseConfigured } from '@/lib/supabase/env'
 import { deleteCustomTopicRemote, listClassesRemote, publishCustomTopic } from '@/lib/learning/remote'
@@ -59,6 +60,7 @@ function slugify(value: string): string {
 
 /** Конструктор тем и заданий для учителя. Контент сразу виден ученикам. */
 export function TopicBuilder() {
+  const { t, locale } = useI18n()
   const [custom, setCustom] = useState<Topic[]>([])
   const [subjectId, setSubjectId] = useState<string>('math')
   const [title, setTitle] = useState('')
@@ -115,15 +117,15 @@ export function TopicBuilder() {
       setMessage(null)
 
       if (!title.trim()) {
-        setError('Укажите название темы.')
+        setError(t('builder.needTitle'))
         return
       }
       if (grades.length === 0) {
-        setError('Выберите хотя бы один класс.')
+        setError(t('builder.needGrade'))
         return
       }
       if (isSupabaseConfigured() && !classId) {
-        setError('Сначала создайте класс в кабинете учителя — тема публикуется в конкретный класс.')
+        setError(t('builder.needClass'))
         return
       }
 
@@ -131,7 +133,7 @@ export function TopicBuilder() {
         (task) => task.prompt.trim() && task.options.filter((option) => option.trim()).length >= 2,
       )
       if (validTasks.length === 0) {
-        setError('Добавьте хотя бы одно задание с вопросом и двумя вариантами ответа.')
+        setError(t('builder.needTask'))
         return
       }
 
@@ -187,32 +189,30 @@ export function TopicBuilder() {
           await publishCustomTopic(classId, topic)
         }
         saveCustomTopic(topic)
-        setMessage(
-          `Тема «${topic.title}» опубликована: ${tasksLabel(builtTasks.length)} ${plural(builtTasks.length, "доступно", "доступны", "доступны")} ученикам класса.`,
-        )
+        setMessage(t('builder.published', { title: topic.title }))
         resetForm()
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Не удалось опубликовать тему.')
+        setError(err instanceof Error ? err.message : t('builder.publishFail'))
       } finally {
         setPublishing(false)
       }
     },
-    [classId, grades, resetForm, skills, subjectId, summary, tasks, theory, title],
+    [classId, grades, resetForm, skills, subjectId, summary, t, tasks, theory, title],
   )
 
   return (
     <div className="space-y-6">
       <section className="pw-card p-6">
-        <h2 className="text-lg font-semibold text-pathwise-ink">Конструктор темы</h2>
+        <h2 className="text-lg font-semibold text-pathwise-ink">{t('builder.title')}</h2>
         <p className="mt-1 text-sm text-pathwise-muted">
-          Тема пишется в класс и сразу появляется в плане учеников этого класса — не только в этом браузере.
+          {t('builder.hint')}
         </p>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label htmlFor="builder-subject" className="text-sm font-semibold text-pathwise-ink">
-                Предмет
+                {t('builder.subject')}
               </label>
               <select
                 id="builder-subject"
@@ -229,13 +229,13 @@ export function TopicBuilder() {
             </div>
             <div>
               <label htmlFor="builder-title" className="text-sm font-semibold text-pathwise-ink">
-                Название темы
+                {t('builder.topicTitle')}
               </label>
               <input
                 id="builder-title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                placeholder="Например: Логарифмические уравнения"
+                placeholder={t('builder.titlePh')}
                 className="pw-input mt-2 w-full px-3 py-3 text-sm"
               />
             </div>
@@ -244,7 +244,7 @@ export function TopicBuilder() {
           {isSupabaseConfigured() ? (
             <div>
               <label htmlFor="builder-class" className="text-sm font-semibold text-pathwise-ink">
-                Класс, куда публикуем
+                {t('builder.publishTo')}
               </label>
               <select
                 id="builder-class"
@@ -252,7 +252,7 @@ export function TopicBuilder() {
                 onChange={(event) => setClassId(event.target.value)}
                 className="pw-input mt-2 w-full px-3 py-3 text-sm"
               >
-                <option value="">— выберите класс —</option>
+                <option value="">{t('builder.pickClass')}</option>
                 {classes.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.name} ({item.inviteCode})
@@ -263,7 +263,7 @@ export function TopicBuilder() {
           ) : null}
 
           <div>
-            <span className="text-sm font-semibold text-pathwise-ink">Классы</span>
+            <span className="text-sm font-semibold text-pathwise-ink">{t('builder.grades')}</span>
             <div className="mt-2 flex flex-wrap gap-2">
               {GRADES.map((grade) => (
                 <button
@@ -286,25 +286,25 @@ export function TopicBuilder() {
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label htmlFor="builder-summary" className="text-sm font-semibold text-pathwise-ink">
-                Краткое описание
+                {t('builder.summary')}
               </label>
               <input
                 id="builder-summary"
                 value={summary}
                 onChange={(event) => setSummary(event.target.value)}
-                placeholder="Что ученик освоит в этой теме"
+                placeholder={t('builder.summaryPh')}
                 className="pw-input mt-2 w-full px-3 py-3 text-sm"
               />
             </div>
             <div>
               <label htmlFor="builder-skills" className="text-sm font-semibold text-pathwise-ink">
-                Навыки через запятую
+                {t('builder.skills')}
               </label>
               <input
                 id="builder-skills"
                 value={skills}
                 onChange={(event) => setSkills(event.target.value)}
-                placeholder="Свойства логарифма, Уравнения, Графики"
+                placeholder={t('builder.skillsPh')}
                 className="pw-input mt-2 w-full px-3 py-3 text-sm"
               />
             </div>
@@ -312,10 +312,10 @@ export function TopicBuilder() {
 
           <div>
             <label htmlFor="builder-theory" className="text-sm font-semibold text-pathwise-ink">
-              Конспект темы
+              {t('builder.theory')}
             </label>
             <p className="mt-1 text-xs text-pathwise-muted">
-              Абзацы разделяйте пустой строкой. Этот текст использует и AI-репетитор при ответах.
+              {t('builder.theoryHint')}
             </p>
             <textarea
               id="builder-theory"
@@ -329,33 +329,33 @@ export function TopicBuilder() {
 
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold text-pathwise-ink">Задания</h3>
+              <h3 className="text-sm font-semibold text-pathwise-ink">{t('builder.tasks')}</h3>
               <button
                 type="button"
                 onClick={() => setTasks((prev) => [...prev, emptyTask(prev.length)])}
                 className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-pathwise-ink transition hover:border-[#6C63FF]"
               >
-                Добавить задание
+                {t('builder.addTask')}
               </button>
             </div>
 
             {tasks.map((task, index) => (
               <div key={task.key} className="rounded-2xl border border-dashed border-slate-300 bg-white p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-sm font-bold text-pathwise-ink">Задание {index + 1}</p>
+                  <p className="text-sm font-bold text-pathwise-ink">{t('builder.taskN', { n: index + 1 })}</p>
                   {tasks.length > 1 ? (
                     <button
                       type="button"
                       onClick={() => setTasks((prev) => prev.filter((item) => item.key !== task.key))}
                       className="text-xs font-semibold text-[#E75555] underline-offset-2 hover:underline"
                     >
-                      Удалить
+                      {t('builder.remove')}
                     </button>
                   ) : null}
                 </div>
 
                 <label htmlFor={`${task.key}-prompt`} className="mt-3 block text-xs font-semibold text-pathwise-muted">
-                  Вопрос
+                  {t('builder.prompt')}
                 </label>
                 <input
                   id={`${task.key}-prompt`}
@@ -376,7 +376,7 @@ export function TopicBuilder() {
                         checked={task.answerIndex === optionIndex}
                         onChange={() => updateTask(task.key, { answerIndex: optionIndex })}
                         className="h-4 w-4 shrink-0 accent-[#6C63FF]"
-                        aria-label={`Правильный вариант ${optionIndex + 1}`}
+                        aria-label={t('builder.correctOption', { n: optionIndex + 1 })}
                       />
                       <input
                         value={option}
@@ -385,32 +385,32 @@ export function TopicBuilder() {
                           options[optionIndex] = event.target.value
                           updateTask(task.key, { options })
                         }}
-                        placeholder={`Вариант ${optionIndex + 1}`}
+                        placeholder={t('builder.option', { n: optionIndex + 1 })}
                         className="pw-input min-h-10 w-full px-2.5 py-1.5 text-sm"
                       />
                     </label>
                   ))}
                 </div>
                 <p className="mt-2 text-xs text-pathwise-muted">
-                  Отметьте радиокнопкой правильный вариант.
+                  {t('builder.markCorrect')}
                 </p>
 
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
                   <div>
                     <label htmlFor={`${task.key}-skill`} className="block text-xs font-semibold text-pathwise-muted">
-                      Навык
+                      {t('builder.skill')}
                     </label>
                     <input
                       id={`${task.key}-skill`}
                       value={task.skill}
                       onChange={(event) => updateTask(task.key, { skill: event.target.value })}
-                      placeholder="Например: Свойства логарифма"
+                      placeholder={t('builder.skillPh')}
                       className="pw-input mt-1 w-full px-3 py-2.5 text-sm"
                     />
                   </div>
                   <div>
                     <label htmlFor={`${task.key}-difficulty`} className="block text-xs font-semibold text-pathwise-muted">
-                      Сложность
+                      {t('builder.diff')}
                     </label>
                     <select
                       id={`${task.key}-difficulty`}
@@ -420,15 +420,15 @@ export function TopicBuilder() {
                       }
                       className="pw-input mt-1 w-full px-3 py-2.5 text-sm"
                     >
-                      <option value={1}>1 — базовый</option>
-                      <option value={2}>2 — средний</option>
-                      <option value={3}>3 — продвинутый</option>
+                      <option value={1}>{t('builder.diff1')}</option>
+                      <option value={2}>{t('builder.diff2')}</option>
+                      <option value={3}>{t('builder.diff3')}</option>
                     </select>
                   </div>
                 </div>
 
                 <label htmlFor={`${task.key}-explanation`} className="mt-3 block text-xs font-semibold text-pathwise-muted">
-                  Объяснение для ученика
+                  {t('builder.explain')}
                 </label>
                 <textarea
                   id={`${task.key}-explanation`}
@@ -445,16 +445,16 @@ export function TopicBuilder() {
           {message ? <p className="text-sm font-semibold text-emerald-600">{message}</p> : null}
 
           <button type="submit" disabled={publishing} className="pw-btn-primary text-sm disabled:opacity-50">
-            {publishing ? 'Публикуем…' : 'Опубликовать тему'}
+            {publishing ? t('builder.publishing') : t('builder.publish')}
           </button>
         </form>
       </section>
 
       <section className="pw-card p-6">
-        <h2 className="text-lg font-semibold text-pathwise-ink">Темы, добавленные учителем</h2>
+        <h2 className="text-lg font-semibold text-pathwise-ink">{t('builder.custom')}</h2>
         {custom.length === 0 ? (
           <p className="mt-3 text-sm text-pathwise-muted">
-            Пока нет собственных тем. Создайте первую — она появится у учеников выбранных классов.
+            {t('builder.customEmpty')}
           </p>
         ) : (
           <div className="mt-5 grid gap-3 md:grid-cols-2">
@@ -468,14 +468,17 @@ export function TopicBuilder() {
                 </div>
                 <p className="mt-2 text-xs leading-5 text-pathwise-muted">{topic.summary}</p>
                 <p className="mt-2 text-xs font-semibold text-pathwise-muted">
-                  Классы: {topic.grades.join(', ')} · {tasksLabel(topic.tasks.length)}
+                  {t('builder.gradesLine', {
+                    grades: topic.grades.join(', '),
+                    tasks: localizedCount(locale, 'tasks', topic.tasks.length),
+                  })}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-3">
                   <Link
                     href={`/learning/topic/${topic.id}`}
                     className="text-xs font-bold text-pathwise-accent underline-offset-2 hover:underline"
                   >
-                    Открыть как ученик
+                    {t('builder.openAsStudent')}
                   </Link>
                   <button
                     type="button"
@@ -485,7 +488,7 @@ export function TopicBuilder() {
                     }}
                     className="text-xs font-bold text-[#E75555] underline-offset-2 hover:underline"
                   >
-                    Удалить
+                    {t('builder.remove')}
                   </button>
                 </div>
               </div>

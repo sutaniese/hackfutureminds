@@ -2,16 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useI18n } from "@/i18n/I18nProvider";
+import { localizedCount } from "@/lib/i18n-labels";
 import { subjectTitle } from "@/lib/learning/catalog";
 import {
-  LEVEL_LABELS,
   readAllTopics,
   readClassRoster,
   subscribeLearning,
   type StudentLearningSnapshot,
 } from "@/lib/learning/store";
 import type { Topic } from "@/lib/learning/types";
-import { studentsLabel } from "@/lib/learning/plural";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { pullClassBoard } from "@/lib/learning/remote";
 import { downloadLearningProgressReport } from "../lib/exportLearningProgress";
@@ -32,14 +32,17 @@ function Bar({ value, color }: { value: number; color: string }) {
   );
 }
 
-function lastSeen(ts?: number) {
-  if (!ts) return "ещё не заходил";
+function lastSeen(
+  ts: number | undefined,
+  t: (key: string, params?: Record<string, string | number>) => string,
+) {
+  if (!ts) return t("board.last");
   const mins = Math.round((Date.now() - ts) / 60_000);
-  if (mins < 2) return "только что";
-  if (mins < 60) return `${mins} мин назад`;
+  if (mins < 2) return t("board.justNow");
+  if (mins < 60) return t("board.minAgo", { n: mins });
   const hours = Math.round(mins / 60);
-  if (hours < 24) return `${hours} ч назад`;
-  return `${Math.round(hours / 24)} дн. назад`;
+  if (hours < 24) return t("board.hAgo", { n: hours });
+  return t("board.dAgo", { n: Math.round(hours / 24) });
 }
 
 type BoardStudent = {
@@ -53,6 +56,7 @@ type HeatCell = { topicId: string; title: string; cells: Array<{ studentId: stri
 
 /** Свод по обучению класса: только живые ученики, без демо-бейджа. */
 export function ClassLearningDashboard() {
+  const { t, locale } = useI18n();
   const [roster, setRoster] = useState<StudentLearningSnapshot[]>([]);
   const [boardStudents, setBoardStudents] = useState<BoardStudent[]>([]);
   const [heatmap, setHeatmap] = useState<HeatCell[]>([]);
@@ -77,13 +81,13 @@ export function ClassLearningDashboard() {
         setError(null);
         return;
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Не удалось загрузить доску");
+        setError(err instanceof Error ? err.message : t("board.loadFail"));
       }
     }
     setRoster(readClassRoster());
     setBoardStudents([]);
     setHeatmap([]);
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void load();
@@ -138,9 +142,9 @@ export function ClassLearningDashboard() {
       <section className="pw-card p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-pathwise-ink">Живая доска класса</h2>
+            <h2 className="text-lg font-semibold text-pathwise-ink">{t("board.live")}</h2>
             <p className="mt-1 text-sm text-pathwise-muted">
-              Освоение, точность, риск и последняя активность — только ученики, которые вступили по коду.
+              {t("board.liveHint")}
             </p>
             {error ? <p className="mt-2 text-sm text-rose-600">{error}</p> : null}
           </div>
@@ -149,7 +153,7 @@ export function ClassLearningDashboard() {
               href="/hub/uchitelya"
               className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-pathwise-ink no-underline"
             >
-              Код класса
+              {t("board.classCode")}
             </Link>
             <select
               id="subject-filter"
@@ -157,7 +161,7 @@ export function ClassLearningDashboard() {
               onChange={(event) => setSubjectFilter(event.target.value)}
               className="pw-input px-3 py-2 text-sm"
             >
-              <option value="all">Все предметы</option>
+              <option value="all">{t("board.allSubjects")}</option>
               {subjects.map((id) => (
                 <option key={id} value={id}>
                   {subjectTitle(id)}
@@ -169,17 +173,17 @@ export function ClassLearningDashboard() {
               onClick={() => downloadLearningProgressReport(filtered, topics)}
               className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-pathwise-ink transition hover:border-[#6C63FF]"
             >
-              Выгрузить CSV
+              {t("board.export")}
             </button>
           </div>
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { label: "Учеников", value: String(stats.total), tone: "text-pathwise-ink" },
-            { label: "Среднее освоение", value: `${stats.avgMastery}%`, tone: "text-[#6C63FF]" },
-            { label: "Средняя точность", value: `${stats.avgAccuracy}%`, tone: "text-emerald-600" },
-            { label: "В зоне риска", value: String(stats.atRisk), tone: "text-[#E75555]" },
+            { label: t("board.count"), value: String(stats.total), tone: "text-pathwise-ink" },
+            { label: t("board.avgMastery"), value: `${stats.avgMastery}%`, tone: "text-[#6C63FF]" },
+            { label: t("board.avgAccuracy"), value: `${stats.avgAccuracy}%`, tone: "text-emerald-600" },
+            { label: t("board.atRisk"), value: String(stats.atRisk), tone: "text-[#E75555]" },
           ].map((item) => (
             <div key={item.label} className="rounded-2xl border border-slate-200 bg-white p-4">
               <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-pathwise-muted">
@@ -192,7 +196,7 @@ export function ClassLearningDashboard() {
 
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-4">
-            <p className="text-sm font-semibold text-pathwise-ink">Распределение по уровням</p>
+            <p className="text-sm font-semibold text-pathwise-ink">{t("board.levels")}</p>
             <div className="mt-4 grid gap-2.5">
               {([4, 3, 2, 1] as const).map((level) => {
                 const count = levelSpread[level];
@@ -200,7 +204,7 @@ export function ClassLearningDashboard() {
                 return (
                   <div key={level} className="flex items-center gap-3">
                     <span className="w-28 shrink-0 text-xs font-bold text-pathwise-muted">
-                      {LEVEL_LABELS[level]}
+                      {t(`level.${level}`)}
                     </span>
                     <Bar value={percent} color={level >= 3 ? "#43D19E" : level === 2 ? "#6C63FF" : "#FF6B6B"} />
                     <span className="w-8 shrink-0 text-right text-xs font-black text-pathwise-ink">{count}</span>
@@ -210,10 +214,10 @@ export function ClassLearningDashboard() {
             </div>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-4">
-            <p className="text-sm font-semibold text-pathwise-ink">Проблемные темы класса</p>
+            <p className="text-sm font-semibold text-pathwise-ink">{t("board.problem")}</p>
             {weakTopics.length === 0 ? (
               <p className="mt-3 text-sm text-pathwise-muted">
-                Слабых тем пока нет — либо ученики ещё не проходили диагностику.
+                {t("board.problemEmpty")}
               </p>
             ) : (
               <div className="mt-4 grid gap-2.5">
@@ -224,7 +228,7 @@ export function ClassLearningDashboard() {
                     </span>
                     <Bar value={(topic.count / Math.max(1, stats.total)) * 100} color="#FF6B6B" />
                     <span className="w-16 shrink-0 text-right text-xs font-bold text-pathwise-muted">
-                      {studentsLabel(topic.count)}
+                      {localizedCount(locale, "students", topic.count)}
                     </span>
                   </div>
                 ))}
@@ -236,15 +240,15 @@ export function ClassLearningDashboard() {
 
       {heatmap.length > 0 ? (
         <section className="pw-card p-6">
-          <h2 className="text-lg font-semibold text-pathwise-ink">Тепловая карта пробелов</h2>
+          <h2 className="text-lg font-semibold text-pathwise-ink">{t("board.heatmap")}</h2>
           <p className="mt-1 text-sm text-pathwise-muted">
-            Красная ячейка — ученик проваливает тему. Нажмите, чтобы увидеть пропущенные задания.
+            {t("board.heatmapHint")}
           </p>
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-left text-xs">
               <thead>
                 <tr>
-                  <th className="px-2 py-2 font-semibold text-pathwise-muted">Тема</th>
+                  <th className="px-2 py-2 font-semibold text-pathwise-muted">{t("board.topic")}</th>
                   {boardStudents.map((student) => (
                     <th key={student.id} className="px-2 py-2 font-semibold text-pathwise-muted">
                       {(student.snapshot.name || student.snapshot.email).split(" ")[0]}
@@ -266,13 +270,13 @@ export function ClassLearningDashboard() {
                               setCellMissed({
                                 title: row.title,
                                 student: student?.snapshot.name || student?.snapshot.email || "",
-                                tasks: (student?.missedTasks ?? []).filter((t) => t.topicId === row.topicId),
+                                tasks: (student?.missedTasks ?? []).filter((task) => task.topicId === row.topicId),
                               })
                             }
                             className={`h-9 w-9 rounded-lg ${
                               cell.failing ? "bg-[#FF6B6B] text-white" : "bg-emerald-100 text-emerald-900"
                             }`}
-                            aria-label={`${row.title}: ${cell.failing ? "пробел" : "ок"}`}
+                            aria-label={`${row.title}: ${cell.failing ? t("board.gap") : t("board.ok")}`}
                           >
                             {cell.failing ? "!" : "·"}
                           </button>
@@ -290,7 +294,7 @@ export function ClassLearningDashboard() {
                 {cellMissed.student} · {cellMissed.title}
               </p>
               {cellMissed.tasks.length === 0 ? (
-                <p className="mt-2 text-sm text-pathwise-muted">Пропущенных заданий в ленте пока нет.</p>
+                <p className="mt-2 text-sm text-pathwise-muted">{t("board.missed")}</p>
               ) : (
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-pathwise-ink">
                   {cellMissed.tasks.map((task) => (
@@ -306,30 +310,30 @@ export function ClassLearningDashboard() {
       ) : null}
 
       <section className="pw-card p-6">
-        <h2 className="text-lg font-semibold text-pathwise-ink">Ученики</h2>
+        <h2 className="text-lg font-semibold text-pathwise-ink">{t("board.students")}</h2>
         <p className="mt-1 text-sm text-pathwise-muted">
-          Пустой список — норма, пока никто не ввёл код класса. Демо-ученики в боевом пути скрыты.
+          {t("board.studentsHint")} {t("board.emptyDemo")}
         </p>
 
         <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50">
           <table className="min-w-full divide-y divide-pathwise-line text-left text-sm">
             <thead className="bg-white text-xs font-semibold uppercase text-pathwise-muted">
               <tr>
-                <th scope="col" className="px-4 py-3">Ученик</th>
-                <th scope="col" className="px-4 py-3">Класс</th>
-                <th scope="col" className="px-4 py-3">Предмет</th>
-                <th scope="col" className="px-4 py-3">Уровень</th>
-                <th scope="col" className="px-4 py-3">Освоено</th>
-                <th scope="col" className="px-4 py-3">Точность</th>
-                <th scope="col" className="px-4 py-3">Активность</th>
-                <th scope="col" className="px-4 py-3">Слабые темы</th>
+                <th scope="col" className="px-4 py-3">{t("teacher.col.student")}</th>
+                <th scope="col" className="px-4 py-3">{t("board.col.grade")}</th>
+                <th scope="col" className="px-4 py-3">{t("board.col.subject")}</th>
+                <th scope="col" className="px-4 py-3">{t("board.col.level")}</th>
+                <th scope="col" className="px-4 py-3">{t("board.col.mastery")}</th>
+                <th scope="col" className="px-4 py-3">{t("board.col.accuracy")}</th>
+                <th scope="col" className="px-4 py-3">{t("board.col.activity")}</th>
+                <th scope="col" className="px-4 py-3">{t("board.col.weak")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-pathwise-line bg-transparent">
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-4 py-8 text-center text-pathwise-muted">
-                    В классе пока нет учеников. Дайте им код с кабинета учителя.
+                    {t("board.empty")}
                   </td>
                 </tr>
               ) : (
@@ -348,7 +352,7 @@ export function ClassLearningDashboard() {
                       <td className="px-4 py-3 text-pathwise-muted">{subjectTitle(student.subjectId)}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${levelTone(student.level)}`}>
-                          {LEVEL_LABELS[student.level]}
+                          {t(`level.${student.level}`)}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -371,7 +375,7 @@ export function ClassLearningDashboard() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-xs text-pathwise-muted">
-                        {lastSeen(student.lastActivityAt || student.updatedAt)}
+                        {lastSeen(student.lastActivityAt || student.updatedAt, t)}
                       </td>
                       <td className="max-w-xs px-4 py-3 text-xs text-pathwise-muted">
                         {student.weakTopics.length === 0
@@ -396,13 +400,18 @@ export function ClassLearningDashboard() {
                   {selected.snapshot.name || selected.snapshot.email}
                 </h3>
                 <p className="mt-1 text-sm text-pathwise-muted">
-                  Слабые навыки: {selected.snapshot.weakTopics.join(", ") || "пока нет"} · клипы:{" "}
-                  {selected.clipStats.watched} просмотрено / {selected.clipStats.dropped} оборвал /{" "}
-                  {selected.clipStats.stuck} застрял
+                  {t("board.weakSkills", {
+                    list: selected.snapshot.weakTopics.join(", ") || t("board.noneYet"),
+                  })}{" "}
+                  · {t("board.clipsLine", {
+                    w: selected.clipStats.watched,
+                    d: selected.clipStats.dropped,
+                    s: selected.clipStats.stuck,
+                  })}
                 </p>
               </div>
               <Link href="/hub/agent" className="pw-btn-secondary text-sm no-underline">
-                Спросить агента
+                {t("board.askAgent")}
               </Link>
             </div>
             {selected.missedTasks.length > 0 ? (
@@ -412,17 +421,16 @@ export function ClassLearningDashboard() {
                 ))}
               </ul>
             ) : (
-              <p className="mt-3 text-sm text-pathwise-muted">Пропущенных заданий ещё нет.</p>
+              <p className="mt-3 text-sm text-pathwise-muted">{t("board.noMissedYet")}</p>
             )}
           </div>
         ) : null}
 
         <p className="mt-4 text-xs text-pathwise-muted">
-          Ученик видит те же данные в своём кабинете —{" "}
+          {t("board.learnFoot")}{" "}
           <Link href="/learning" className="font-semibold text-pathwise-accent underline-offset-2 hover:underline">
-            раздел «Обучение»
+            {t("board.openLearn")}
           </Link>
-          .
         </p>
       </section>
     </div>
