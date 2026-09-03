@@ -38,7 +38,7 @@ export async function requireUser(): Promise<AuthedUser> {
   const { data, error } = await supabase.auth.getClaims();
   let userId = data?.claims?.sub ? String(data.claims.sub) : "";
   let emailFromClaims =
-    typeof data.claims?.email === "string" ? data.claims.email : "";
+    typeof data?.claims?.email === "string" ? data.claims.email : "";
 
   if (error || !userId) {
     const { data: userData } = await supabase.auth.getUser();

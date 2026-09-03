@@ -140,8 +140,8 @@ async function deriveHash(
     {
       name: "PBKDF2",
       hash: "SHA-256",
-      // PBKDF2 spec accepts BufferSource. ArrayBufferView is fine.
-      salt: saltBytes,
+      // TS 5.7+ Uint8Array is generic (ArrayBufferLike); SubtleCrypto wants BufferSource.
+      salt: saltBytes as BufferSource,
       iterations,
     },
     keyMaterial,
