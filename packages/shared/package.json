@@ -14,6 +14,7 @@
     "./brand": "./src/brand.ts",
     "./links": "./src/links.ts",
     "./clips": "./src/clips.ts",
+    "./live-clip": "./src/live-clip.ts",
     "./grade-access": "./src/grade-access.ts"
   }
 }
