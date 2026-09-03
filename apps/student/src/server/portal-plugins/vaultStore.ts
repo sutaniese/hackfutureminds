@@ -599,7 +599,7 @@ export function seedIfEmpty(): void {
   if (process.env.NEXT_PUBLIC_DEMO_ROSTER !== "1" && process.env.DEMO_VAULT_SEED !== "1") return;
   const db = readDb()
   if (Object.keys(db.students).length > 0 || Object.keys(db.classes).length > 0) return
-  const cls = createClass('10«А» — профориентация (демо)')
+  const cls = createClass('10«А» — профориентация')
   const seedDb = readDb()
   const seedClass = seedDb.classes[cls.id]!
   // Айгерим

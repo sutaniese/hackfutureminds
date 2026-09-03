@@ -1,53 +1,13 @@
-import { useState } from 'react'
-import { readJsonResponse } from '@/lib/http-json'
-import { ENTERPRISE_COHORT } from '../data/enterpriseCohort'
 import { useTenantTheme } from '../enterprise/TenantThemeContext'
 import { TENANTS } from '../enterprise/tenantConfig'
-import { downloadBulkParentReportsZip } from '../lib/bulkParentReportsZip'
 import { withAssetBase } from '../lib/publicUrl'
 import { EnterpriseAnalytics } from './EnterpriseAnalytics'
 
 export function EnterpriseHub() {
   const { tenant, tenantId, setTenantId } = useTenantTheme()
-  const [crmLoading, setCrmLoading] = useState(false)
-  const [crmResult, setCrmResult] = useState<string | null>(null)
-  const [bulkBusy, setBulkBusy] = useState(false)
-
-  async function runCrmSync() {
-    setCrmLoading(true)
-    setCrmResult(null)
-    try {
-      const res = await fetch('/api/crm-sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tenant_id: tenantId, batch_size: ENTERPRISE_COHORT.length }),
-      })
-      const data = (await readJsonResponse<Record<string, unknown>>(res)) as Record<string, unknown> & {
-        error?: string
-      }
-      if (!res.ok) throw new Error(String(data.error ?? res.statusText))
-      setCrmResult(JSON.stringify(data, null, 2))
-    } catch (e) {
-      setCrmResult(e instanceof Error ? e.message : 'Ошибка')
-    } finally {
-      setCrmLoading(false)
-    }
-  }
-
-  async function runBulkReports() {
-    setBulkBusy(true)
-    try {
-      await downloadBulkParentReportsZip(ENTERPRISE_COHORT, tenant.displayName)
-    } finally {
-      setBulkBusy(false)
-    }
-  }
 
   return (
     <div className="space-y-8">
-      <p className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-        Макет white-label / CRM. В live-демо жюри этот раздел не используется.
-      </p>
       <section className="pw-card p-6">
         <h2 className="text-lg font-semibold text-pathwise-ink">White-label (tenant_id)</h2>
         <p className="mt-1 text-sm text-pathwise-muted">
@@ -97,43 +57,6 @@ export function EnterpriseHub() {
       </section>
 
       <EnterpriseAnalytics />
-
-      <section className="pw-card p-6">
-        <h2 className="text-lg font-semibold text-pathwise-ink">CRM-синхронизация (демо)</h2>
-        <p className="mt-1 text-sm text-pathwise-muted">
-          Мок-эндпоинт <code className="rounded bg-pathwise-accent-soft px-1">POST /api/crm-sync</code> имитирует выгрузку
-          карточек учеников во внешнюю CRM.
-        </p>
-        <button
-          type="button"
-          onClick={runCrmSync}
-          disabled={crmLoading}
-          className="pw-btn-primary mt-4 inline-flex min-h-[48px] items-center justify-center px-5 py-3 text-sm disabled:opacity-50"
-        >
-          {crmLoading ? 'Синхронизация…' : 'Запустить CRM sync'}
-        </button>
-        {crmResult && (
-          <pre className="mt-4 max-h-56 overflow-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-emerald-100">
-            {crmResult}
-          </pre>
-        )}
-      </section>
-
-      <section className="pw-card p-6">
-        <h2 className="text-lg font-semibold text-pathwise-ink">Массовые отчёты для родителей</h2>
-        <p className="mt-1 text-sm text-pathwise-muted">
-          Генерация ZIP-архива с персональными текстовыми отчётами по каждому ученику демо-потока (
-          {ENTERPRISE_COHORT.length} файлов + список).
-        </p>
-        <button
-          type="button"
-          onClick={runBulkReports}
-          disabled={bulkBusy}
-          className="mt-4 inline-flex min-h-[48px] items-center justify-center rounded-full border border-[#d7d3ff] bg-[#f1efff] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#ebe9ff] disabled:opacity-50"
-        >
-          {bulkBusy ? 'Сборка архива…' : 'Сгенерировать отчёты для всего потока (ZIP)'}
-        </button>
-      </section>
     </div>
   )
 }

@@ -27,7 +27,7 @@ export const CHROME_MESSAGES: Record<string, Record<Locale, string>> = {
   "hub.nav.student": TR("Ученик", "Student", "Оқушы"),
   "hub.nav.parent": TR("Родитель", "Parent", "Ата-ана"),
   "hub.nav.teacher": TR("Учитель", "Teacher", "Мұғалім"),
-  "hub.footer": TR("обучение для школьников Казахстана · демо", "learning for Kazakhstan students · demo", "Қазақстан оқушыларына арналған оқу · демо"),
+  "hub.footer": TR("обучение для школьников Казахстана", "learning for Kazakhstan students", "Қазақстан оқушыларына арналған оқу"),
 
   "goal.ent": TR("Подготовка к ЕНТ", "ENT exam prep", "ҰБТ-ға дайындық"),
   "goal.ent.hint": TR("Плотный график, упор на типовые задания", "Tight schedule, typical exam tasks", "Тығыз график, типтік тапсырмалар"),
@@ -435,6 +435,9 @@ export const CHROME_MESSAGES: Record<string, Record<Locale, string>> = {
   "clips.quizNow": TR("Проверка", "Check", "Тексеру"),
   "clips.openTopic": TR("Открыть тему →", "Open topic →", "Тақырыпты ашу →"),
   "clips.building": TR("Собираем клип…", "Building clip…", "Клип жиналуда…"),
+  "clips.badge": TR("Клип", "Clip", "Клип"),
+  "topic.watchClip": TR("Смотреть клип", "Watch the clip", "Клипті көру"),
+  "topic.hideClip": TR("Скрыть клип", "Hide the clip", "Клипті жасыру"),
 
   "topic.notFound": TR("Тема не найдена", "Topic not found", "Тақырып табылмады"),
   "topic.notFoundHint": TR("Возможно, тема была удалена из конструктора учителя или ссылка устарела.", "The topic may have been removed from the teacher builder, or the link is stale.", "Тақырып мұғалім құрастырғышынан өшірілген немесе сілтеме ескірген."),

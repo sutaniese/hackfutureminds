@@ -19,7 +19,7 @@ import { LEVEL_LABELS } from "@/lib/learning/store";
 import { LEARNING_GOALS } from "@/lib/learning/types";
 import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { ProgressRing } from "@/components/motion/ProgressRing";
-import { EmptyState, Pill, ProgressBar, StatTile } from "./LearningUI";
+import { ClipBadge, EmptyState, Pill, ProgressBar, StatTile } from "./LearningUI";
 import { ReminderBanner } from "./ReminderBanner";
 import { ClassJoinCard } from "./ClassJoinCard";
 import { useLearning } from "./useLearning";
@@ -270,9 +270,12 @@ export function LearningDashboard() {
                     className="pw-reveal pw-press group block rounded-2xl border border-slate-200 bg-white p-4 no-underline hover:-translate-y-1 hover:border-[#6C63FF]/50 hover:shadow-[0_18px_40px_rgb(108_99_255_/_0.15)]"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-base font-black text-pathwise-ink transition-colors duration-200 group-hover:text-[#554dd6]">
-                        {item.topic.title}
-                      </p>
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <p className="text-base font-black text-pathwise-ink transition-colors duration-200 group-hover:text-[#554dd6]">
+                          {item.topic.title}
+                        </p>
+                        <ClipBadge topicId={item.topic.id} />
+                      </div>
                       <Pill tone={item.priority === "high" ? "warn" : item.priority === "medium" ? "accent" : "muted"}>
                         {t(`priority.${item.priority}`)}
                       </Pill>
@@ -331,7 +334,10 @@ export function LearningDashboard() {
                       <Pill tone="warn">{spot.accuracy}%</Pill>
                     </div>
                     {spot.topicTitle ? (
-                      <p className="mt-1 text-xs font-semibold text-pathwise-muted">{spot.topicTitle}</p>
+                      <p className="mt-1 flex flex-wrap items-center gap-2 text-xs font-semibold text-pathwise-muted">
+                        {spot.topicTitle}
+                        {spot.topicId ? <ClipBadge topicId={spot.topicId} /> : null}
+                      </p>
                     ) : null}
                     <div className="mt-2.5">
                       <ProgressBar value={spot.accuracy} color="#FF6B6B" />
@@ -485,7 +491,10 @@ export function LearningDashboard() {
                   className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 no-underline"
                 >
                   <div>
-                    <p className="text-sm font-bold text-pathwise-ink">{item.topic.title}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-bold text-pathwise-ink">{item.topic.title}</p>
+                      <ClipBadge topicId={item.topic.id} />
+                    </div>
                     <p className="text-xs font-semibold text-pathwise-muted">
                       {t("learn.srsMeta", { n: item.intervalDays, date: dateLabel })}
                     </p>

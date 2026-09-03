@@ -207,9 +207,6 @@ export function HomeView() {
                     </p>
                     <h2 className="mt-2 text-2xl font-black tracking-tight">{t("home.landing.accountTitle")}</h2>
                   </div>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
-                    MVP
-                  </span>
                 </div>
                 <div className="mt-6 space-y-3">
                   {accountItems.map((item) => (

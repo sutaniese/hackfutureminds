@@ -1,8 +1,9 @@
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
+import { videoClipFor } from "@pathwise/shared";
 import { Screen } from "../../src/components/Screen";
-import { Body, Card, Kicker, PrimaryButton, SecondaryButton, Stat, Title } from "../../src/components/ui";
+import { Body, Card, Chip, Kicker, PrimaryButton, SecondaryButton, Stat, Title } from "../../src/components/ui";
 import { useAuth } from "../../src/context/AuthContext";
 import { useI18n } from "../../src/context/I18nContext";
 import { useLearning } from "../../src/context/LearningContext";
@@ -115,6 +116,9 @@ export default function LearningScreen() {
             <Card key={item.topic.id} style={{ padding: 12 }}>
               <Kicker>{t(`priority.${item.priority}`)}</Kicker>
               <Title>{topic.title}</Title>
+              {videoClipFor(item.topic.id, locale === "kk" ? "kk" : "ru") ? (
+                <Chip label={t("clips.badge")} selected={false} onPress={() => router.push(`/learning/topic/${item.topic.id}`)} />
+              ) : null}
               <Body>{t("learn.why", { reason: whyThisTopic(item, weak, locale) })}</Body>
               <Body>{t("learn.masteredPct", { n: item.mastery })}</Body>
               <PrimaryButton label={t("learn.openTopic")} onPress={() => router.push(`/learning/topic/${item.topic.id}`)} />
@@ -131,6 +135,9 @@ export default function LearningScreen() {
           <Card key={item.skill} style={{ padding: 12 }}>
             <Title>{item.skill}</Title>
             <Body>{item.topicTitle} · {item.accuracy}%</Body>
+            {item.topicId && videoClipFor(item.topicId, locale === "kk" ? "kk" : "ru") ? (
+              <Chip label={t("clips.badge")} selected={false} onPress={() => router.push(`/learning/topic/${item.topicId}`)} />
+            ) : null}
             <PrimaryButton label={t("learn.drill")} onPress={() => router.push(`/learning/topic/${item.topicId}`)} />
           </Card>
         ))}
@@ -150,9 +157,14 @@ export default function LearningScreen() {
         <Body>{t("learn.srsHint")}</Body>
         {reviews.length === 0 ? <Body>{t("learn.srsEmpty")}</Body> : null}
         {reviews.map((item) => (
-          <Body key={item.topic.id}>
-            {item.topic.title} · {t("learn.srsMeta", { n: item.intervalDays, date: String(item.daysSince) })}
-          </Body>
+          <View key={item.topic.id} style={{ gap: 6 }}>
+            <Body>
+              {item.topic.title} · {t("learn.srsMeta", { n: item.intervalDays, date: String(item.daysSince) })}
+            </Body>
+            {videoClipFor(item.topic.id, locale === "kk" ? "kk" : "ru") ? (
+              <Chip label={t("clips.badge")} selected={false} onPress={() => router.push(`/learning/topic/${item.topic.id}`)} />
+            ) : null}
+          </View>
         ))}
       </Card>
     </Screen>

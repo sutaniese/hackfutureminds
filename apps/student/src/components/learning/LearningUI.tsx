@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { videoClipFor } from "@pathwise/shared";
 import { useI18n } from "@/i18n/I18nProvider";
 import { cn } from "@/lib/cn";
 import type { Difficulty } from "@/lib/learning/types";
@@ -101,6 +102,12 @@ export function Pill({
       {children}
     </span>
   );
+}
+
+export function ClipBadge({ topicId }: { topicId: string }) {
+  const { t, locale } = useI18n();
+  if (!videoClipFor(topicId, locale === "kk" ? "kk" : "ru")) return null;
+  return <Pill tone="accent">{t("clips.badge")}</Pill>;
 }
 
 export function DifficultyBadge({ difficulty }: { difficulty: Difficulty }) {
