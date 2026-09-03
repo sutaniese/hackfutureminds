@@ -8,6 +8,7 @@ import { XPBar } from "@/components/gamification/XPBar";
 import { SHELL_PX } from "@/lib/shell-layout";
 import { useI18n } from "@/i18n/I18nProvider";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { A11yTopBar } from "./A11yTopBar";
 import { UnifiedSiteNav } from "./UnifiedSiteNav";
 import { RoleRouteGuard } from "./RoleRouteGuard";
@@ -16,10 +17,16 @@ import { RouteTransition } from "./RouteTransition";
 import { BottomNav } from "./BottomNav";
 import { ThemeInit } from "./ThemeInit";
 
+const HIDE_NAV_PATHS = ["/learning/diagnostics"];
+
 export function MobileAppShell({ children }: { children: React.ReactNode }) {
   const { t } = useI18n();
   const { user } = useAuth();
+  const pathname = usePathname() || "/";
   const showStudentNav = !user || user.role === "student";
+  const hideBottomNav = HIDE_NAV_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
   return (
     <div className="flex min-h-dvh w-full min-w-0 flex-col bg-pathwise-page text-foreground">
       <a href="#main" className="pw-skip">
@@ -36,7 +43,7 @@ export function MobileAppShell({ children }: { children: React.ReactNode }) {
       </div>
       <main
         id="main"
-        className={`${showStudentNav ? "pw-pb-nav" : ""} ${SHELL_PX} flex-1 overflow-y-auto py-6 md:py-10`}
+        className={`${showStudentNav && !hideBottomNav ? "pw-pb-nav" : ""} ${SHELL_PX} flex-1 overflow-y-auto py-6 md:py-10`}
         style={{ minHeight: "0" }}
       >
         <RouteTransition>
@@ -57,7 +64,7 @@ export function MobileAppShell({ children }: { children: React.ReactNode }) {
           <span className="opacity-70">{t("footer.line")}</span>
         </div>
       </footer>
-      {showStudentNav ? <BottomNav /> : null}
+      {showStudentNav && !hideBottomNav ? <BottomNav /> : null}
       <VoiceAssistant />
       <BadgeToast />
       <LevelUpModal />

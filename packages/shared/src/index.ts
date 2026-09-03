@@ -15,4 +15,4 @@ export * from "./generate-contract";
 export * from "./universities";
 export * from "./grants";
 export * from "./clips";
-export * from "./learning-goals";
+export * from "./grade-access";
