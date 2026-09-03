@@ -1,4 +1,4 @@
-import { canAccessUniversityLayer } from "@pathwise/shared";
+import { canShowUniversityLayer } from "@pathwise/shared";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Linking } from "react-native";
@@ -20,10 +20,10 @@ type Grant = {
 export default function GrantsScreen() {
   const { t } = useI18n();
   const router = useRouter();
-  const { profile } = useLearning();
+  const { profile, state } = useLearning();
   const [grants, setGrants] = useState<Grant[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const allowUniversity = canAccessUniversityLayer(profile?.grade);
+  const allowUniversity = canShowUniversityLayer(profile?.grade, state.diagnostic);
 
   useEffect(() => {
     if (!allowUniversity) return;
@@ -37,8 +37,8 @@ export default function GrantsScreen() {
       <Screen>
         <Card>
           <Kicker>{t("nav.grants")}</Kicker>
-          <Title>{t("guard.grade.title")}</Title>
-          <Body>{t("guard.grade.body")}</Body>
+          <Title>{profile?.grade && Number(profile.grade) < 10 ? t("guard.grade.title") : t("guard.diag.title")}</Title>
+          <Body>{profile?.grade && Number(profile.grade) < 10 ? t("guard.grade.body") : t("guard.diag.body")}</Body>
           <PrimaryButton label={t("guard.grade.cta")} onPress={() => router.replace("/learning")} />
         </Card>
       </Screen>

@@ -11,7 +11,9 @@ import { useI18n } from "@/i18n/I18nProvider";
 import { AnswerField } from "@/components/learning/AnswerField";
 import { isAnswerCorrect, type Task } from "@/lib/learning/types";
 import { recordClipEvent } from "@/lib/learning/remote";
-import { isSpeechSupported, speakText, stopSpeaking } from "@/lib/speech";
+import { isSpeechSupported, stopSpeaking } from "@/lib/speech";
+import { speakNarration, waitForVoices } from "@/lib/learning/clips/speech";
+import { shouldAdvanceScene, shouldArmFallbackTimer } from "@/lib/learning/clips/scene-advance";
 import { VOICE_CONTROL_EVENT, type VoiceUiEvent } from "@/lib/voice/bus";
 
 function taskFromScript(script: LiveClipScript, topicId: string): Task {
@@ -154,6 +156,10 @@ export function LiveScenePlayer({
   const completedRef = useRef(false);
   const advanceRef = useRef<(() => void) | null>(null);
   const timerRef = useRef<number | null>(null);
+  const generationRef = useRef(0);
+  const speakingRef = useRef(false);
+  const phaseRef = useRef(phase);
+  const speechCancelRef = useRef<(() => void) | null>(null);
   const clipId = `live-${topicId}`;
   const scene = script.scenes[sceneIndex];
   const quiz = quizTask ?? taskFromScript(script, topicId);
@@ -194,6 +200,10 @@ export function LiveScenePlayer({
 
   advanceRef.current = goNext;
 
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
+
   const playScene = useCallback(
     (index: number) => {
       const current = script.scenes[index];
@@ -201,28 +211,84 @@ export function LiveScenePlayer({
         finishClip();
         return;
       }
+      const token = generationRef.current + 1;
+      generationRef.current = token;
       clearTimer();
+      speechCancelRef.current?.();
+      speechCancelRef.current = null;
       stopSpeaking();
-      const fallbackMs = sceneDurationMs(current.narration);
-      let ended = false;
-      const finish = () => {
-        if (ended || phase === "paused") return;
-        ended = true;
+      speakingRef.current = false;
+
+      const tryAdvance = (reason: "speech_end" | "speech_error" | "fallback_timer") => {
+        if (
+          !shouldAdvanceScene({
+            generation: generationRef.current,
+            expectedGeneration: token,
+            speaking: speakingRef.current,
+            paused: phaseRef.current === "paused",
+            reason,
+          })
+        ) {
+          return;
+        }
+        speakingRef.current = false;
         advanceRef.current?.();
       };
-      timerRef.current = window.setTimeout(finish, fallbackMs);
-      if (isSpeechSupported()) {
-        speakText(current.narration, script.language, finish);
-      }
+
+      const armTimer = () => {
+        if (!shouldArmFallbackTimer({ speechSupported: isSpeechSupported(), speechStarted: speakingRef.current })) {
+          return;
+        }
+        clearTimer();
+        timerRef.current = window.setTimeout(() => tryAdvance("fallback_timer"), sceneDurationMs(current.narration));
+      };
+
+      const startSpeech = async () => {
+        if (!isSpeechSupported()) {
+          armTimer();
+          return;
+        }
+        await waitForVoices();
+        if (generationRef.current !== token || phaseRef.current !== "play") return;
+        let attempts = 0;
+        const speakOnce = () => {
+          attempts += 1;
+          const handle = speakNarration(
+            current.narration,
+            script.language,
+            () => tryAdvance("speech_end"),
+            () => {
+              if (generationRef.current !== token) return;
+              if (attempts < 2) speakOnce();
+              else tryAdvance("speech_error");
+            },
+          );
+          speechCancelRef.current = handle.cancel;
+          if (handle.started) {
+            speakingRef.current = true;
+            clearTimer();
+            return;
+          }
+          speakingRef.current = false;
+          armTimer();
+        };
+        speakOnce();
+      };
+
+      void startSpeech();
     },
-    [clearTimer, finishClip, phase, script.language, script.scenes],
+    [clearTimer, finishClip, script.language, script.scenes],
   );
 
   useEffect(() => {
     if (phase !== "play") return;
     playScene(sceneIndex);
     return () => {
+      generationRef.current += 1;
+      speakingRef.current = false;
       clearTimer();
+      speechCancelRef.current?.();
+      speechCancelRef.current = null;
       stopSpeaking();
     };
   }, [clearTimer, phase, playScene, sceneIndex]);
@@ -243,12 +309,20 @@ export function LiveScenePlayer({
   };
 
   const pause = () => {
+    generationRef.current += 1;
+    speakingRef.current = false;
+    speechCancelRef.current?.();
+    speechCancelRef.current = null;
     stopSpeaking();
     clearTimer();
     setPhase("paused");
   };
 
   const replay = () => {
+    generationRef.current += 1;
+    speakingRef.current = false;
+    speechCancelRef.current?.();
+    speechCancelRef.current = null;
     stopSpeaking();
     clearTimer();
     completedRef.current = false;

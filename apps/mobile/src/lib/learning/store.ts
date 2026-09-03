@@ -9,6 +9,7 @@ import type { Difficulty, Grade, LearningGoalId, Topic } from "./types";
 export const LEARNING_PROFILE_KEY = "ten-learning-profile";
 export const LEARNING_STATE_KEY = "ten-learning-state";
 export const LEARNING_CUSTOM_KEY = "ten-learning-custom-content";
+export const LEARNING_REMOTE_CUSTOM_KEY = "ten-learning-remote-custom";
 export const LEARNING_ROSTER_KEY = "ten-learning-roster";
 
 export type LearningProfile = {
@@ -145,8 +146,18 @@ function writeLearningState(state: LearningState): LearningState {
 
 let remoteCustomTopics: Topic[] = [];
 
+function asTeacherTopic(topic: Topic): Topic {
+  return { ...topic, custom: true };
+}
+
+function readPersistedRemoteTopics(): Topic[] {
+  const value = readJson<Topic[]>(adoptLegacyKey(LEARNING_REMOTE_CUSTOM_KEY), []);
+  return Array.isArray(value) ? value.map(asTeacherTopic) : [];
+}
+
 export function applyRemoteCustomTopics(topics: Topic[]): void {
-  remoteCustomTopics = Array.isArray(topics) ? topics : [];
+  remoteCustomTopics = Array.isArray(topics) ? topics.map(asTeacherTopic) : [];
+  writeJson(scopedKey(LEARNING_REMOTE_CUSTOM_KEY), remoteCustomTopics);
   emitLearningChange();
 }
 
@@ -157,7 +168,10 @@ export function applyRemoteLearning(input: {
 }): void {
   if (input.profile) writeJson(scopedKey(LEARNING_PROFILE_KEY), input.profile);
   if (input.state) writeJson(scopedKey(LEARNING_STATE_KEY), input.state);
-  if (input.topics) remoteCustomTopics = input.topics;
+  if (input.topics) {
+    remoteCustomTopics = input.topics.map(asTeacherTopic);
+    writeJson(scopedKey(LEARNING_REMOTE_CUSTOM_KEY), remoteCustomTopics);
+  }
   emitLearningChange();
 }
 
@@ -253,7 +267,11 @@ export function saveCustomTopic(topic: Topic): Topic[] {
 }
 
 export function readAllTopics(): Topic[] {
+  if (remoteCustomTopics.length === 0) {
+    remoteCustomTopics = readPersistedRemoteTopics();
+  }
   const byId = new Map<string, Topic>();
+  // Teacher-published constructor topics last so they win over baked catalog ids.
   for (const topic of [...BASE_TOPICS, ...readCustomTopics(), ...remoteCustomTopics]) {
     byId.set(topic.id, topic);
   }

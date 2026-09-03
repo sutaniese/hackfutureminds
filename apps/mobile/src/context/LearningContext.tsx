@@ -32,19 +32,38 @@ export function LearningProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!user || user.role !== "student" || !isSupabaseConfigured()) return;
-    void apiGet<{
-      profile?: LearningProfile | null;
-      state?: LearningState | null;
-      topics?: Topic[];
-    }>("/api/learning/progress")
-      .then((data) => {
-        applyRemoteLearning({
-          profile: data.profile,
-          state: data.state,
-          topics: data.topics,
-        });
-      })
-      .catch(() => undefined);
+    let cancelled = false;
+
+    const hydrate = () => {
+      void Promise.all([
+        apiGet<{
+          profile?: LearningProfile | null;
+          state?: LearningState | null;
+          topics?: Topic[];
+        }>("/api/learning/progress"),
+        apiGet<{ topics?: Topic[] }>("/api/learning/topics"),
+      ])
+        .then(([progress, catalog]) => {
+          if (cancelled) return;
+          const topics = [
+            ...(progress.topics ?? []),
+            ...(catalog.topics ?? []),
+          ];
+          applyRemoteLearning({
+            profile: progress.profile,
+            state: progress.state,
+            topics,
+          });
+        })
+        .catch(() => undefined);
+    };
+
+    hydrate();
+    const timer = setInterval(hydrate, 20_000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
   }, [user]);
 
   const value = useMemo<LearningValue>(() => {

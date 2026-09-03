@@ -202,6 +202,14 @@ export default function ClipsScreen() {
           ))}
         </View>
       ))}
+      {topics.filter((item) => item.custom).length > 0 ? (
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+          <Body style={{ fontSize: 12, fontWeight: "800" }}>{t("learn.teacherTopics")}</Body>
+          {topics.filter((item) => item.custom).map((item) => (
+            <Chip key={item.id} label={item.title} selected={topicId === item.id} onPress={() => selectTopic(item.id)} />
+          ))}
+        </View>
+      ) : null}
       <Chip label={t("clips.live")} selected={source === "ai"} onPress={() => selectTopic(topicId, true)} />
 
       {phase === "video" ? (

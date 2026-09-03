@@ -28,15 +28,15 @@ function reducedMotion(): boolean {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function VoiceControl() {
+export function VoiceControl({ embedded = false }: { embedded?: boolean }) {
   const { t, locale, setLocale } = useI18n();
   const pathname = usePathname() || "/";
   const router = useRouter();
   const { user, logout } = useAuth();
   const { role, setRole } = useSelectedRole();
   const { profile } = useLearning();
-  const [on, setOn] = useState(false);
-  const [status, setStatus] = useState<Status>("off");
+  const [on, setOn] = useState(embedded);
+  const [status, setStatus] = useState<Status>(embedded ? "idle" : "off");
   const [last, setLast] = useState("");
   const [typed, setTyped] = useState("");
   const [micDenied, setMicDenied] = useState(false);
@@ -341,6 +341,7 @@ export function VoiceControl() {
 
   return (
     <div className="pointer-events-auto flex flex-col items-end gap-2">
+      {embedded ? null : (
       <button
         type="button"
         onClick={() => (on ? disable() : enable())}
@@ -351,7 +352,8 @@ export function VoiceControl() {
       >
         {t("voiceControl.toggle")}
       </button>
-      {on ? (
+      )}
+      {on || embedded ? (
         <section
           className="w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-teal-200 bg-white/95 p-3 shadow-xl"
           aria-live="polite"

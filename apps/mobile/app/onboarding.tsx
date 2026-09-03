@@ -1,4 +1,4 @@
-import { canAccessUniversityLayer, nextOnboardingStepIndex } from "@pathwise/shared";
+import { canShowUniversityLayer, nextOnboardingStepIndex } from "@pathwise/shared";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
@@ -14,14 +14,27 @@ import type { GenerateResponse } from "../src/types/generate";
 
 export default function OnboardingScreen() {
   const { t, locale } = useI18n();
-  const { profile } = useLearning();
+  const { profile, state } = useLearning();
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState(createEmptyAnswers());
   const [busy, setBusy] = useState(false);
   const grade = profile?.grade;
-  const allowUniversity = canAccessUniversityLayer(grade);
-  const isLast = nextOnboardingStepIndex(step - 1, grade, 1) > 6;
+  const allowUniversity = canShowUniversityLayer(grade, state.diagnostic);
+  const isLast = nextOnboardingStepIndex(step - 1, allowUniversity ? grade : 8, 1) > 6;
+
+  if (!allowUniversity) {
+    return (
+      <Screen>
+        <Card>
+          <Kicker>{t("nav.onboarding")}</Kicker>
+          <Title>{profile?.grade && Number(profile.grade) < 10 ? t("guard.grade.title") : t("guard.diag.title")}</Title>
+          <Body>{profile?.grade && Number(profile.grade) < 10 ? t("guard.grade.body") : t("guard.diag.body")}</Body>
+          <PrimaryButton label={t("learn.takeDiag")} onPress={() => router.replace("/learning/diagnostics")} />
+        </Card>
+      </Screen>
+    );
+  }
 
   async function finish() {
     setBusy(true);
@@ -130,7 +143,7 @@ export default function OnboardingScreen() {
             <SecondaryButton
               label={t("diag.back")}
               onPress={() => {
-                const prev = nextOnboardingStepIndex(step - 1, grade, -1);
+                const prev = nextOnboardingStepIndex(step - 1, allowUniversity ? grade : 8, -1);
                 if (prev >= 0) setStep(prev + 1);
               }}
             />
@@ -141,7 +154,7 @@ export default function OnboardingScreen() {
             ) : (
               <PrimaryButton
                 label={t("onboard.continue")}
-                onPress={() => setStep(nextOnboardingStepIndex(step - 1, grade, 1) + 1)}
+                onPress={() => setStep(nextOnboardingStepIndex(step - 1, allowUniversity ? grade : 8, 1) + 1)}
               />
             )}
           </View>

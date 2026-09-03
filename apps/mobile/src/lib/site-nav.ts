@@ -27,7 +27,7 @@ export const ROLE_LABEL_KEYS: Record<UserRole, string> = {
 };
 
 export const ROLE_ENTRY_PATHS: Record<UserRole, string> = {
-  student: "/onboarding",
+  student: "/",
   parent: "/hub/roditeli",
   teacher: "/hub/uchitelya",
 };

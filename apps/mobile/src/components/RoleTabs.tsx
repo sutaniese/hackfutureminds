@@ -12,7 +12,7 @@
  * • Hidden on login / register.
  */
 
-import { filterNavLinksForGrade } from "@pathwise/shared";
+import { filterNavLinksForUniversityAccess } from "@pathwise/shared";
 import { usePathname, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
@@ -31,12 +31,11 @@ import { colors, tap } from "../lib/theme";
 
 type Tab = { href: string; labelKey: string; match?: (path: string) => boolean };
 
-const MAX_PRIMARY = 5;
+const MAX_PRIMARY = 4;
 
-/** Student tabs (always includes home + learn; others depend on grade). */
+/** Student tabs: start learning, not university. Overflow (uni/grants/portfolio) lives in Ещё. */
 const STUDENT_TABS: Tab[] = [
   { href: "/", labelKey: "nav.home", match: (p) => p === "/" },
-  { href: "/onboarding", labelKey: "nav.onboarding" },
   {
     href: "/learning",
     labelKey: "nav.learning",
@@ -46,23 +45,22 @@ const STUDENT_TABS: Tab[] = [
         !p.startsWith("/learning/class") &&
         !p.startsWith("/learning/clips")),
   },
+  { href: "/learning/class", labelKey: "nav.class" },
+  { href: "/learning/clips", labelKey: "learn.clips" },
   { href: "/results", labelKey: "nav.results" },
   { href: "/roadmap", labelKey: "nav.roadmap" },
-  { href: "/grants", labelKey: "nav.grants" },
   { href: "/portfolio", labelKey: "nav.portfolio" },
+  { href: "/grants", labelKey: "nav.grants" },
+  { href: "/hub/vuzy", labelKey: "nav.universities" },
 ];
 
 const TEACHER_TABS: Tab[] = [
   { href: "/hub/uchitelya", labelKey: "nav.cabinet" },
   { href: "/hub/obuchenie", labelKey: "nav.teacherLearn" },
-  { href: "/hub/uchenik", labelKey: "nav.students" },
-  { href: "/hub/agent", labelKey: "nav.agent" },
 ];
 
 const PARENT_TABS: Tab[] = [
   { href: "/hub/roditeli", labelKey: "nav.cabinet" },
-  { href: "/hub/agent", labelKey: "nav.agent" },
-  { href: "/hub/vuzy", labelKey: "nav.universities" },
 ];
 
 function isTabActive(tab: Tab, pathname: string): boolean {
@@ -117,7 +115,7 @@ function TabItem({
 export function RoleTabs() {
   const { user, status } = useAuth();
   const { t, palette } = useI18n();
-  const { profile } = useLearning();
+  const { profile, state } = useLearning();
   const pathname = usePathname();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -132,7 +130,7 @@ export function RoleTabs() {
       ? TEACHER_TABS
       : user.role === "parent"
         ? PARENT_TABS
-        : filterNavLinksForGrade(STUDENT_TABS, profile?.grade);
+        : filterNavLinksForUniversityAccess(STUDENT_TABS, profile?.grade, state.diagnostic);
 
   /* Split visible tabs from overflow */
   const primary = allTabs.length <= MAX_PRIMARY ? allTabs : allTabs.slice(0, MAX_PRIMARY - 1);

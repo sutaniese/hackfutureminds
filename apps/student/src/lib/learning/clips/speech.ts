@@ -28,10 +28,11 @@ export function speakNarration(
   text: string,
   language: "ru" | "kk",
   onEnd: () => void,
-): { cancel: () => void; pick: SpeechPick } {
+  onError?: () => void,
+): { cancel: () => void; pick: SpeechPick; started: boolean } {
   const pick = pickSpeechVoice(language);
   if (typeof window === "undefined" || !window.speechSynthesis) {
-    return { cancel: () => undefined, pick };
+    return { cancel: () => undefined, pick, started: false };
   }
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
@@ -42,9 +43,14 @@ export function speakNarration(
     : null;
   if (match) utterance.voice = match;
   utterance.onend = () => onEnd();
-  utterance.onerror = () => onEnd();
+  utterance.onerror = (event) => {
+    if (event.error === "canceled" || event.error === "interrupted") return;
+    if (onError) onError();
+    else onEnd();
+  };
   window.speechSynthesis.speak(utterance);
   return {
+    started: true,
     cancel: () => {
       utterance.onend = null;
       utterance.onerror = null;

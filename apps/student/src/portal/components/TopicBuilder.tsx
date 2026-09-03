@@ -11,6 +11,11 @@ import {
   subscribeLearning,
 } from '@/lib/learning/store'
 import type { Difficulty, Grade, Task, Topic } from '@/lib/learning/types'
+import {
+  notesToTheory,
+  type GeneratedTask,
+  type TopicNotes,
+} from '@/lib/learning/constructor-generate'
 import { isSupabaseConfigured } from '@/lib/supabase/env'
 import { deleteCustomTopicRemote, listClassesRemote, publishCustomTopic } from '@/lib/learning/remote'
 import { LiveScenePlayer } from '@/components/learning/LiveScenePlayer'
@@ -81,6 +86,8 @@ export function TopicBuilder() {
   const [clipBusy, setClipBusy] = useState(false)
   const [clipScript, setClipScript] = useState<LiveClipScript | null>(null)
   const [clipNote, setClipNote] = useState<string | null>(null)
+  const [notesDraft, setNotesDraft] = useState<TopicNotes | null>(null)
+  const [genBusy, setGenBusy] = useState<'tasks' | 'notes' | null>(null)
 
   useEffect(() => {
     const sync = () => setCustom(readCustomTopics())
@@ -165,6 +172,55 @@ export function TopicBuilder() {
       setClipBusy(false)
     }
   }, [clipLang, clipPrompt, grades, skills, subjectId, summary, t, theory, title])
+
+  const generatePart = useCallback(
+    async (kind: 'tasks' | 'notes') => {
+      if (!title.trim()) {
+        setError(t('builder.needTitle'))
+        return
+      }
+      setGenBusy(kind)
+      setError(null)
+      try {
+        const response = await fetch('/api/constructor/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            kind,
+            title: title.trim(),
+            subject: subjectId,
+            grade: grades[0],
+            language: clipLang,
+            goal: summary.trim(),
+            skills: skills.trim(),
+          }),
+        })
+        const data = (await response.json()) as { tasks?: GeneratedTask[]; notes?: TopicNotes }
+        if (kind === 'tasks' && data.tasks?.length) {
+          setTasks(
+            data.tasks.map((task, index) => ({
+              key: `gen-${index}-${Math.random().toString(36).slice(2, 8)}`,
+              prompt: task.prompt,
+              options: task.options,
+              answerIndex: task.answerIndex,
+              explanation: task.explanation,
+              difficulty: task.difficulty,
+              skill: task.skillId,
+            })),
+          )
+        }
+        if (kind === 'notes' && data.notes) {
+          setNotesDraft(data.notes)
+          setTheory(notesToTheory(data.notes).join('\n\n'))
+        }
+      } catch {
+        setError(t('builder.genFail'))
+      } finally {
+        setGenBusy(null)
+      }
+    },
+    [clipLang, grades, skills, subjectId, summary, t, title],
+  )
 
   const onSubmit = useCallback(
     async (event: FormEvent) => {
@@ -253,6 +309,7 @@ export function TopicBuilder() {
         tasks: builtTasks,
         custom: true,
         clipScript,
+        notes: notesDraft,
       }
 
       setPublishing(true)
@@ -269,7 +326,7 @@ export function TopicBuilder() {
         setPublishing(false)
       }
     },
-    [classId, clipScript, grades, resetForm, skills, subjectId, summary, t, tasks, theory, title],
+    [classId, clipScript, grades, notesDraft, resetForm, skills, subjectId, summary, t, tasks, theory, title],
   )
 
   return (
@@ -389,6 +446,14 @@ export function TopicBuilder() {
             <p className="mt-1 text-xs text-pathwise-muted">
               {t('builder.theoryHint')}
             </p>
+            <button
+              type="button"
+              disabled={genBusy === 'notes'}
+              onClick={() => void generatePart('notes')}
+              className="mt-2 inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold disabled:opacity-50"
+            >
+              {genBusy === 'notes' ? t('builder.genNotesBusy') : t('builder.genNotes')}
+            </button>
             <textarea
               id="builder-theory"
               value={theory}
@@ -487,13 +552,23 @@ export function TopicBuilder() {
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-sm font-semibold text-pathwise-ink">{t('builder.tasks')}</h3>
-              <button
-                type="button"
-                onClick={() => setTasks((prev) => [...prev, emptyTask(prev.length)])}
-                className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-pathwise-ink transition hover:border-[#6C63FF]"
-              >
-                {t('builder.addTask')}
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={genBusy === 'tasks'}
+                  onClick={() => void generatePart('tasks')}
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-pathwise-ink disabled:opacity-50"
+                >
+                  {genBusy === 'tasks' ? t('builder.genTasksBusy') : t('builder.genTasks')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTasks((prev) => [...prev, emptyTask(prev.length)])}
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-pathwise-ink transition hover:border-[#6C63FF]"
+                >
+                  {t('builder.addTask')}
+                </button>
+              </div>
             </div>
 
             {tasks.map((task, index) => (

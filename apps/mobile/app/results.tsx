@@ -3,7 +3,7 @@ import { Screen } from "../src/components/Screen";
 import { Body, Card, Kicker, PrimaryButton, SecondaryButton, Title } from "../src/components/ui";
 import { useI18n } from "../src/context/I18nContext";
 import { useLearning } from "../src/context/LearningContext";
-import { canAccessUniversityLayer } from "@pathwise/shared";
+import { canShowUniversityLayer } from "@pathwise/shared";
 import { resolveActiveLearningGoal, isOlympiadGoal, isSchoolCatchupGoal } from "../src/lib/learning/goal-priority";
 import { readJson } from "../src/lib/storage";
 import type { GenerateResponse } from "../src/types/generate";
@@ -11,7 +11,7 @@ import type { OnboardingAnswers } from "../src/types/onboarding";
 
 export default function ResultsScreen() {
   const { t } = useI18n();
-  const { profile } = useLearning();
+  const { profile, state } = useLearning();
   const router = useRouter();
   const answers = readJson<OnboardingAnswers | null>("ten-onboarding-answers", null);
   const generated = readJson<GenerateResponse | null>("ten-generate-response", null);
@@ -28,10 +28,10 @@ export default function ResultsScreen() {
         <Kicker>{t("results.kicker")}</Kicker>
         <Title>{t(titleKey)}</Title>
         {isOlympiadGoal(goal) ? (
-          <Body>{t(canAccessUniversityLayer(profile?.grade) ? "results.sub.olympiad" : "results.sub.olympiad.middle")}</Body>
+          <Body>{t(canShowUniversityLayer(profile?.grade, state.diagnostic) ? "results.sub.olympiad" : "results.sub.olympiad.middle")}</Body>
         ) : null}
         {isSchoolCatchupGoal(goal) ? (
-          <Body>{t(canAccessUniversityLayer(profile?.grade) ? "results.sub.school" : "results.sub.school.middle")}</Body>
+          <Body>{t(canShowUniversityLayer(profile?.grade, state.diagnostic) ? "results.sub.school" : "results.sub.school.middle")}</Body>
         ) : null}
         {!generated && !answers ? <Body>{t("results.afterOnboard")}</Body> : null}
       </Card>
@@ -45,7 +45,7 @@ export default function ResultsScreen() {
         </Card>
       ) : null}
 
-      {canAccessUniversityLayer(profile?.grade) && generated?.financial_route ? (
+      {canShowUniversityLayer(profile?.grade, state.diagnostic) && generated?.financial_route ? (
         <Card>
           <Kicker>{t("results.tag.money")}</Kicker>
           <Body>{generated.financial_route.monthly_cost} ₸ · {generated.financial_route.coverage_percent}%</Body>
@@ -60,7 +60,9 @@ export default function ResultsScreen() {
       ) : null}
 
       <PrimaryButton label={t("results.toLearn")} onPress={() => router.push("/learning")} />
-      <SecondaryButton label={t("nav.onboarding")} onPress={() => router.push("/onboarding")} />
+      {canShowUniversityLayer(profile?.grade, state.diagnostic) ? (
+        <SecondaryButton label={t("nav.onboarding")} onPress={() => router.push("/onboarding")} />
+      ) : null}
     </Screen>
   );
 }

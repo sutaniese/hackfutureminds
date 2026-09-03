@@ -662,8 +662,11 @@ to service_role;
 alter table public.custom_topics
   add column if not exists live_clip jsonb;
 
-comment on column public.custom_topics.live_clip is
-  'Teacher-authored live clip script (scenes JSON). Students in the class can read; teacher owner can write.';
+alter table public.custom_topics
+  add column if not exists notes jsonb;
+
+comment on column public.custom_topics.notes is
+  'Structured topic conspect: key idea, formula, bullets, example, common mistake. Students read via topic jsonb + this column.';
 
 alter table public.clip_events drop constraint if exists clip_events_event_check;
 alter table public.clip_events add constraint clip_events_event_check

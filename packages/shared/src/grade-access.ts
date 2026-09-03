@@ -28,6 +28,39 @@ export function canAccessUniversityLayer(grade: GradeLike): boolean {
   return n >= UNIVERSITY_LAYER_MIN_GRADE;
 }
 
+/** At least one subject diagnostic with a recorded pool. */
+export function isSubjectDiagnosticComplete(
+  diagnostic: { total?: number; subjectId?: string } | null | undefined,
+): boolean {
+  if (!diagnostic?.subjectId) return false;
+  const total = Number(diagnostic.total);
+  return Number.isFinite(total) && total > 0;
+}
+
+/**
+ * Phone / first-run gate: hide вузы, гранты and the admission (“навигационный”)
+ * test until the student has a class/grade AND has finished a subject diagnostic.
+ * Grades 7–9 stay hidden even after diagnostics.
+ */
+export function canShowUniversityLayer(
+  grade: GradeLike,
+  diagnostic: { total?: number; subjectId?: string } | null | undefined,
+): boolean {
+  const n = parseGradeNumber(grade);
+  if (n == null) return false;
+  if (n < UNIVERSITY_LAYER_MIN_GRADE) return false;
+  return isSubjectDiagnosticComplete(diagnostic);
+}
+
+export function filterNavLinksForUniversityAccess<T extends { href: string }>(
+  links: readonly T[],
+  grade: GradeLike,
+  diagnostic: { total?: number; subjectId?: string } | null | undefined,
+): T[] {
+  if (canShowUniversityLayer(grade, diagnostic)) return [...links];
+  return links.filter((link) => !isUniversityNavHref(link.href));
+}
+
 export function isUniversityLayerGoal(goal: string | null | undefined): boolean {
   return goal === "ent" || goal === "abroad";
 }

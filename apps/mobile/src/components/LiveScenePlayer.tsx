@@ -36,7 +36,12 @@ function linesOf(scene: LiveClipScene): string[] {
     .slice(0, 4);
 }
 
-async function speakScene(text: string, language: "ru" | "kk", onDone: () => void) {
+async function speakScene(
+  text: string,
+  language: "ru" | "kk",
+  onDone: () => void,
+  onError: () => void,
+) {
   let voices: Speech.Voice[] = [];
   try {
     voices = await Speech.getAvailableVoicesAsync();
@@ -52,12 +57,13 @@ async function speakScene(text: string, language: "ru" | "kk", onDone: () => voi
   const voice = match ?? (language === "kk" ? ru : undefined);
   Speech.stop();
   Speech.speak(text, {
-    language: voice?.language || (language === "kk" ? "ru-RU" : "ru-RU"),
+    language: voice?.language || "ru-RU",
     voice: voice?.identifier,
     onDone,
-    onStopped: onDone,
-    onError: onDone,
+    onStopped: () => undefined,
+    onError,
   });
+  return true;
 }
 
 function SceneBlock({ scene, accent }: { scene: LiveClipScene; accent: string }) {
@@ -131,6 +137,8 @@ export function LiveScenePlayer({
   const startedRef = useRef(false);
   const completedRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const generationRef = useRef(0);
+  const speakingRef = useRef(false);
   const sceneIndexRef = useRef(0);
   const phaseRef = useRef(phase);
   const quiz = quizTask ?? taskFromScript(script, topicId);
@@ -166,6 +174,8 @@ export function LiveScenePlayer({
         completedRef.current = true;
         fire("complete");
       }
+      generationRef.current += 1;
+      speakingRef.current = false;
       Speech.stop();
       clearTimer();
       setPhase("quiz");
@@ -178,17 +188,51 @@ export function LiveScenePlayer({
     if (phase !== "play") return;
     const current = script.scenes[sceneIndex];
     if (!current) return;
+    const token = generationRef.current + 1;
+    generationRef.current = token;
     clearTimer();
     Speech.stop();
-    let ended = false;
-    const finish = () => {
-      if (ended) return;
-      ended = true;
+    speakingRef.current = false;
+
+    const tryAdvance = (reason: "speech_end" | "speech_error" | "fallback_timer") => {
+      if (generationRef.current !== token) return;
+      if (phaseRef.current === "paused") return;
+      if (speakingRef.current && reason === "fallback_timer") return;
+      speakingRef.current = false;
       goNext();
     };
-    timerRef.current = setTimeout(finish, sceneDurationMs(current.narration));
-    void speakScene(current.narration, script.language, finish);
+
+    let attempts = 0;
+    const start = () => {
+      attempts += 1;
+      void speakScene(
+        current.narration,
+        script.language,
+        () => tryAdvance("speech_end"),
+        () => {
+          if (generationRef.current !== token) return;
+          if (attempts < 2) start();
+          else tryAdvance("speech_error");
+        },
+      )
+        .then((started) => {
+          if (generationRef.current !== token) return;
+          if (started) {
+            speakingRef.current = true;
+            clearTimer();
+            return;
+          }
+          timerRef.current = setTimeout(() => tryAdvance("fallback_timer"), sceneDurationMs(current.narration));
+        })
+        .catch(() => {
+          if (generationRef.current !== token) return;
+          timerRef.current = setTimeout(() => tryAdvance("fallback_timer"), sceneDurationMs(current.narration));
+        });
+    };
+    start();
     return () => {
+      generationRef.current += 1;
+      speakingRef.current = false;
       clearTimer();
       Speech.stop();
     };
@@ -253,7 +297,13 @@ export function LiveScenePlayer({
           </View>
           <View style={{ flexDirection: "row", gap: 8 }}>
             <Pressable
-              onPress={phase === "play" ? () => { Speech.stop(); clearTimer(); setPhase("paused"); } : start}
+              onPress={phase === "play" ? () => {
+                generationRef.current += 1;
+                speakingRef.current = false;
+                Speech.stop();
+                clearTimer();
+                setPhase("paused");
+              } : start}
               style={{ flex: 1, minHeight: 48, borderRadius: 999, backgroundColor: CLIP_STAGE.purple, alignItems: "center", justifyContent: "center" }}
             >
               <Text style={{ color: "#fff", fontWeight: "800" }}>
@@ -262,6 +312,8 @@ export function LiveScenePlayer({
             </Pressable>
             <Pressable
               onPress={() => {
+                generationRef.current += 1;
+                speakingRef.current = false;
                 Speech.stop();
                 clearTimer();
                 completedRef.current = false;

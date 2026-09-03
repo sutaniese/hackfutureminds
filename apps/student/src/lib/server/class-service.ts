@@ -18,11 +18,16 @@ import { joinFailureMessage, publicErrorMessage } from "@/lib/server/public-erro
 import { asArray } from "@/lib/safe-list";
 
 export type { StudentClassOverview, StudentExamItem, StudentHomeworkItem };
-function topicFromCustomRow(row: { topic?: Topic | null; clip_script?: Topic["clipScript"] }): Topic | null {
+function topicFromCustomRow(row: {
+  topic?: Topic | null;
+  clip_script?: Topic["clipScript"];
+  notes?: Topic["notes"];
+}): Topic | null {
   if (!row.topic) return null;
   return {
     ...row.topic,
     clipScript: row.topic.clipScript ?? row.clip_script ?? null,
+    notes: row.topic.notes ?? row.notes ?? null,
   };
 }
 
@@ -189,7 +194,7 @@ export async function readOwnProgress(user: AuthedUser) {
   if (classIds.length > 0) {
     const { data: custom } = await supabase
       .from("custom_topics")
-      .select("topic, clip_script, class_id")
+      .select("topic, clip_script, notes, class_id")
       .in("class_id", classIds);
     topics = (custom ?? [])
       .map((row: { topic?: Topic | null; clip_script?: Topic["clipScript"] }) => topicFromCustomRow(row))
@@ -315,7 +320,7 @@ export async function getStudentClassOverview(user: AuthedUser): Promise<Student
       .filter((row: { displayName: string }) => row.displayName.length > 0);
   }
 
-  const { data: custom } = await supabase.from("custom_topics").select("topic, clip_script").eq("class_id", classId);
+  const { data: custom } = await supabase.from("custom_topics").select("topic, clip_script, notes").eq("class_id", classId);
   const homework: StudentHomeworkItem[] = (custom ?? [])
     .map((row: { topic?: Topic | null; clip_script?: Topic["clipScript"] }) => topicFromCustomRow(row))
     .filter((topic): topic is Topic => Boolean(topic))
@@ -406,12 +411,19 @@ export async function publishTopic(user: AuthedUser, classId: string, topic: Top
     teacher_id: user.id,
     topic: { ...topic, custom: true, author: user.name || user.email },
     clip_script: topic.clipScript ?? null,
+    notes: topic.notes ?? null,
     updated_at: new Date().toISOString(),
   };
   let { error } = await supabase.from("custom_topics").upsert(payload);
+  if (error && /notes/i.test(error.message)) {
+    const { notes: _notes, ...withoutNotes } = payload;
+    void _notes;
+    ({ error } = await supabase.from("custom_topics").upsert(withoutNotes));
+  }
   if (error && /clip_script/i.test(error.message)) {
-    const { clip_script: _ignored, ...legacy } = payload;
+    const { clip_script: _ignored, notes: _notes, ...legacy } = payload;
     void _ignored;
+    void _notes;
     ({ error } = await supabase.from("custom_topics").upsert(legacy));
   }
   if (error) throw new HttpError(500, error.message);
@@ -438,7 +450,7 @@ export async function classBoard(user: AuthedUser, classId?: string) {
     return { classes, students: [], heatmap: [] };
   }
 
-  const { data: custom } = await supabase.from("custom_topics").select("topic, clip_script").eq("class_id", active.id);
+  const { data: custom } = await supabase.from("custom_topics").select("topic, clip_script, notes").eq("class_id", active.id);
   const catalog: Topic[] = [
     ...BASE_TOPICS,
     ...((custom ?? [])

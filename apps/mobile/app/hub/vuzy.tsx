@@ -1,4 +1,4 @@
-import { canAccessUniversityLayer } from "@pathwise/shared";
+import { canShowUniversityLayer } from "@pathwise/shared";
 import { useRouter } from "expo-router";
 import { Screen } from "../../src/components/Screen";
 import { Body, Card, Kicker, PrimaryButton, Title } from "../../src/components/ui";
@@ -23,14 +23,14 @@ export default function UniversitiesScreen() {
   const { t } = useI18n();
   const router = useRouter();
   const { user } = useAuth();
-  const { profile } = useLearning();
-  if (user?.role === "student" && !canAccessUniversityLayer(profile?.grade)) {
+  const { profile, state } = useLearning();
+  if (user?.role === "student" && !canShowUniversityLayer(profile?.grade, state.diagnostic)) {
     return (
       <Screen>
         <Card>
           <Kicker>{t("uni.kicker")}</Kicker>
-          <Title>{t("guard.grade.title")}</Title>
-          <Body>{t("guard.grade.body")}</Body>
+          <Title>{profile?.grade && Number(profile.grade) < 10 ? t("guard.grade.title") : t("guard.diag.title")}</Title>
+          <Body>{profile?.grade && Number(profile.grade) < 10 ? t("guard.grade.body") : t("guard.diag.body")}</Body>
           <PrimaryButton label={t("guard.grade.cta")} onPress={() => router.replace("/learning")} />
         </Card>
       </Screen>

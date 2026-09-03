@@ -83,6 +83,14 @@ export type Topic = {
   skills: string[];
   /** Короткий конспект темы — абзацы. */
   theory: string[];
+  /** Structured conspect (key idea, formula, bullets, example, mistake). */
+  notes?: {
+    keyIdea: string;
+    formula?: string;
+    bullets: string[];
+    example: string;
+    mistake: string;
+  } | null;
   materials: Material[];
   tasks: Task[];
   /** Тема добавлена учителем через конструктор. */
