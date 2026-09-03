@@ -23,6 +23,7 @@ import {
   Pressable,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -767,7 +768,13 @@ export default function DiagnosticsScreen() {
                 ))}
               </View>
             ) : (
-              <View
+              <TextInput
+                value={answer}
+                onChangeText={setAnswer}
+                placeholder={t("answer.short")}
+                placeholderTextColor={palette.muted}
+                multiline
+                textAlignVertical="top"
                 style={{
                   borderWidth: 1.5,
                   borderColor: palette.border,
@@ -775,15 +782,11 @@ export default function DiagnosticsScreen() {
                   paddingHorizontal: 14,
                   paddingVertical: 10,
                   backgroundColor: palette.surface,
+                  fontSize: 14,
+                  color: palette.ink,
+                  minHeight: 80,
                 }}
-              >
-                <Text
-                  style={{ fontSize: 14, color: answer ? palette.ink : palette.muted }}
-                  onPress={() => {/* text answer handled by RN TextInput elsewhere */}}
-                >
-                  {answer || t("answer.short")}
-                </Text>
-              </View>
+              />
             )}
 
             <View style={{ flexDirection: "row", gap: 10 }}>
@@ -807,17 +810,16 @@ export default function DiagnosticsScreen() {
               {/* Answer / Finish button */}
               <Pressable
                 accessibilityRole="button"
-                disabled={answer === "" && current.type !== "text"}
+                disabled={answer.trim() === ""}
                 onPress={() => {
-                  if (answer === "" && current.type !== "text") return;
+                  if (answer.trim() === "") return;
                   submitOrDontKnow(answer);
                 }}
                 style={{
                   flex: 1,
                   minHeight: tap,
                   borderRadius: 999,
-                  backgroundColor:
-                    answer === "" && current.type !== "text" ? palette.border : palette.primary,
+                  backgroundColor: answer.trim() === "" ? palette.border : palette.primary,
                   alignItems: "center",
                   justifyContent: "center",
                 }}
@@ -826,8 +828,7 @@ export default function DiagnosticsScreen() {
                   style={{
                     fontSize: 14,
                     fontWeight: "800",
-                    color:
-                      answer === "" && current.type !== "text" ? palette.muted : palette.primaryFg,
+                    color: answer.trim() === "" ? palette.muted : palette.primaryFg,
                   }}
                 >
                   {records.length + 1 >= DIAGNOSTIC_SIZE ? t("diag.done") : t("diag.answer")}

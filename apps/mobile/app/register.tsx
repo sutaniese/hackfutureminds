@@ -26,7 +26,7 @@ export default function RegisterScreen() {
     setBusy(true);
     try {
       const user = await register({ email, password, role, name });
-      router.replace((user.role === "student" ? "/onboarding" : cabinetPathForRole(user.role)) as never);
+      router.replace((user.role === "student" ? "/setup" : cabinetPathForRole(user.role)) as never);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("auth.generic"));
     } finally {

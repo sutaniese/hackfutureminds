@@ -447,6 +447,12 @@ export const CHROME_MESSAGES: Record<string, Record<Locale, string>> = {
   "topic.watchClip": TR("Смотреть клип", "Watch the clip", "Клипті көру"),
   "topic.hideClip": TR("Скрыть клип", "Hide the clip", "Клипті жасыру"),
 
+  "setup.kicker": TR("Шаг 1 из 3", "Step 1 of 3", "1 / 3 қадам"),
+  "setup.title": TR("Расскажите о себе", "Tell us about yourself", "Өзіңіз туралы айтыңыз"),
+  "setup.desc": TR("Укажите класс и код класса от учителя — потом пройдём короткую диагностику.", "Pick your grade and your teacher's class code — then we'll run a quick diagnostic.", "Сынып пен мұғалімнің сынып кодын енгізіңіз — содан кейін қысқа диагностика өтеміз."),
+  "setup.nextClass": TR("Далее — код класса", "Next — class code", "Әрі — сынып коды"),
+  "setup.skipClass": TR("Пропустить", "Skip", "Өткізу"),
+
   "topic.notFound": TR("Тема не найдена", "Topic not found", "Тақырып табылмады"),
   "topic.notFoundHint": TR("Возможно, тема была удалена из конструктора учителя или ссылка устарела.", "The topic may have been removed from the teacher builder, or the link is stale.", "Тақырып мұғалім құрастырғышынан өшірілген немесе сілтеме ескірген."),
   "topic.backDash": TR("Вернуться в кабинет", "Back to dashboard", "Кабинетке оралу"),
