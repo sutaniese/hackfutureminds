@@ -15,11 +15,17 @@ import { recordClipEvent } from "@/lib/learning/remote";
 import { weakSpots } from "@/lib/learning/recommend";
 import { useLearning } from "./useLearning";
 
-export function ClipPlayer() {
+export function ClipPlayer({
+  lockedTopicId,
+  onWrongAnswer,
+}: {
+  lockedTopicId?: string;
+  onWrongAnswer?: () => void;
+} = {}) {
   const { locale, t } = useI18n();
   const { topics, state, profile } = useLearning();
   const clipLocale = locale === "kk" ? "kk" : "ru";
-  const [topicId, setTopicId] = useState("math-quadratic");
+  const [topicId, setTopicId] = useState(lockedTopicId ?? "math-quadratic");
   const [phase, setPhase] = useState<"video" | "quiz" | "fallback">("video");
   const [clip, setClip] = useState<LearningClip | null>(null);
   const [source, setSource] = useState<"video" | "baked" | "ai" | "local">("video");
@@ -112,15 +118,20 @@ export function ClipPlayer() {
   const nextAfterQuiz = useCallback(
     (correct: boolean) => {
       fire(correct ? "quiz_right" : "quiz_wrong");
-      const weak = weakSpots(topics, state, 8);
       if (!correct) {
+        if (onWrongAnswer) {
+          onWrongAnswer();
+          return;
+        }
         selectTopic(topicId);
         return;
       }
+      if (lockedTopicId) return;
+      const weak = weakSpots(topics, state, 8);
       const nextWeak = weak.find((spot) => spot.topicId && spot.topicId !== topicId);
       selectTopic(nextWeak?.topicId || (profile?.subjectId === "physics" ? "phys-newton" : "inf-python"));
     },
-    [fire, profile?.subjectId, selectTopic, state, topicId, topics],
+    [fire, lockedTopicId, onWrongAnswer, profile?.subjectId, selectTopic, state, topicId, topics],
   );
 
   const onPlay = () => {
@@ -139,6 +150,7 @@ export function ClipPlayer() {
 
   return (
     <div className="flex flex-col items-center gap-5">
+      {lockedTopicId ? null : (
       <div className="flex w-full max-w-3xl flex-col gap-3">
         {SUBJECTS.map((subject) => {
           const items = BASE_TOPICS.filter((item) => item.subjectId === subject.id);
@@ -172,6 +184,7 @@ export function ClipPlayer() {
           {t("clips.live")}
         </button>
       </div>
+      )}
 
       <div className="w-full max-w-[390px] overflow-hidden rounded-[2.4rem] border-8 border-slate-900 bg-slate-950 shadow-2xl">
         <div className="relative aspect-[9/16] w-full bg-black text-white">
@@ -274,7 +287,7 @@ export function ClipPlayer() {
       </div>
 
       <p className="text-xs text-pathwise-muted">{t("clips.sourceLine", { source: t(`clips.source.${source}`) })}</p>
-      {topicId ? (
+      {topicId && !lockedTopicId ? (
         <Link href={`/learning/topic/${topicId}`} className="text-sm font-bold text-[#554dd6]">
           {t("clips.openTopic")}
         </Link>

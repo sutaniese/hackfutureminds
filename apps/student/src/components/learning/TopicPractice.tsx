@@ -23,8 +23,10 @@ import { recordAttempt, upsertRosterEntry } from "@/lib/learning/store";
 import { isAnswerCorrect, taskCorrectLabel } from "@/lib/learning/types";
 import type { Task } from "@/lib/learning/types";
 import { whyThisTask } from "@/lib/learning/why-this";
+import { videoClipFor } from "@pathwise/shared";
 import { AnswerField } from "./AnswerField";
-import { DifficultyBadge, EmptyState, Pill, ProgressBar, StatTile } from "./LearningUI";
+import { ClipPlayer } from "./ClipPlayer";
+import { ClipBadge, DifficultyBadge, EmptyState, Pill, ProgressBar, StatTile } from "./LearningUI";
 import { SpeakButton } from "./SpeakButton";
 import { TutorChat } from "./TutorChat";
 import { useLearning } from "./useLearning";
@@ -55,6 +57,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [checking, setChecking] = useState(false);
+  const [showClip, setShowClip] = useState(false);
 
   const topic = useMemo(() => topics.find((item) => item.id === topicId) ?? null, [topicId, topics]);
   const subject = topic ? findSubject(topic.subjectId) : null;
@@ -206,6 +209,8 @@ export function TopicPractice({ topicId }: { topicId: string }) {
 
   const sameSubject = topicsForSubject(topics, topic.subjectId).filter((item) => item.id !== topic.id);
   const solvedCount = topicState?.solved.length ?? 0;
+  const clipLocale = locale === "kk" ? "kk" : "ru";
+  const hasClip = Boolean(videoClipFor(topicId, clipLocale));
 
   return (
     <div className="flex flex-col gap-5">
@@ -216,6 +221,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
               <Pill tone="accent">{subjectTitle(topic.subjectId)}</Pill>
               <Pill>{t("learn.grade", { n: topic.grades.join(", ") })}</Pill>
               {topic.custom ? <Pill tone="good">{t("topic.teacherAdded")}</Pill> : null}
+              {hasClip ? <ClipBadge topicId={topicId} /> : null}
             </div>
             <h2 className="mt-3 flex flex-wrap items-center gap-3 text-2xl font-black tracking-tight text-pathwise-ink">
               {subject ? (
@@ -231,9 +237,20 @@ export function TopicPractice({ topicId }: { topicId: string }) {
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-pathwise-muted">{topic.summary}</p>
           </div>
-          <Link href="/learning" className="pw-btn-secondary shrink-0 text-sm">
-            {t("topic.toDash")}
-          </Link>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            {hasClip ? (
+              <button
+                type="button"
+                onClick={() => setShowClip((open) => !open)}
+                className="pw-btn-primary text-sm"
+              >
+                {showClip ? t("topic.hideClip") : t("topic.watchClip")}
+              </button>
+            ) : null}
+            <Link href="/learning" className="pw-btn-secondary text-sm">
+              {t("topic.toDash")}
+            </Link>
+          </div>
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
@@ -280,6 +297,18 @@ export function TopicPractice({ topicId }: { topicId: string }) {
           ))}
         </div>
       </ContentCard>
+
+      {showClip && hasClip ? (
+        <ContentCard>
+          <ClipPlayer
+            lockedTopicId={topicId}
+            onWrongAnswer={() => {
+              setShowClip(false);
+              setTab("practice");
+            }}
+          />
+        </ContentCard>
+      ) : null}
 
       {tab === "practice" ? (
         <ContentCard>
@@ -472,7 +501,10 @@ export function TopicPractice({ topicId }: { topicId: string }) {
                 href={`/learning/topic/${item.id}`}
                 className="rounded-2xl border border-slate-200 bg-white p-4 no-underline transition hover:-translate-y-0.5 hover:border-[#6C63FF]/50 hover:shadow-lg"
               >
-                <p className="text-sm font-black text-pathwise-ink">{item.title}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-black text-pathwise-ink">{item.title}</p>
+                  <ClipBadge topicId={item.id} />
+                </div>
                 <p className="mt-1 line-clamp-2 text-xs leading-5 text-pathwise-muted">
                   {item.summary}
                 </p>

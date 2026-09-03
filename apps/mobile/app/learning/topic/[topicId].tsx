@@ -1,8 +1,10 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
+import { videoClipFor } from "@pathwise/shared";
 import { Screen } from "../../../src/components/Screen";
 import { SpeakButton } from "../../../src/components/SpeakButton";
+import { TopicClipPlayer } from "../../../src/components/TopicClipPlayer";
 import { Body, Card, Chip, ErrorText, Field, Kicker, PrimaryButton, SecondaryButton, Title } from "../../../src/components/ui";
 import { useI18n } from "../../../src/context/I18nContext";
 import { useLearning } from "../../../src/context/LearningContext";
@@ -28,6 +30,9 @@ export default function TopicScreen() {
   const [busy, setBusy] = useState(false);
   const [question, setQuestion] = useState("");
   const [chat, setChat] = useState<Array<{ role: "user" | "assistant"; text: string }>>([]);
+  const [showClip, setShowClip] = useState(false);
+  const clipLocale = locale === "kk" ? "kk" : "ru";
+  const hasClip = Boolean(videoClipFor(String(topicId), clipLocale));
 
   if (!topic) {
     return (
@@ -110,12 +115,29 @@ export default function TopicScreen() {
         <Title>{topic.title}</Title>
         <Body>{topic.summary}</Body>
         <Body>{t("learn.masteredPct", { n: mastery })} · {t("learn.accuracy")} {accuracy ?? "—"}%</Body>
-        <View style={{ flexDirection: "row", gap: 8 }}>
+        <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
           {(["practice", "theory", "tutor"] as Tab[]).map((item) => (
             <Chip key={item} label={t(`topic.tab.${item}`)} selected={tab === item} onPress={() => setTab(item)} />
           ))}
+          {hasClip ? <Chip label={t("clips.badge")} selected={false} onPress={() => setShowClip((open) => !open)} /> : null}
         </View>
+        {hasClip ? (
+          <PrimaryButton
+            label={showClip ? t("topic.hideClip") : t("topic.watchClip")}
+            onPress={() => setShowClip((open) => !open)}
+          />
+        ) : null}
       </Card>
+
+      {showClip && hasClip ? (
+        <TopicClipPlayer
+          topicId={topic.id}
+          onWrongAnswer={() => {
+            setShowClip(false);
+            setTab("practice");
+          }}
+        />
+      ) : null}
 
       {tab === "practice" ? (
         <Card>

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ContentCard, PageHero } from "@/components/ui/PageHero";
 import { ClassJoinCard } from "@/components/learning/ClassJoinCard";
-import { Pill } from "@/components/learning/LearningUI";
+import { ClipBadge, Pill } from "@/components/learning/LearningUI";
 import { useLearning } from "@/components/learning/useLearning";
 import { useI18n } from "@/i18n/I18nProvider";
 import { daysUntil, isTopicComplete, topicStateOf, weakSpots } from "@/lib/learning/recommend";
@@ -216,7 +216,10 @@ export function StudentClassView() {
                 className="block rounded-2xl border border-slate-200 bg-white p-4 no-underline"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-sm font-black text-pathwise-ink">{item.title}</p>
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <p className="text-sm font-black text-pathwise-ink">{item.title}</p>
+                    <ClipBadge topicId={item.id} />
+                  </div>
                   <Pill tone={statusTone(item.status)}>
                     {item.status === "done"
                       ? t("class.hwDone")
