@@ -14,6 +14,7 @@ import {
   pickNextDiagnostic,
 } from "../../src/lib/learning/recommend";
 import { readAllTopics, saveDiagnostic, seedDueReview, upsertRosterEntry, writeLearningProfile } from "../../src/lib/learning/store";
+import { canAccessUniversityLayer, goalsForGrade, sanitizeGoalsForGrade } from "@pathwise/shared";
 import { isAnswerCorrect, LEARNING_GOALS, taskCorrectLabel, type Grade, type LearningGoalId, type Task } from "../../src/lib/learning/types";
 
 const GRADES: Grade[] = [7, 8, 9, 10, 11, 12];
@@ -34,7 +35,7 @@ export default function DiagnosticsScreen() {
   const [stage, setStage] = useState<"grade" | "subject" | "goal" | "test" | "result">("grade");
   const [grade, setGrade] = useState<Grade>(9);
   const [subjectId, setSubjectId] = useState("math");
-  const [goals, setGoals] = useState<LearningGoalId[]>(["ent"]);
+  const [goals, setGoals] = useState<LearningGoalId[]>(["school"]);
   const [examDate, setExamDate] = useState(defaultExamDate());
   const [minutesPerDay, setMinutesPerDay] = useState(30);
   const [asked, setAsked] = useState<Task[]>([]);
@@ -53,7 +54,13 @@ export default function DiagnosticsScreen() {
       setError(t("diag.noNext"));
       return;
     }
-    writeLearningProfile({ grade, subjectId, goals, examDate, minutesPerDay });
+    writeLearningProfile({
+      grade,
+      subjectId,
+      goals: sanitizeGoalsForGrade(goals, grade),
+      examDate,
+      minutesPerDay,
+    });
     setAsked([first]);
     setCurrent(first);
     setRecords([]);
@@ -128,7 +135,19 @@ export default function DiagnosticsScreen() {
           <Body>{t("diag.hintGrade")}</Body>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {GRADES.map((item) => (
-              <Chip key={item} label={String(item)} selected={grade === item} onPress={() => setGrade(item)} />
+              <Chip
+                key={item}
+                label={String(item)}
+                selected={grade === item}
+                onPress={() => {
+                  setGrade(item);
+                  setGoals((prev) => {
+                    if (!canAccessUniversityLayer(item)) return sanitizeGoalsForGrade(prev, item);
+                    if (prev.length === 1 && prev[0] === "school") return ["ent"];
+                    return prev;
+                  });
+                }}
+              />
             ))}
           </View>
           <PrimaryButton label={t("diag.nextSubject")} onPress={() => setStage("subject")} />
@@ -156,7 +175,7 @@ export default function DiagnosticsScreen() {
         <Card>
           <Title>{t("diag.askGoal")}</Title>
           <Body>{t("diag.goalHint")}</Body>
-          {LEARNING_GOALS.map((item) => (
+          {goalsForGrade(LEARNING_GOALS, grade).map((item) => (
             <Chip
               key={item.id}
               label={`${t(`goal.${item.id}`)}`}

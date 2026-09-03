@@ -13,6 +13,8 @@ import { useI18n } from "@/i18n/I18nProvider";
 import { profileHref } from "@/lib/profile-slug";
 import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { studentContinuePath } from "@/lib/student-progress";
+import { canAccessUniversityLayer } from "@pathwise/shared";
+import { useLearning } from "@/components/learning/useLearning";
 
 type EntryCard = {
   role: UserRole;
@@ -39,7 +41,9 @@ export function HomeView() {
   const router = useRouter();
   const { t } = useI18n();
   const { user, status, logout } = useAuth();
+  const { profile } = useLearning();
   const isAuthed = status === "authed" && Boolean(user);
+  const showGrants = canAccessUniversityLayer(profile?.grade);
 
   const entryCards = useMemo(() => buildEntryCards(t), [t]);
 
@@ -158,12 +162,14 @@ export function HomeView() {
               >
                 {t("home.landing.ctaSecondary")}
               </Link>
+              {showGrants ? (
               <Link
                 href="/grants"
                 className="inline-flex min-h-12 items-center justify-center rounded-full border border-slate-200 bg-white px-6 text-sm font-black text-[#111827] no-underline shadow-sm transition hover:-translate-y-0.5 hover:border-[#6C63FF]"
               >
                 {t("home.landing.ctaGrants")}
               </Link>
+              ) : null}
               {isAuthed && user?.email ? (
                 <Link
                   href={profileHref(user.email)}

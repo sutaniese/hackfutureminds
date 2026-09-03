@@ -27,6 +27,7 @@ import {
 import { topicsLabel } from "@/lib/learning/plural";
 import { LEARNING_GOALS, isAnswerCorrect, taskCorrectLabel } from "@/lib/learning/types";
 import type { Difficulty, Grade, LearningGoalId, Task } from "@/lib/learning/types";
+import { canAccessUniversityLayer, goalsForGrade, sanitizeGoalsForGrade } from "@pathwise/shared";
 import { localizeTopic } from "@/lib/learning/kk-overlay";
 import { useI18n } from "@/i18n/I18nProvider";
 import { AnswerField } from "./AnswerField";
@@ -104,7 +105,7 @@ export function DiagnosticsFlow() {
   const [stage, setStage] = useState<Stage>("profile");
   const [grade, setGrade] = useState<Grade>(9);
   const [subjectId, setSubjectId] = useState<string>("math");
-  const [goals, setGoals] = useState<LearningGoalId[]>(["ent"]);
+  const [goals, setGoals] = useState<LearningGoalId[]>(["school"]);
   const [examDate, setExamDate] = useState(defaultExamDate);
   const [minutesPerDay, setMinutesPerDay] = useState(30);
   const [profileStep, setProfileStep] = useState<ProfileStep>("grade");
@@ -138,7 +139,7 @@ export function DiagnosticsFlow() {
         .filter((item): item is DiagnosticRecord => Boolean(item));
       setGrade(draft.grade);
       setSubjectId(draft.subjectId);
-      setGoals(draft.goals.length ? draft.goals : ["ent"]);
+      setGoals(sanitizeGoalsForGrade(draft.goals.length ? draft.goals : ["school"], draft.grade));
       setExamDate(draft.examDate || defaultExamDate());
       setMinutesPerDay(draft.minutesPerDay);
       setPool(nextPool);
@@ -154,7 +155,7 @@ export function DiagnosticsFlow() {
     if (profile) {
       setGrade(profile.grade);
       setSubjectId(profile.subjectId);
-      setGoals(profile.goals.length ? profile.goals : ["ent"]);
+      setGoals(sanitizeGoalsForGrade(profile.goals.length ? profile.goals : ["school"], profile.grade));
       setExamDate(profile.examDate || defaultExamDate());
       setMinutesPerDay(profile.minutesPerDay);
     }
@@ -163,6 +164,17 @@ export function DiagnosticsFlow() {
     // Restore once on mount. Locale for KK overlay is read from the current i18n value
     // inside the draft branch; re-running on locale change would wipe an in-progress test.
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const visibleGoals = useMemo(() => goalsForGrade(LEARNING_GOALS, grade), [grade]);
+
+  const pickGrade = useCallback((next: Grade) => {
+    setGrade(next);
+    setGoals((prev) => {
+      if (!canAccessUniversityLayer(next)) return sanitizeGoalsForGrade(prev, next);
+      if (prev.length === 1 && prev[0] === "school") return ["ent"];
+      return prev;
+    });
   }, []);
 
   const toggleGoal = useCallback((goal: LearningGoalId) => {
@@ -174,10 +186,11 @@ export function DiagnosticsFlow() {
     const nextPool = diagnosticPool(allTopics, subjectId, grade);
     if (nextPool.length === 0) return;
 
+    const nextGoals = sanitizeGoalsForGrade(goals.length > 0 ? goals : ["school"], grade);
     writeLearningProfile({
       grade,
       subjectId,
-      goals: goals.length > 0 ? goals : ["school"],
+      goals: nextGoals,
       examDate: examDate || defaultExamDate(),
       minutesPerDay,
     });
@@ -195,7 +208,7 @@ export function DiagnosticsFlow() {
         stage: "test",
         grade,
         subjectId,
-        goals: goals.length > 0 ? goals : ["school"],
+        goals: nextGoals,
         examDate: examDate || defaultExamDate(),
         minutesPerDay,
         askedIds: [],
@@ -313,7 +326,7 @@ export function DiagnosticsFlow() {
                   <button
                     key={item}
                     type="button"
-                    onClick={() => setGrade(item)}
+                    onClick={() => pickGrade(item)}
                     aria-pressed={grade === item}
                     className={`min-h-12 min-w-14 rounded-full border px-4 text-sm font-black transition ${
                       grade === item
@@ -400,7 +413,7 @@ export function DiagnosticsFlow() {
               <p className="text-sm font-black text-pathwise-ink">{t("diag.goal")}</p>
               <p className="mt-1 text-xs text-pathwise-muted">{t("diag.goalHint")}</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {LEARNING_GOALS.map((goal) => {
+                {visibleGoals.map((goal) => {
                   const active = goals.includes(goal.id);
                   return (
                     <button

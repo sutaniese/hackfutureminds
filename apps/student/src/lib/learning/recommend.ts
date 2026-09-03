@@ -1,3 +1,4 @@
+import { canAccessUniversityLayer } from "@pathwise/shared";
 import { topicsForSubject } from "./catalog";
 import { daysLabel, tasksLabel } from "./plural";
 import { emptyTopicState } from "./empty-state";
@@ -297,7 +298,11 @@ export function recommendTopics(
       score += 8;
       reasons.push("есть задания олимпиадного уровня");
     }
-    if (goals.has("ent") && topic.grades.some((grade) => grade >= 10)) {
+    if (
+      canAccessUniversityLayer(profile.grade) &&
+      goals.has("ent") &&
+      topic.grades.some((grade) => grade >= 10)
+    ) {
       score += 8;
       reasons.push("входит в программу ЕНТ");
     }

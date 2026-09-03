@@ -1,9 +1,11 @@
+import { canAccessUniversityLayer, nextOnboardingStepIndex } from "@pathwise/shared";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
 import { Screen } from "../src/components/Screen";
 import { Body, Card, Chip, Field, Kicker, PrimaryButton, SecondaryButton, Title } from "../src/components/ui";
 import { useI18n } from "../src/context/I18nContext";
+import { useLearning } from "../src/context/LearningContext";
 import { apiPost } from "../src/lib/api";
 import { writeJson } from "../src/lib/storage";
 import { ONBOARDING_SUBJECT_OPTIONS, WORK_OPTIONS } from "../src/lib/onboarding-constants";
@@ -12,24 +14,31 @@ import type { GenerateResponse } from "../src/types/generate";
 
 export default function OnboardingScreen() {
   const { t, locale } = useI18n();
+  const { profile } = useLearning();
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState(createEmptyAnswers());
   const [busy, setBusy] = useState(false);
+  const grade = profile?.grade;
+  const allowUniversity = canAccessUniversityLayer(grade);
+  const isLast = nextOnboardingStepIndex(step - 1, grade, 1) > 6;
 
   async function finish() {
     setBusy(true);
     try {
+      const payload = allowUniversity || answers.studyLocation
+        ? answers
+        : { ...answers, studyLocation: "kazakhstan" as const };
       const data = await apiPost<GenerateResponse>("/api/generate", {
-        interests: answers.subjectIds,
-        achievements: answers.achievements.split("\n").filter(Boolean),
+        interests: payload.subjectIds,
+        achievements: payload.achievements.split("\n").filter(Boolean),
         target_university: "",
-        city: answers.city,
-        budget_monthly: Number(answers.budgetConstraints.replace(/\D/g, "")) || 0,
+        city: payload.city,
+        budget_monthly: Number(payload.budgetConstraints.replace(/\D/g, "")) || 0,
         language: locale,
-        onboarding: answers,
+        onboarding: payload,
       });
-      writeJson("ten-onboarding-answers", answers);
+      writeJson("ten-onboarding-answers", payload);
       writeJson("ten-generate-response", data);
       router.replace("/results");
     } catch {
@@ -43,7 +52,7 @@ export default function OnboardingScreen() {
   return (
     <Screen>
       <Card>
-        <Kicker>{t("nav.onboarding")} · {step}/7</Kicker>
+        <Kicker>{t("nav.onboarding")} · {step}/{allowUniversity ? 7 : 5}</Kicker>
         {step === 1 ? (
           <>
             <Title>{t("onboard.q1")}</Title>
@@ -117,12 +126,23 @@ export default function OnboardingScreen() {
           </>
         ) : null}
         <View style={{ flexDirection: "row", gap: 8 }}>
-          {step > 1 ? <SecondaryButton label={t("diag.back")} onPress={() => setStep((n) => n - 1)} /> : null}
+          {step > 1 ? (
+            <SecondaryButton
+              label={t("diag.back")}
+              onPress={() => {
+                const prev = nextOnboardingStepIndex(step - 1, grade, -1);
+                if (prev >= 0) setStep(prev + 1);
+              }}
+            />
+          ) : null}
           <View style={{ flex: 1 }}>
-            {step < 7 ? (
-              <PrimaryButton label={t("onboard.continue")} onPress={() => setStep((n) => n + 1)} />
-            ) : (
+            {isLast ? (
               <PrimaryButton label={t("onboard.finish")} onPress={finish} busy={busy} />
+            ) : (
+              <PrimaryButton
+                label={t("onboard.continue")}
+                onPress={() => setStep(nextOnboardingStepIndex(step - 1, grade, 1) + 1)}
+              />
             )}
           </View>
         </View>

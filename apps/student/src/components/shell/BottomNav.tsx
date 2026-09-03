@@ -1,7 +1,9 @@
 "use client";
 
+import { filterNavLinksForGrade } from "@pathwise/shared";
 import { SHELL_PX } from "@/lib/shell-layout";
 import { useI18n } from "@/i18n/I18nProvider";
+import { useLearning } from "@/components/learning/useLearning";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -110,6 +112,9 @@ const items: NavItem[] = [
 export function BottomNav() {
   const { t } = useI18n();
   const path = usePathname() || "/";
+  const { profile } = useLearning();
+  const visible = filterNavLinksForGrade(items, profile?.grade);
+  const cols = visible.length;
 
   return (
     <nav
@@ -122,10 +127,10 @@ export function BottomNav() {
     >
       <div className={`${SHELL_PX} pb-2`}>
         <div
-          className="pointer-events-auto mx-auto grid max-w-2xl grid-cols-7 gap-1 rounded-full border border-slate-200 bg-white p-1.5 shadow-[0_14px_35px_rgb(15_23_42_/_0.12)] "
-          style={{ minHeight: "var(--pw-nav)" }}
+          className="pointer-events-auto mx-auto grid max-w-2xl gap-1 rounded-full border border-slate-200 bg-white p-1.5 shadow-[0_14px_35px_rgb(15_23_42_/_0.12)] "
+          style={{ minHeight: "var(--pw-nav)", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
         >
-          {items.map((item) => {
+          {visible.map((item) => {
             const active = item.isActive(path);
             return (
               <Link

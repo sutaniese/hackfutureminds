@@ -1,6 +1,8 @@
 "use client";
 
+import { canAccessUniversityLayer } from "@pathwise/shared";
 import { PORTAL_PATHS, portalHref } from "@pathwise/shared/links";
+import { useLearning } from "@/components/learning/useLearning";
 
 /**
  * Bridge from the student core to the B2B hub inside the same Next.js app.
@@ -11,6 +13,8 @@ import { PORTAL_PATHS, portalHref } from "@pathwise/shared/links";
  */
 export function CrossAppPromo() {
   const portalBase = process.env.NEXT_PUBLIC_PORTAL_URL?.trim() || undefined;
+  const { profile } = useLearning();
+  const allowUniversity = canAccessUniversityLayer(profile?.grade);
   const items: Array<{ href: string; emoji: string; title: string; sub: string }> = [
     {
       href: portalHref(PORTAL_PATHS.parents, portalBase),
@@ -24,12 +28,16 @@ export function CrossAppPromo() {
       title: "Учителя",
       sub: "Класс с инвайт-кодом, сводный дашборд и письма-рекомендации.",
     },
-    {
-      href: portalHref(PORTAL_PATHS.universities, portalBase),
-      emoji: "🎓",
-      title: "Каталог вузов",
-      sub: "30+ университетов Казахстана с программами, дедлайнами и грантами.",
-    },
+    ...(allowUniversity
+      ? [
+          {
+            href: portalHref(PORTAL_PATHS.universities, portalBase),
+            emoji: "🎓",
+            title: "Каталог вузов",
+            sub: "30+ университетов Казахстана с программами, дедлайнами и грантами.",
+          },
+        ]
+      : []),
   ];
 
   return (

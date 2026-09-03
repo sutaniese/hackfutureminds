@@ -1,8 +1,10 @@
+import { filterNavLinksForGrade } from "@pathwise/shared";
 import { usePathname, useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import { useI18n } from "../context/I18nContext";
+import { useLearning } from "../context/LearningContext";
 import { tap } from "../lib/theme";
 
 type Tab = { href: string; labelKey: string; match?: (path: string) => boolean };
@@ -33,6 +35,7 @@ const PARENT_TABS: Tab[] = [
 export function RoleTabs() {
   const { user, status } = useAuth();
   const { t, palette } = useI18n();
+  const { profile } = useLearning();
   const pathname = usePathname();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -41,7 +44,12 @@ export function RoleTabs() {
   if (!user) return null;
   if (pathname === "/login" || pathname === "/register") return null;
 
-  const tabs = user.role === "teacher" ? TEACHER_TABS : user.role === "parent" ? PARENT_TABS : STUDENT_TABS;
+  const tabs =
+    user.role === "teacher"
+      ? TEACHER_TABS
+      : user.role === "parent"
+        ? PARENT_TABS
+        : filterNavLinksForGrade(STUDENT_TABS, profile?.grade);
 
   return (
     <View

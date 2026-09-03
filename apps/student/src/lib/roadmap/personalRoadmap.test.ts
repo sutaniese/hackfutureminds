@@ -63,16 +63,42 @@ describe("buildPersonalRoadmap", () => {
     expect(nodes[0]?.subtitle).toMatch(/олимпиад/i);
   });
 
-  it("keeps ЕНТ copy when that is the diagnostic goal", () => {
+  it("keeps ЕНТ copy when that is the diagnostic goal for grades 10–12", () => {
     const nodes = buildPersonalRoadmap({
       answers: onboarding,
-      diagnostic,
-      profile: { ...olympiadProfile, goals: ["ent"] },
+      diagnostic: { ...diagnostic, grade: 11 },
+      profile: { ...olympiadProfile, grade: 11, goals: ["ent"] },
       generated: null,
       targetUniversity: null,
       locale: "ru",
     });
     const blob = JSON.stringify(nodes);
     expect(blob).toMatch(/ЕНТ|вуз|грант/i);
+  });
+
+  it("hides the university layer for grades 7–9 even if ENT is still stored", () => {
+    const nodes = buildPersonalRoadmap({
+      answers: onboarding,
+      diagnostic: { ...diagnostic, grade: 8 },
+      profile: { ...olympiadProfile, grade: 8, goals: ["ent"] },
+      generated: {
+        career_map: [{ title: "Врач", salary_kzt: "1", description: "", vacancies: [] }],
+        financial_route: {
+          monthly_cost: 1,
+          grants: [{ name: "Bolashak", amount: 1, deadline: "май", match: "high" }],
+          gap: 0,
+          coverage_percent: 80,
+        },
+        portfolio_block: "",
+      },
+      targetUniversity: { id: "nu", name: "NU", city: "Астана" },
+      locale: "ru",
+    });
+    const blob = JSON.stringify(nodes);
+    expect(blob).not.toMatch(/ЕНТ/);
+    expect(blob).not.toMatch(/Bolashak/i);
+    expect(blob).not.toMatch(/вуз/i);
+    expect(blob).not.toMatch(/грант/i);
+    expect(blob).toMatch(/школ|программ/i);
   });
 });
