@@ -143,7 +143,7 @@ export function fallbackLiveClipScript(input: LiveClipFallbackInput): LiveClipSc
       heading: title,
       body: a,
       narration: `${copy.open(title)} ${a}`.trim(),
-      visual: "diagram",
+      visual: "diagram" as const,
     },
     {
       id: "s2",
@@ -151,28 +151,28 @@ export function fallbackLiveClipScript(input: LiveClipFallbackInput): LiveClipSc
       body: b,
       formula: formulaSource,
       narration: `${copy.idea} ${b}`.trim(),
-      visual: formulaSource ? "formula" : "bullets",
+      visual: formulaSource ? ("formula" as const) : ("bullets" as const),
     },
     {
       id: "s3",
       heading: language === "kk" ? "Қадамдар" : "Шаги",
       body: c,
       narration: `${copy.example} ${c}`.trim(),
-      visual: "bullets",
+      visual: "bullets" as const,
     },
     {
       id: "s4",
       heading: language === "kk" ? "Салыстыру" : "Сравнение",
       body: `${a}\n${b}`,
       narration: `${copy.compare} ${a} ${b}`.trim(),
-      visual: "compare",
+      visual: "compare" as const,
     },
     {
       id: "s5",
       heading: language === "kk" ? "Қорытынды" : "Итог",
       body: prompt.slice(0, 280),
       narration: `${copy.recap} ${title}. ${a}`.trim(),
-      visual: "bullets",
+      visual: "bullets" as const,
     },
   ].slice(0, LIVE_CLIP_MAX_SCENES);
 

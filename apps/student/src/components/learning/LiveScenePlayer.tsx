@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   CLIP_STAGE,
   sceneDurationMs,
@@ -263,8 +263,9 @@ export function LiveScenePlayer({
 
   const accent = CLIP_STAGE.purple;
 
-  const frame = useMemo(
-    () => (
+  return (
+    <div className={preview ? "w-full overflow-hidden rounded-[1.6rem] border-4 border-slate-900 bg-slate-950" : "w-full max-w-[390px] overflow-hidden rounded-[2.4rem] border-8 border-slate-900 bg-slate-950 shadow-2xl"}>
+      <div className="relative aspect-[9/16] w-full bg-black text-white">
       <div
         className="relative flex h-full min-h-[520px] flex-col px-5 pb-6 pt-8"
         style={{ background: `linear-gradient(180deg, ${CLIP_STAGE.inkSoft} 0%, ${CLIP_STAGE.ink} 100%)` }}
@@ -331,13 +332,7 @@ export function LiveScenePlayer({
           </>
         )}
       </div>
-    ),
-    [accent, answer, fire, onWrongAnswer, phase, progress, quiz, quizDone, scene, sceneIndex, script.scenes.length, t],
-  );
-
-  return (
-    <div className={preview ? "w-full overflow-hidden rounded-[1.6rem] border-4 border-slate-900 bg-slate-950" : "w-full max-w-[390px] overflow-hidden rounded-[2.4rem] border-8 border-slate-900 bg-slate-950 shadow-2xl"}>
-      <div className="relative aspect-[9/16] w-full bg-black text-white">{frame}</div>
+      </div>
     </div>
   );
 }

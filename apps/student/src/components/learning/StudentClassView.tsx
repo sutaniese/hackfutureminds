@@ -92,6 +92,7 @@ export function StudentClassView() {
           summary: topic.summary,
           author: topic.author,
           status,
+          hasClip: Boolean(topic.clipScript?.scenes?.length),
         };
       });
   }, [remote.homework, state, topics]);
