@@ -10,6 +10,7 @@ import type {
   StudentExamItem,
   StudentHomeworkItem,
 } from "@/lib/learning/class-overview";
+import { mergeClassExams } from "@/lib/learning/class-overview";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { requireRole, type AuthedUser } from "@/lib/server/require-user";
 import { HttpError } from "@/lib/server/require-user";
@@ -234,10 +235,18 @@ export async function getStudentClassOverview(user: AuthedUser): Promise<Student
   const state = asState(stateRow ?? null);
   const learningProfile = profile ? asProfile(profile) : null;
 
-  const exams: StudentExamItem[] = [];
-  if (learningProfile?.examDate) {
-    exams.push({ title: learningProfile.examDate, date: learningProfile.examDate, source: "profile" });
-  }
+  const { data: deadlineRows } = classId
+    ? await supabase
+        .from("class_deadlines")
+        .select("title, due_on")
+        .eq("class_id", classId)
+        .order("due_on", { ascending: true })
+    : { data: [] as Array<{ title: string; due_on: string }> };
+
+  const exams = mergeClassExams(
+    learningProfile?.examDate,
+    (deadlineRows ?? []) as Array<{ title: string; due_on: string }>,
+  );
 
   if (!classId) {
     return {

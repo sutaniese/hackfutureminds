@@ -12,6 +12,20 @@ export type StudentExamItem = {
   source: "profile" | "teacher";
 };
 
+export function mergeClassExams(
+  profileExamDate: string | undefined,
+  teacherDeadlines: Array<{ title: string; due_on: string }>,
+): StudentExamItem[] {
+  const exams: StudentExamItem[] = [];
+  if (profileExamDate) {
+    exams.push({ title: profileExamDate, date: profileExamDate, source: "profile" });
+  }
+  for (const row of teacherDeadlines) {
+    exams.push({ title: row.title, date: row.due_on, source: "teacher" });
+  }
+  return exams;
+}
+
 export type StudentClassOverview = {
   configured: boolean;
   class: {
