@@ -411,6 +411,11 @@ export const CHROME_MESSAGES: Record<string, Record<Locale, string>> = {
   "diag.openDash": TR("Открыть личный кабинет", "Open dashboard", "Кабинетті ашу"),
   "diag.toRoadmap": TR("К дорожной карте", "To the roadmap", "Жол картасына"),
   "diag.preparing": TR("Готовим диагностику…", "Preparing the diagnostic…", "Диагностика дайындалуда…"),
+  "diag.dontKnow": TR("Не знаю", "Don't know", "Білмеймін"),
+  "diag.dontKnowHint": TR("«Не знаю» сигнализирует системе о пробеле — это ценнее, чем угадывать.", "«Don't know» signals a gap — it is more useful than guessing.", "«Білмеймін» жүйеге олқылық туралы сигнал береді — болжаудан бағалы."),
+  "diag.result.whatNext": TR("Что дальше?", "What's next?", "Бұдан кейін не болады?"),
+  "diag.result.openTopic": TR("Открыть тему", "Open topic", "Тақырыпты ашу"),
+  "diag.result.skillLabel": TR("Навык: {{skill}}", "Skill: {{skill}}", "Дағды: {{skill}}"),
   "diag.progress": TR("Пройдено {{a}} из {{b}}", "{{a}} of {{b}} done", "{{a}} / {{b}} өтті"),
 
   "clips.kicker": TR("Клипы", "Clips", "Клиптер"),

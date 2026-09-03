@@ -40,6 +40,8 @@ const DRAFT_KEY = "ten-diagnostic-draft";
 type Stage = "profile" | "test" | "result";
 type ProfileStep = "grade" | "subject" | "goal";
 
+const DONT_KNOW_WEB = "__dontknow";
+
 type Draft = {
   stage: "test";
   grade: Grade;
@@ -48,7 +50,7 @@ type Draft = {
   examDate: string;
   minutesPerDay: number;
   askedIds: string[];
-  records: Array<{ taskId: string; correct: boolean }>;
+  records: Array<{ taskId: string; correct: boolean; given?: string }>;
   targetDifficulty: Difficulty;
 };
 
@@ -114,6 +116,7 @@ export function DiagnosticsFlow() {
   const [current, setCurrent] = useState<Task | null>(null);
   const [answer, setAnswer] = useState("");
   const [records, setRecords] = useState<DiagnosticRecord[]>([]);
+  const [givenAnswers, setGivenAnswers] = useState<string[]>([]);
   const [targetDifficulty, setTargetDifficulty] = useState<Difficulty>(2);
   const [result, setResult] = useState<ReturnType<typeof evaluateDiagnostic> | null>(null);
 
@@ -256,13 +259,24 @@ export function DiagnosticsFlow() {
     [awardXp, earnBadge, goals, grade, setProfileCompletion, subjectId, user?.email, user?.name],
   );
 
+  const submitWithValue = useCallback((givenVal: string) => {
+    if (!current) return;
+    const isDontKnow = givenVal === DONT_KNOW_WEB;
+    const correct = isDontKnow ? false : isAnswerCorrect(current, givenVal);
+    const nextRecords = [...records, { task: current, correct }];
+    const nextGiven = [...givenAnswers, isDontKnow ? DONT_KNOW_WEB : String(givenVal)];
+    setRecords(nextRecords);
+    setGivenAnswers(nextGiven);
+    setAnswer("");
+    return { nextRecords, correct, nextGiven };
+  }, [current, givenAnswers, records]);
+
   const submitAnswer = useCallback(() => {
     if (!current || answer === "") return;
 
-    const correct = isAnswerCorrect(current, answer);
-    const nextRecords = [...records, { task: current, correct }];
-    setRecords(nextRecords);
-    setAnswer("");
+    const result = submitWithValue(answer);
+    if (!result) return;
+    const { nextRecords, correct } = result;
 
     if (nextRecords.length >= DIAGNOSTIC_SIZE) {
       finish(nextRecords);
@@ -290,7 +304,35 @@ export function DiagnosticsFlow() {
       records: nextRecords.map((record) => ({ taskId: record.task.id, correct: record.correct })),
       targetDifficulty: difficulty,
     });
-  }, [answer, current, examDate, finish, goals, grade, minutesPerDay, pool, records, subjectId, targetDifficulty]);
+  }, [answer, current, examDate, finish, goals, grade, minutesPerDay, pool, records, subjectId, submitWithValue, targetDifficulty]);
+
+  const submitDontKnow = useCallback(() => {
+    if (!current) return;
+    const result = submitWithValue(DONT_KNOW_WEB);
+    if (!result) return;
+    const { nextRecords, correct } = result;
+    if (nextRecords.length >= DIAGNOSTIC_SIZE) {
+      finish(nextRecords);
+      return;
+    }
+    const difficulty2 = nextDifficulty(targetDifficulty, correct);
+    setTargetDifficulty(difficulty2);
+    const asked = nextRecords.map((r) => r.task.id);
+    const next = pickQuestion(pool, asked, difficulty2);
+    if (!next) { finish(nextRecords); return; }
+    setCurrent(next);
+    writeDraft({
+      stage: "test",
+      grade,
+      subjectId,
+      goals: goals.length > 0 ? goals : ["school"],
+      examDate: examDate || defaultExamDate(),
+      minutesPerDay,
+      askedIds: asked,
+      records: nextRecords.map((r) => ({ taskId: r.task.id, correct: r.correct })),
+      targetDifficulty: difficulty2,
+    });
+  }, [current, examDate, finish, goals, grade, minutesPerDay, pool, records, subjectId, submitWithValue, targetDifficulty]);
 
   /* ------------------------------ шаг 1: профиль ------------------------------ */
 
@@ -558,6 +600,14 @@ export function DiagnosticsFlow() {
             >
               {answered + 1 === DIAGNOSTIC_SIZE ? t("diag.done") : t("diag.answer")}
             </button>
+            <button
+              type="button"
+              onClick={submitDontKnow}
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-pathwise-muted transition hover:border-[#6C63FF]/40 hover:text-[#554dd6]"
+              title={t("diag.dontKnowHint")}
+            >
+              {t("diag.dontKnow")}
+            </button>
             <span className="text-xs font-semibold text-pathwise-muted">
               {t("diag.topicSkill", { skill: current.skill })}
             </span>
@@ -571,6 +621,8 @@ export function DiagnosticsFlow() {
 
   if (stage === "result" && result) {
     const accuracy = Math.round((result.correct / Math.max(1, result.total)) * 100);
+    const levelColor =
+      result.level >= 3 ? "#43D19E" : result.level >= 2 ? "#6C63FF" : "#FF6B6B";
     const topicRows = Object.entries(result.byTopic)
       .map(([topicId, score]) => {
         const topic = topics.find((item) => item.id === topicId);
@@ -589,12 +641,28 @@ export function DiagnosticsFlow() {
           <p className="text-xs font-black uppercase tracking-[0.16em] text-pathwise-accent-strong">
             {t("diag.step3")}
           </p>
-          <h2 className="mt-3 text-2xl font-black tracking-tight text-pathwise-ink">
-            {t("diag.yourLevel", { level: t(`level.${result.level}`) })}
-          </h2>
+          <div className="mt-3 flex items-baseline gap-3">
+            <span className="text-4xl font-black" style={{ color: levelColor }}>
+              {result.correct}/{result.total}
+            </span>
+            <span
+              className="rounded-full px-3 py-1 text-sm font-black"
+              style={{ backgroundColor: levelColor + "22", color: levelColor }}
+            >
+              {t(`level.${result.level}`)}
+            </span>
+          </div>
           <p className="mt-2 text-sm leading-6 text-pathwise-muted">
             {t("diag.resultHint", { subject: subjectTitle(result.subjectId), grade: result.grade })}
           </p>
+          <div className="mt-5 rounded-2xl border border-[#6C63FF]/20 bg-[#6C63FF]/5 p-4">
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-pathwise-accent-strong">
+              {t("diag.result.whatNext")}
+            </p>
+            <p className="mt-1 text-sm leading-6 text-pathwise-muted">
+              {t("diag.result.whatNext")} — {t("diag.adapt")}
+            </p>
+          </div>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
             <StatTile label={t("diag.correctOf")} value={t("diag.of", { a: result.correct, b: result.total })} tone="accent" />
@@ -632,27 +700,80 @@ export function DiagnosticsFlow() {
         <ContentCard>
           <h3 className="text-lg font-black tracking-tight text-pathwise-ink">{t("diag.byQuestion")}</h3>
           <div className="mt-4 grid gap-3">
-            {records.map((record, index) => (
+            {records.map((record, index) => {
+              const isDontKnow = givenAnswers[index] === DONT_KNOW_WEB;
+              const icon = record.correct ? "✓" : isDontKnow ? "?" : "✗";
+              const iconLabel = record.correct
+                ? t("learn.correct")
+                : isDontKnow
+                  ? t("diag.dontKnow")
+                  : t("learn.wrong");
+              const borderColor = record.correct
+                ? "#43D19E"
+                : isDontKnow
+                  ? "#F59E0B"
+                  : "#FF6B6B";
+              const bgColor = record.correct
+                ? "#F0FFF8"
+                : isDontKnow
+                  ? "#FFFBEB"
+                  : "#FFF0F0";
+              const topic = topics.find((tp) => tp.id === record.task.topicId);
+
+              return (
               <details
                 key={record.task.id}
-                className="rounded-2xl border border-slate-200 bg-white p-4"
+                className="rounded-2xl p-4"
+                style={{ border: `2px solid ${borderColor}`, backgroundColor: bgColor }}
               >
                 <summary className="cursor-pointer list-none">
-                  <span className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-sm font-bold text-pathwise-ink">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span
+                      className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-black text-white"
+                      style={{ backgroundColor: borderColor }}
+                      aria-hidden
+                    >
+                      {icon}
+                    </span>
+                    <span className="flex-1 text-sm font-bold text-pathwise-ink">
                       {index + 1}. {record.task.prompt}
                     </span>
-                    <Pill tone={record.correct ? "good" : "warn"}>
-                      {record.correct ? t("learn.correct") : t("learn.wrong")}
-                    </Pill>
+                    <span
+                      className="rounded-full px-2.5 py-1 text-xs font-bold"
+                      style={{ backgroundColor: borderColor + "22", color: borderColor }}
+                    >
+                      {iconLabel}
+                    </span>
                   </span>
                 </summary>
-                <p className="mt-3 text-sm font-bold text-pathwise-ink">
-                  {t("diag.rightAnswer", { answer: taskCorrectLabel(record.task) })}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-pathwise-muted">{record.task.explanation}</p>
+                {!record.correct ? (
+                  <div className="mt-3 rounded-xl bg-[#43D19E]/15 p-3">
+                    <p className="text-sm font-black text-[#188655]">
+                      ✓ {taskCorrectLabel(record.task)}
+                    </p>
+                    {record.task.explanation ? (
+                      <p className="mt-1.5 text-sm leading-6 text-pathwise-muted">
+                        {record.task.explanation}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-pathwise-muted">
+                    {t("diag.result.skillLabel", { skill: record.task.skill })}
+                  </span>
+                  {!record.correct && topic ? (
+                    <Link
+                      href={`/learning/topic/${record.task.topicId}`}
+                      className="rounded-full bg-[#6C63FF]/10 px-3 py-1 text-xs font-black text-[#554dd6] no-underline hover:bg-[#6C63FF]/20"
+                    >
+                      {t("diag.result.openTopic")} →
+                    </Link>
+                  ) : null}
+                </div>
               </details>
-            ))}
+              );
+            })}
           </div>
         </ContentCard>
         ) : null}
