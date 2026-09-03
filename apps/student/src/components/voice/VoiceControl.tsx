@@ -1,13 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useI18n } from "@/i18n/I18nProvider";
 import { useAuth } from "@/components/shell/useAuth";
 import { useSelectedRole } from "@/components/shell/useSelectedRole";
 import { useLearning } from "@/components/learning/useLearning";
 import { isLocale, type Locale } from "@/i18n/locales";
-import { LS_VOICE } from "@/lib/pw-storage";
 import { joinClassByCode } from "@/lib/learning/remote";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { saveLocalClassJoin } from "@/lib/learning/class-local";
@@ -16,151 +15,95 @@ import { speakText, stopSpeaking } from "@/lib/speech";
 import { ROLE_ENTRY_PATHS, type UserRole } from "@/lib/site-nav";
 import { looksLikeHttpHtmlFailureMessage, readJsonResponse } from "@/lib/http-json";
 import {
+  commandPlainLanguage,
   parseVoiceControlCommand,
   resolveVoicePath,
   type VoiceControlCommand,
 } from "@/lib/voice/control-command";
-import { emitVoiceUi, LS_VOICE_CONTROL, screenDigest, VOICE_CONTROL_TOGGLE } from "@/lib/voice/bus";
+import { emitVoiceUi, screenDigest } from "@/lib/voice/bus";
+import { canStartListening, phaseAfterInterrupt, type VoicePhase } from "@/lib/voice/machine";
+import { useTapMic } from "@/lib/voice/use-tap-mic";
 
-type Status = "off" | "idle" | "listening" | "processing";
-
-function reducedMotion(): boolean {
-  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-export function VoiceControl({ embedded = false }: { embedded?: boolean }) {
+export function VoiceControl({ embedded = false, active = true }: { embedded?: boolean; active?: boolean }) {
   const { t, locale, setLocale } = useI18n();
   const pathname = usePathname() || "/";
   const router = useRouter();
   const { user, logout } = useAuth();
   const { role, setRole } = useSelectedRole();
   const { profile } = useLearning();
-  const [on, setOn] = useState(embedded);
-  const [status, setStatus] = useState<Status>(embedded ? "idle" : "off");
-  const [last, setLast] = useState("");
+  const [open, setOpen] = useState(embedded);
+  const [phase, setPhase] = useState<VoicePhase>("idle");
+  const [heard, setHeard] = useState("");
+  const [parsed, setParsed] = useState("");
+  const [error, setError] = useState("");
   const [typed, setTyped] = useState("");
-  const [micDenied, setMicDenied] = useState(false);
   const [pendingLogout, setPendingLogout] = useState(false);
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const loopRef = useRef(false);
-  const busyRef = useRef(false);
+  const tokenRef = useRef(0);
 
-  const supported = useMemo(() => {
-    if (typeof window === "undefined") return false;
-    return typeof navigator.mediaDevices?.getUserMedia === "function" && typeof window.MediaRecorder !== "undefined";
-  }, []);
-
-  const persist = useCallback((next: boolean) => {
-    setOn(next);
-    setStatus(next ? "idle" : "off");
-    try {
-      if (next) {
-        localStorage.setItem(LS_VOICE_CONTROL, "1");
-        localStorage.setItem(LS_VOICE, "1");
-      } else {
-        localStorage.removeItem(LS_VOICE_CONTROL);
-        localStorage.removeItem(LS_VOICE);
-      }
-      window.dispatchEvent(new Event("pathwise:voice-toggle"));
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  useEffect(() => {
-    try {
-      const enabled =
-        localStorage.getItem(LS_VOICE_CONTROL) === "1" || localStorage.getItem(LS_VOICE) === "1";
-      setOn(enabled);
-      setStatus(enabled ? "idle" : "off");
-    } catch {
-      /* ignore */
-    }
-    const sync = () => {
-      try {
-        const enabled =
-          localStorage.getItem(LS_VOICE_CONTROL) === "1" || localStorage.getItem(LS_VOICE) === "1";
-        setOn(enabled);
-        setStatus((prev) => (enabled ? (prev === "off" ? "idle" : prev) : "off"));
-      } catch {
-        /* ignore */
-      }
-    };
-    window.addEventListener("storage", sync);
-    window.addEventListener("pathwise:voice-toggle", sync);
-    window.addEventListener(VOICE_CONTROL_TOGGLE, sync);
-    return () => {
-      window.removeEventListener("storage", sync);
-      window.removeEventListener("pathwise:voice-toggle", sync);
-      window.removeEventListener(VOICE_CONTROL_TOGGLE, sync);
-    };
-  }, []);
-
-  const speak = useCallback(
-    (line: string) => {
-      setLast(line);
-      speakText(line, locale);
-    },
-    [locale],
-  );
+  const bump = () => {
+    tokenRef.current += 1;
+    return tokenRef.current;
+  };
 
   const runCommand = useCallback(
-    async (command: VoiceControlCommand) => {
+    async (command: VoiceControlCommand): Promise<"ok" | "error"> => {
+      const line = commandPlainLanguage(command);
+      setParsed(line);
       if (command.action === "noop") {
-        speak(command.speak);
-        return;
+        speakText(line, locale);
+        return "ok";
       }
       if (command.action === "logout") {
         if (!command.confirm && !pendingLogout) {
           setPendingLogout(true);
-          speak(t("voiceControl.logoutAsk"));
-          return;
+          setParsed(t("voiceControl.logoutAsk"));
+          speakText(t("voiceControl.logoutAsk"), locale);
+          return "ok";
         }
         setPendingLogout(false);
-        speak(command.speak || t("voiceControl.logoutOk"));
+        speakText(command.speak || t("voiceControl.logoutOk"), locale);
         await logout();
         router.push("/");
-        return;
+        return "ok";
       }
       setPendingLogout(false);
 
       if (command.action === "language" && isLocale(command.locale)) {
         setLocale(command.locale as Locale);
-        speak(command.speak);
-        return;
+        speakText(line, locale);
+        return "ok";
       }
 
       if (command.action === "role") {
         const wanted = command.role as UserRole;
         if (user && user.role !== wanted) {
-          speak(t("voiceControl.roleDenied"));
-          return;
+          setParsed(t("voiceControl.roleDenied"));
+          speakText(t("voiceControl.roleDenied"), locale);
+          return "ok";
         }
         if (!user) setRole(wanted);
         router.push(ROLE_ENTRY_PATHS[wanted]);
-        speak(command.speak);
-        return;
+        speakText(line, locale);
+        return "ok";
       }
 
       if (command.action === "back") {
         router.back();
-        speak(command.speak);
-        return;
+        speakText(line, locale);
+        return "ok";
       }
 
       if (command.action === "open_more") {
         emitVoiceUi({ type: "open_more" });
         const nav = document.querySelector("nav[role='navigation']");
         if (nav instanceof HTMLElement) nav.focus();
-        speak(command.speak);
-        return;
+        speakText(line, locale);
+        return "ok";
       }
 
       if (command.action === "read_screen") {
-        speak(command.speak);
-        return;
+        speakText(line, locale);
+        return "ok";
       }
 
       if (command.action === "join_class") {
@@ -182,11 +125,13 @@ export function VoiceControl({ embedded = false }: { embedded?: boolean }) {
               localOnly: false,
             });
           }
-          speak(command.speak);
+          speakText(line, locale);
+          return "ok";
         } catch {
-          speak(t("voiceControl.joinFail"));
+          setError(t("voiceControl.joinFail"));
+          setPhase("error");
+          return "error";
         }
-        return;
       }
 
       if (command.action === "diagnostic") {
@@ -195,8 +140,8 @@ export function VoiceControl({ embedded = false }: { embedded?: boolean }) {
           router.push(`/learning/diagnostics${subject}`);
         }
         emitVoiceUi({ type: "diagnostic", verb: command.verb, subjectId: command.subjectId });
-        speak(command.speak);
-        return;
+        speakText(line, locale);
+        return "ok";
       }
 
       if (command.action === "clip") {
@@ -205,8 +150,8 @@ export function VoiceControl({ embedded = false }: { embedded?: boolean }) {
           router.push(user?.role === "teacher" ? "/hub/obuchenie" : `/learning/clips${q}`);
         }
         emitVoiceUi({ type: "clip", verb: command.verb, topicQuery: command.topicQuery });
-        speak(command.speak);
-        return;
+        speakText(line, locale);
+        return "ok";
       }
 
       if (command.action === "navigate") {
@@ -216,22 +161,29 @@ export function VoiceControl({ embedded = false }: { embedded?: boolean }) {
           grade: profile?.grade,
         });
         if (resolved.blocked) {
-          speak(resolved.blocked);
-          return;
+          setParsed(resolved.blocked);
+          speakText(resolved.blocked, locale);
+          return "ok";
         }
         if (resolved.path) router.push(resolved.path);
-        speak(command.speak);
+        speakText(line, locale);
       }
+      return "ok";
     },
-    [logout, pendingLogout, profile?.grade, role, router, setLocale, setRole, speak, t, user],
+    [locale, logout, pendingLogout, profile?.grade, role, router, setLocale, setRole, t, user],
   );
 
   const submitTranscript = useCallback(
-    async (transcript: string) => {
+    async (transcript: string, token: number) => {
       const clean = transcript.trim();
-      if (!clean || busyRef.current) return;
-      busyRef.current = true;
-      setStatus("processing");
+      if (!clean) {
+        setError(t("voiceCoach.sttFail"));
+        setPhase("error");
+        return;
+      }
+      setHeard(clean);
+      setPhase("processing");
+      setError("");
       try {
         const response = await fetch("/api/voice/command", {
           method: "POST",
@@ -246,133 +198,133 @@ export function VoiceControl({ embedded = false }: { embedded?: boolean }) {
           }),
         });
         const data = await readJsonResponse<{ command?: VoiceControlCommand; error?: string }>(response);
+        if (tokenRef.current !== token) return;
         if ("error" in data && !("command" in data)) {
           throw new Error((data as { error: string }).error);
         }
         const command = parseVoiceControlCommand((data as { command?: unknown }).command);
-        await runCommand(command ?? { action: "noop", speak: t("voiceControl.unclear") });
-      } catch (error) {
-        const raw = error instanceof Error ? error.message : "";
-        const line = looksLikeHttpHtmlFailureMessage(raw) ? t("voiceControl.unclear") : t("voiceControl.unclear");
-        speak(line);
-      } finally {
-        busyRef.current = false;
-        if (loopRef.current) setStatus("listening");
-        else setStatus(on ? "idle" : "off");
+        if (!command) {
+          throw new Error("unparsed");
+        }
+        const result = await runCommand(command);
+        if (tokenRef.current !== token) return;
+        if (result === "ok") setPhase("idle");
+      } catch (err) {
+        if (tokenRef.current !== token) return;
+        const raw = err instanceof Error ? err.message : "";
+        setError(looksLikeHttpHtmlFailureMessage(raw) ? t("voiceControl.fail") : t("voiceControl.fail"));
+        setPhase("error");
       }
     },
-    [locale, on, pathname, profile?.grade, role, runCommand, speak, t, user?.role],
+    [locale, pathname, profile?.grade, role, runCommand, t, user?.role],
   );
 
-  const stopMic = useCallback(() => {
-    if (recorderRef.current?.state === "recording") recorderRef.current.stop();
-    recorderRef.current = null;
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
-  }, []);
-
-  const startChunk = useCallback(async () => {
-    if (!supported || !loopRef.current) return;
-    try {
-      const stream = streamRef.current ?? (await navigator.mediaDevices.getUserMedia({ audio: true }));
-      streamRef.current = stream;
-      setMicDenied(false);
-      chunksRef.current = [];
-      const recorder = new MediaRecorder(stream);
-      recorderRef.current = recorder;
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) chunksRef.current.push(event.data);
-      };
-      recorder.onstop = () => {
-        const audio = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
-        chunksRef.current = [];
-        if (audio.size > 1200 && loopRef.current) {
-          const form = new FormData();
-          form.set("audio", audio, "voice-control.webm");
-          form.set("locale", locale);
-          void fetch("/api/voice-transcribe", { method: "POST", body: form })
-            .then((res) => readJsonResponse<{ transcript?: string }>(res))
-            .then((data) => {
-              const line = "transcript" in data ? data.transcript?.trim() : "";
-              if (line) void submitTranscript(line);
-            })
-            .finally(() => {
-              if (loopRef.current) window.setTimeout(() => void startChunk(), 250);
-            });
-        } else if (loopRef.current) {
-          window.setTimeout(() => void startChunk(), 250);
+  const onAudio = useCallback(
+    async (audio: Blob) => {
+      const token = tokenRef.current;
+      setPhase("processing");
+      try {
+        const form = new FormData();
+        form.set("audio", audio, "voice-control.webm");
+        form.set("locale", locale);
+        const response = await fetch("/api/voice-transcribe", { method: "POST", body: form });
+        const data = await readJsonResponse<{ transcript?: string; error?: string }>(response);
+        if (tokenRef.current !== token) return;
+        if ("error" in data && !("transcript" in data)) {
+          throw new Error((data as { error: string }).error);
         }
-      };
-      recorder.start();
-      setStatus("listening");
-      window.setTimeout(() => {
-        if (recorderRef.current === recorder && recorder.state === "recording") recorder.stop();
-      }, 4500);
-    } catch {
-      setMicDenied(true);
-      loopRef.current = false;
-      setStatus("idle");
-      speak(t("voiceControl.micDenied"));
-    }
-  }, [locale, speak, submitTranscript, supported, t]);
+        const line = "transcript" in data ? data.transcript?.trim() : "";
+        await submitTranscript(line || "", token);
+      } catch {
+        if (tokenRef.current !== token) return;
+        setError(t("voiceControl.fail"));
+        setPhase("error");
+      }
+    },
+    [locale, submitTranscript, t],
+  );
 
-  const enable = useCallback(() => {
-    persist(true);
-    loopRef.current = true;
-    if (supported && !micDenied) void startChunk();
-    else setStatus("idle");
-  }, [micDenied, persist, startChunk, supported]);
-
-  const disable = useCallback(() => {
-    loopRef.current = false;
-    stopMic();
-    stopSpeaking();
-    persist(false);
-  }, [persist, stopMic]);
+  const mic = useTapMic({
+    active: active && (embedded || open),
+    captureWave: false,
+    onAudio,
+    onStopped: (kind) => {
+      if (kind === "send") setPhase("processing");
+    },
+  });
 
   useEffect(() => {
-    return () => {
-      loopRef.current = false;
-      stopMic();
-    };
-  }, [stopMic]);
+    if (!active) {
+      bump();
+      stopSpeaking();
+      mic.stop("discard");
+      setPhase("idle");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active]);
 
-  const pulse = on && status === "listening" && !reducedMotion();
+  const toggleMic = () => {
+    if (phase === "speaking") return;
+    if (mic.listening) {
+      mic.stop("send");
+      setPhase("processing");
+      return;
+    }
+    if (!canStartListening(phase) && phase !== "error") return;
+    bump();
+    setError("");
+    void mic.start().then((ok) => setPhase(ok ? "listening" : "idle"));
+  };
+
+  const statusLabel =
+    mic.listening || phase === "listening"
+      ? t("voiceControl.listening")
+      : phase === "processing"
+        ? t("voiceControl.processing")
+        : phase === "error"
+          ? t("voiceDock.error")
+          : heard
+            ? t("voiceControl.ready")
+            : t("voiceDock.idle");
+
+  const typeFallback = mic.denied || !mic.supported;
+  const shown = embedded || open;
 
   return (
     <div className="pointer-events-auto flex flex-col items-end gap-2">
       {embedded ? null : (
-      <button
-        type="button"
-        onClick={() => (on ? disable() : enable())}
-        aria-pressed={on}
-        className={`inline-flex min-h-12 min-w-[11rem] items-center justify-center rounded-full px-4 text-sm font-bold shadow-lg transition ${
-          on ? "bg-[#0F766E] text-white" : "border border-slate-200 bg-white text-pathwise-ink"
-        } ${pulse ? "animate-pulse" : ""}`}
-      >
-        {t("voiceControl.toggle")}
-      </button>
+        <button
+          type="button"
+          onClick={() => setOpen((prev) => !prev)}
+          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-[#0F766E] px-4 text-sm font-bold text-white shadow-lg"
+          aria-expanded={open}
+        >
+          {t("voiceControl.toggle")}
+        </button>
       )}
-      {on || embedded ? (
+      {shown ? (
         <section
-          className="w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-teal-200 bg-white/95 p-3 shadow-xl"
+          className={`${embedded ? "w-full rounded-none border-0 p-3 shadow-none" : "w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-teal-200 bg-white/95 p-3 shadow-xl"}`}
           aria-live="polite"
           aria-label={t("voiceControl.toggle")}
         >
-          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-teal-800">
-            {status === "listening"
-              ? t("voiceControl.listening")
-              : status === "processing"
-                ? t("voiceControl.processing")
-                : t("voiceControl.idle")}
-          </p>
-          <p className="mt-1 text-sm font-semibold text-pathwise-ink">{last || t("voiceControl.hint")}</p>
-          {micDenied || !supported ? (
+          <p className="text-sm font-black uppercase tracking-[0.12em] text-teal-800">{statusLabel}</p>
+          {heard ? (
+            <p className="mt-2 text-sm text-pathwise-muted">
+              {t("voiceControl.heard")}: <span className="font-semibold text-pathwise-ink">{heard}</span>
+            </p>
+          ) : (
+            <p className="mt-2 text-sm font-semibold text-pathwise-ink">{t("voiceControl.hint")}</p>
+          )}
+          {parsed ? <p className="mt-1 text-sm font-bold text-[#0F766E]">{parsed}</p> : null}
+          {error ? <p className="mt-1 text-sm font-semibold text-[#E75555]">{error}</p> : null}
+          {typeFallback ? (
             <form
               className="mt-2 flex gap-2"
               onSubmit={(event) => {
                 event.preventDefault();
-                void submitTranscript(typed);
+                const token = bump();
+                void submitTranscript(typed, token);
                 setTyped("");
               }}
             >
@@ -383,21 +335,50 @@ export function VoiceControl({ embedded = false }: { embedded?: boolean }) {
                 id="voice-control-type"
                 value={typed}
                 onChange={(event) => setTyped(event.target.value)}
-                className="pw-input min-h-12 flex-1 px-3 text-sm"
+                className="pw-input min-h-11 flex-1 px-3 text-sm"
                 placeholder={t("voiceControl.typePh")}
               />
-              <button type="submit" className="pw-btn-primary min-h-12 px-3 text-sm">
+              <button type="submit" className="pw-btn-primary min-h-11 px-3 text-sm">
                 {t("voiceControl.run")}
               </button>
             </form>
-          ) : null}
-          <button
-            type="button"
-            onClick={disable}
-            className="mt-2 inline-flex min-h-12 w-full items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-sm font-bold"
-          >
-            {t("voiceControl.off")}
-          </button>
+          ) : (
+            <div className="mt-3 flex flex-col gap-2">
+              {phase === "speaking" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    bump();
+                    stopSpeaking();
+                    setPhase(phaseAfterInterrupt());
+                  }}
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[#E75555] text-sm font-bold text-white"
+                >
+                  {t("voiceDock.interrupt")}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={toggleMic}
+                  disabled={phase === "processing"}
+                  className={`inline-flex min-h-11 w-full items-center justify-center rounded-full text-sm font-bold text-white ${
+                    mic.listening ? "bg-[#E75555]" : "bg-[#0F766E]"
+                  } disabled:opacity-60`}
+                >
+                  {mic.listening ? t("voiceCoach.stopSend") : t("voiceControl.tap")}
+                </button>
+              )}
+              {phase === "error" ? (
+                <button
+                  type="button"
+                  onClick={toggleMic}
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-slate-200 text-sm font-bold"
+                >
+                  {t("voiceDock.retry")}
+                </button>
+              ) : null}
+            </div>
+          )}
         </section>
       ) : null}
     </div>

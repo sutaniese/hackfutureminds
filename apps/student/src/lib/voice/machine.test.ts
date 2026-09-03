@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canStartListening, isStaleVoiceToken } from "./machine";
+import { canStartListening, isStaleVoiceToken, phaseAfterInterrupt } from "./machine";
 
 describe("voice session tokens", () => {
   it("drops a transcript from a cancelled listen", () => {
@@ -10,5 +10,10 @@ describe("voice session tokens", () => {
   it("does not listen while TTS is speaking", () => {
     expect(canStartListening("speaking")).toBe(false);
     expect(canStartListening("idle")).toBe(true);
+  });
+
+  it("interrupt returns to idle instead of listening", () => {
+    expect(phaseAfterInterrupt()).toBe("idle");
+    expect(canStartListening(phaseAfterInterrupt())).toBe(true);
   });
 });

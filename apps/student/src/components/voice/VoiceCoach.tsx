@@ -4,31 +4,30 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "@/i18n/I18nProvider";
 import { useAuth } from "@/components/shell/useAuth";
 import { useLearning } from "@/components/learning/useLearning";
-import { speakText } from "@/lib/speech";
+import { speakText, stopSpeaking } from "@/lib/speech";
 import { readJsonResponse } from "@/lib/http-json";
+import { canStartListening, phaseAfterInterrupt, type VoicePhase } from "@/lib/voice/machine";
+import { prefersReducedMotion, waveDisplay } from "@/lib/voice/meter";
+import { useTapMic } from "@/lib/voice/use-tap-mic";
+import { SoundWaves } from "./SoundWaves";
 
 type ChatTurn = { role: "user" | "assistant"; text: string };
 
-export function VoiceCoach({ embedded = false }: { embedded?: boolean }) {
+export function VoiceCoach({ embedded = false, active = true }: { embedded?: boolean; active?: boolean }) {
   const { t, locale } = useI18n();
   const { user } = useAuth();
   const { profile, state, topics } = useLearning();
   const [open, setOpen] = useState(embedded);
-  const [listening, setListening] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [micDenied, setMicDenied] = useState(false);
+  const [phase, setPhase] = useState<VoicePhase>("idle");
   const [typed, setTyped] = useState("");
   const [history, setHistory] = useState<ChatTurn[]>([]);
-  const [maySpeak, setMaySpeak] = useState(false);
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const holdRef = useRef(false);
+  const [reduced, setReduced] = useState(false);
+  const tokenRef = useRef(0);
 
-  const supported = useMemo(() => {
-    if (typeof window === "undefined") return false;
-    return typeof navigator.mediaDevices?.getUserMedia === "function" && typeof window.MediaRecorder !== "undefined";
-  }, []);
+  const bump = () => {
+    tokenRef.current += 1;
+    return tokenRef.current;
+  };
 
   const weakTopics = useMemo(() => {
     return Object.entries(state.topics)
@@ -38,10 +37,10 @@ export function VoiceCoach({ embedded = false }: { embedded?: boolean }) {
   }, [state.topics, topics]);
 
   const send = useCallback(
-    async (text: string) => {
+    async (text: string, token: number) => {
       const message = text.trim();
-      if (!message || busy) return;
-      setBusy(true);
+      if (!message) return;
+      setPhase("processing");
       setHistory((prev) => [...prev, { role: "user", text: message }]);
       try {
         const response = await fetch("/api/coach/chat", {
@@ -61,6 +60,7 @@ export function VoiceCoach({ embedded = false }: { embedded?: boolean }) {
           }),
         });
         const data = await readJsonResponse<{ reply?: string; error?: string }>(response);
+        if (tokenRef.current !== token) return;
         const reply =
           "reply" in data && data.reply
             ? data.reply
@@ -69,83 +69,126 @@ export function VoiceCoach({ embedded = false }: { embedded?: boolean }) {
               : t("voiceCoach.fail");
         const line = reply || t("voiceCoach.fail");
         setHistory((prev) => [...prev, { role: "assistant", text: line }]);
-        if (maySpeak) speakText(line, locale);
+        setPhase("speaking");
+        const spoken = speakText(line, locale, () => {
+          if (tokenRef.current !== token) return;
+          setPhase("idle");
+        });
+        if (!spoken) setPhase("idle");
       } catch {
+        if (tokenRef.current !== token) return;
         setHistory((prev) => [...prev, { role: "assistant", text: t("voiceCoach.fail") }]);
-      } finally {
-        setBusy(false);
+        setPhase("error");
       }
     },
-    [busy, history, locale, maySpeak, profile?.grade, profile?.subjectId, t, topics, weakTopics],
+    [history, locale, profile?.grade, profile?.subjectId, t, topics, weakTopics],
   );
 
-  const transcribe = useCallback(
+  const onAudio = useCallback(
     async (audio: Blob) => {
-      const form = new FormData();
-      form.set("audio", audio, "coach.webm");
-      form.set("locale", locale);
-      const response = await fetch("/api/voice-transcribe", { method: "POST", body: form });
-      const data = await readJsonResponse<{ transcript?: string; error?: string }>(response);
-      const line = "transcript" in data ? data.transcript?.trim() : "";
-      if (line) await send(line);
-      else setHistory((prev) => [...prev, { role: "assistant", text: t("voiceCoach.sttFail") }]);
+      const token = tokenRef.current;
+      setPhase("processing");
+      try {
+        const form = new FormData();
+        form.set("audio", audio, "coach.webm");
+        form.set("locale", locale);
+        const response = await fetch("/api/voice-transcribe", { method: "POST", body: form });
+        const data = await readJsonResponse<{ transcript?: string; error?: string }>(response);
+        if (tokenRef.current !== token) return;
+        const line = "transcript" in data ? data.transcript?.trim() : "";
+        if (!line) {
+          setPhase("error");
+          setHistory((prev) => [...prev, { role: "assistant", text: t("voiceCoach.sttFail") }]);
+          return;
+        }
+        await send(line, token);
+      } catch {
+        if (tokenRef.current !== token) return;
+        setPhase("error");
+        setHistory((prev) => [...prev, { role: "assistant", text: t("voiceCoach.sttFail") }]);
+      }
     },
     [locale, send, t],
   );
 
-  const stopRec = useCallback(() => {
-    if (recorderRef.current?.state === "recording") recorderRef.current.stop();
-    recorderRef.current = null;
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
-    setListening(false);
+  const mic = useTapMic({
+    active: active && (embedded || open),
+    captureWave: true,
+    onAudio,
+    onStopped: (kind) => {
+      if (kind === "send") setPhase("processing");
+    },
+  });
+
+  useEffect(() => {
+    setReduced(prefersReducedMotion());
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onChange = () => setReduced(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  const startRec = useCallback(async () => {
-    if (!supported) {
-      setMicDenied(true);
+  useEffect(() => {
+    if (!active) {
+      bump();
+      stopSpeaking();
+      mic.stop("discard");
+      setPhase("idle");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the tab hides
+  }, [active]);
+
+  const interrupt = () => {
+    bump();
+    stopSpeaking();
+    mic.stop("discard");
+    setPhase(phaseAfterInterrupt());
+  };
+
+  const toggleMic = () => {
+    if (phase === "speaking") return;
+    if (mic.listening) {
+      mic.stop("send");
+      setPhase("processing");
       return;
     }
-    try {
-      setMaySpeak(true);
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      chunksRef.current = [];
-      const recorder = new MediaRecorder(stream);
-      recorderRef.current = recorder;
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) chunksRef.current.push(event.data);
-      };
-      recorder.onstop = () => {
-        const audio = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
-        chunksRef.current = [];
-        if (audio.size > 0) void transcribe(audio);
-      };
-      recorder.start();
-      setListening(true);
-      setMicDenied(false);
-    } catch {
-      setMicDenied(true);
-    }
-  }, [supported, transcribe]);
+    if (!canStartListening(phase) && phase !== "error") return;
+    bump();
+    void mic.start().then((ok) => setPhase(ok ? "listening" : "idle"));
+  };
 
-  useEffect(() => () => stopRec(), [stopRec]);
-
-  const title =
-    user?.role === "teacher" ? t("voiceCoach.teacherTitle") : t("voiceCoach.studentTitle");
+  const title = user?.role === "teacher" ? t("voiceCoach.teacherTitle") : t("voiceCoach.studentTitle");
+  const waveMode = waveDisplay(mic.listening ? "listening" : phase, reduced, "coach");
+  const typeFallback = mic.denied || !mic.supported;
+  const shown = embedded || open;
 
   return (
     <div className="pointer-events-auto flex flex-col items-end gap-2">
-      {open ? (
+      {shown ? (
         <section
           className={`${embedded ? "w-full rounded-none border-0 shadow-none" : "w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-slate-200 bg-white/95 shadow-xl"} overflow-hidden`}
           aria-label={title}
         >
           <div className={`flex items-center justify-between border-b border-slate-100 px-3 py-2 ${embedded ? "hidden" : ""}`}>
             <p className="text-sm font-bold text-pathwise-ink">{title}</p>
-            <button type="button" onClick={() => setOpen(false)} className="min-h-11 px-2 text-sm font-semibold">
+            <button type="button" onClick={() => setOpen(false)} className="min-h-11 min-w-11 px-2 text-sm font-semibold">
               {t("voiceCoach.close")}
             </button>
+          </div>
+          <div className="px-3 pt-2">
+            <SoundWaves points={mic.points} mode={waveMode} label={t("voiceDock.listening")} />
+            {phase === "processing" ? (
+              <p className="flex min-h-11 items-center gap-2 text-sm font-semibold text-pathwise-muted" role="status">
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[#6C63FF] border-t-transparent" />
+                {t("voiceDock.processing")}
+              </p>
+            ) : null}
+            {phase === "speaking" ? (
+              <p className="text-sm font-semibold text-pathwise-ink" role="status">
+                {t("voiceDock.speaking")}
+              </p>
+            ) : null}
           </div>
           <div className="max-h-56 space-y-2 overflow-y-auto p-3" aria-live="polite">
             {history.length === 0 ? (
@@ -162,70 +205,79 @@ export function VoiceCoach({ embedded = false }: { embedded?: boolean }) {
                 </p>
               ))
             )}
-            {busy ? <p className="text-xs font-semibold text-pathwise-muted">{t("voiceCoach.thinking")}</p> : null}
           </div>
-          {micDenied || !supported ? (
+          {typeFallback ? (
             <form
               className="flex gap-2 border-t border-slate-100 p-3"
               onSubmit={(event) => {
                 event.preventDefault();
-                setMaySpeak(true);
-                void send(typed);
+                const token = bump();
+                void send(typed, token);
                 setTyped("");
               }}
             >
               <input
                 value={typed}
                 onChange={(event) => setTyped(event.target.value)}
-                className="pw-input min-h-12 flex-1 px-3 text-sm"
+                className="pw-input min-h-11 flex-1 px-3 text-sm"
                 placeholder={t("voiceCoach.typePh")}
               />
-              <button type="submit" className="pw-btn-primary min-h-12 px-3 text-sm">
+              <button type="submit" className="pw-btn-primary min-h-11 min-w-11 px-3 text-sm">
                 {t("voiceCoach.send")}
               </button>
             </form>
           ) : (
-            <div className="flex gap-2 border-t border-slate-100 p-3">
-              <button
-                type="button"
-                onPointerDown={() => {
-                  holdRef.current = true;
-                  void startRec();
-                }}
-                onPointerUp={() => {
-                  if (holdRef.current) stopRec();
-                  holdRef.current = false;
-                }}
-                onClick={() => {
-                  if (holdRef.current) return;
-                  if (listening) stopRec();
-                  else void startRec();
-                }}
-                className={`min-h-12 flex-1 rounded-full text-sm font-bold text-white ${
-                  listening ? "bg-[#E75555]" : "bg-[#6C63FF]"
-                }`}
-              >
-                {listening ? t("voiceCoach.release") : t("voiceCoach.hold")}
-              </button>
+            <div className="flex flex-col items-center gap-2 border-t border-slate-100 p-3">
+              {phase === "speaking" ? (
+                <button
+                  type="button"
+                  onClick={interrupt}
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[#E75555] text-sm font-bold text-white"
+                >
+                  {t("voiceDock.interrupt")}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={toggleMic}
+                  disabled={phase === "processing"}
+                  aria-pressed={mic.listening}
+                  className={`inline-flex h-20 w-20 items-center justify-center rounded-full text-white shadow-md ${
+                    mic.listening ? "bg-[#E75555]" : "bg-[#6C63FF]"
+                  } disabled:opacity-60`}
+                  aria-label={mic.listening ? t("voiceCoach.stopSend") : t("voiceCoach.tap")}
+                >
+                  <svg viewBox="0 0 24 24" className="h-9 w-9" fill="currentColor" aria-hidden>
+                    <path d="M12 3a4 4 0 00-4 4v5a4 4 0 008 0V7a4 4 0 00-4-4zm-7 9a1 1 0 012 0 5 5 0 0010 0 1 1 0 112 0 7 7 0 01-6 6.93V21h3a1 1 0 110 2H8a1 1 0 110-2h3v-2.07A7 7 0 015 12z" />
+                  </svg>
+                </button>
+              )}
+              <p className="text-center text-xs font-semibold text-pathwise-muted">
+                {mic.listening ? t("voiceCoach.stopSend") : t("voiceCoach.tap")}
+              </p>
+              {phase === "error" ? (
+                <button
+                  type="button"
+                  onClick={toggleMic}
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-slate-200 text-sm font-bold"
+                >
+                  {t("voiceDock.retry")}
+                </button>
+              ) : null}
             </div>
           )}
         </section>
       ) : null}
       {embedded ? null : (
-      <button
-        type="button"
-        onClick={() => {
-          setOpen((prev) => !prev);
-          setMaySpeak(true);
-        }}
-        className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#6C63FF] text-white shadow-lg"
-        aria-expanded={open}
-        aria-label={title}
-      >
-        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor" aria-hidden>
-          <path d="M12 3a4 4 0 00-4 4v5a4 4 0 008 0V7a4 4 0 00-4-4zm-7 9a1 1 0 012 0 5 5 0 0010 0 1 1 0 112 0 7 7 0 01-6 6.93V21h3a1 1 0 110 2H8a1 1 0 110-2h3v-2.07A7 7 0 015 12z" />
-        </svg>
-      </button>
+        <button
+          type="button"
+          onClick={() => setOpen((prev) => !prev)}
+          className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#6C63FF] text-white shadow-lg"
+          aria-expanded={open}
+          aria-label={title}
+        >
+          🎙
+        </button>
       )}
     </div>
   );

@@ -66,7 +66,7 @@ export const MOBILE_EXTRA: Record<string, Record<Locale, string>> = {
   "voiceDock.control": TR("Управление", "Control", "Басқару"),
   "voiceDock.idle": TR("Нажмите и говорите", "Tap and speak", "Басып сөйлеңіз"),
   "voiceDock.listening": TR("Слушаю", "Listening", "Тыңдап тұрмын"),
-  "voiceDock.processing": TR("Распознаю", "Processing", "Тану"),
+  "voiceDock.processing": TR("Обработка", "Processing", "Өңдеу"),
   "voiceDock.speaking": TR("Отвечаю", "Speaking", "Жауап беру"),
   "voiceDock.error": TR("Не получилось. Повторите.", "That failed. Try again.", "Болмады. Қайталаңыз."),
   "voiceDock.interrupt": TR("Прервать", "Interrupt", "Тоқтату"),
