@@ -13,6 +13,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { StudentClassOverview, StudentHomeworkItem } from "@/lib/learning/class-overview";
 import { daysLabel } from "@/lib/learning/plural";
 import { localizedCount } from "@/lib/i18n-labels";
+import { asArray } from "@/lib/safe-list";
 
 const EMPTY: StudentClassOverview = {
   configured: false,
@@ -76,8 +77,10 @@ export function StudentClassView() {
         ? { id: "local", name: inviteCode, inviteCode, teacherName: null }
         : null;
 
+  const classmates = asArray(remote.classmates);
   const homework = useMemo(() => {
-    if (remote.homework.length) return remote.homework;
+    const remoteHw = asArray(remote.homework);
+    if (remoteHw.length) return remoteHw;
     return topics
       .filter((topic) => topic.custom)
       .map((topic) => {
@@ -97,7 +100,8 @@ export function StudentClassView() {
   }, [remote.homework, state, topics]);
 
   const exams = useMemo(() => {
-    if (remote.exams.length) return remote.exams;
+    const remoteExams = asArray(remote.exams);
+    if (remoteExams.length) return remoteExams;
     if (profile?.examDate) {
       return [{ title: profile.examDate, date: profile.examDate, source: "profile" as const }];
     }
@@ -180,9 +184,9 @@ export function StudentClassView() {
               {t("class.matesCount", { n: memberCount })}
               {locale !== "ru" ? ` · ${localizedCount(locale, "students", memberCount)}` : null}
             </p>
-            {remote.classmates.length > 0 ? (
+            {classmates.length > 0 ? (
               <ul className="mt-2 flex flex-wrap gap-2">
-                {remote.classmates.map((mate) => (
+                {classmates.map((mate) => (
                   <li key={mate.displayName}>
                     <Pill>{mate.displayName}</Pill>
                   </li>

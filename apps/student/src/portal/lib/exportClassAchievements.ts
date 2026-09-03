@@ -1,5 +1,6 @@
 import type { TeacherClass } from '../types/teacher'
 import { SITE_NAME } from '../site'
+import { asArray } from '@/lib/safe-list'
 
 const OLYMPIAD_RE = /олимпиад|olympiad|\boi\b|physics|химия|биолог|математ/i
 
@@ -14,10 +15,11 @@ function escapeCsvCell(value: string) {
 
 /** Агрегированная статистика + построчно ученики (UTF-8 BOM для Excel) */
 export function downloadClassAchievementsReport(klass: TeacherClass, filenameBase = 'class_report') {
-  const olympiadCount = klass.students.filter((s) => isOlympiadRow(s.profile.achievements)).length
+  const students = asArray(klass.students)
+  const olympiadCount = students.filter((s) => isOlympiadRow(asArray(s.profile.achievements))).length
 
   const dirCounts = new Map<string, number>()
-  for (const s of klass.students) {
+  for (const s of students) {
     for (const d of s.careerDirections) {
       const key = d.trim() || '—'
       dirCounts.set(key, (dirCounts.get(key) ?? 0) + 1)
@@ -34,8 +36,8 @@ export function downloadClassAchievementsReport(klass: TeacherClass, filenameBas
   lines.push(`Код приглашения;${klass.inviteCode}`)
   lines.push('')
   lines.push('Сводка;Значение')
-  lines.push(`Всего учеников;${klass.students.length}`)
-  lines.push(`Прошли онбординг;${klass.students.filter((s) => s.onboardingComplete).length}`)
+  lines.push(`Всего учеников;${students.length}`)
+  lines.push(`Прошли онбординг;${students.filter((s) => s.onboardingComplete).length}`)
   lines.push(`Олимпиадники (по ключевым словам в достижениях);${olympiadCount}`)
   lines.push('')
   lines.push('Популярные направления;Количество упоминаний')
@@ -44,8 +46,8 @@ export function downloadClassAchievementsReport(klass: TeacherClass, filenameBas
   }
   lines.push('')
   lines.push('Ученик;Онбординг;Направления;Нужна фин. помощь;Достижения (кратко)')
-  for (const s of klass.students) {
-    const ach = s.profile.achievements.join(' | ')
+  for (const s of students) {
+    const ach = asArray(s.profile.achievements).join(' | ')
     lines.push(
       [
         escapeCsvCell(s.profile.displayName),

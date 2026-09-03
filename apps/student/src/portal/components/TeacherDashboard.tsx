@@ -5,12 +5,14 @@ import { downloadClassAchievementsReport } from '../lib/exportClassAchievements'
 import { adaptClass } from '../lib/classAdapter'
 import { api, type ServerClass } from '../lib/api'
 import { useStudents } from '../state/StudentContext'
+import { asArray } from '@/lib/safe-list'
 import type { ClassStudentRow } from '../types/teacher'
 import type { StudentProfile } from '../types/pathwise'
 
 export function TeacherDashboard() {
   const { t } = useI18n()
-  const { students } = useStudents()
+  const { students: studentsRaw } = useStudents()
+  const students = asArray(studentsRaw)
   const [classes, setClasses] = useState<ServerClass[]>([])
   const [activeId, setActiveId] = useState<string>('')
   const [newName, setNewName] = useState('11«Б» — профориентация')
@@ -24,7 +26,7 @@ export function TeacherDashboard() {
   const reload = useCallback(async () => {
     setError(null)
     try {
-      const list = await api.listClasses()
+      const list = asArray<ServerClass>(await api.listClasses())
       setClasses(list)
       setActiveId((prev) => (prev && list.find((c) => c.id === prev) ? prev : list[0]?.id ?? ''))
     } catch (e) {
@@ -254,14 +256,14 @@ export function TeacherDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-pathwise-line bg-transparent">
-                {activeLegacy.students.length === 0 ? (
+                {asArray(activeLegacy.students).length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-4 py-8 text-center text-pathwise-muted">
                       {t('teacher.emptyRoster', { code: activeLegacy.inviteCode })}
                     </td>
                   </tr>
                 ) : (
-                  activeLegacy.students.map((s) => <StudentTableRow key={s.id} row={s} />)
+                  asArray(activeLegacy.students).map((s) => <StudentTableRow key={s.id} row={s} />)
                 )}
               </tbody>
             </table>
@@ -293,7 +295,7 @@ export function TeacherDashboard() {
                 className="pw-input mt-2 w-full px-3 py-3 text-sm"
               >
                 <option value="">{t('teacher.pick')}</option>
-                {activeLegacy.students.map((s) => (
+                {asArray(activeLegacy.students).map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.profile.displayName}
                   </option>

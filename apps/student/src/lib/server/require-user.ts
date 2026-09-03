@@ -1,6 +1,7 @@
 import { isUserRole, type UserRole } from "@/lib/site-nav";
 import { createServerSupabase, readRequestAccessToken } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { publicErrorMessage } from "@/lib/server/public-error";
 
 export type AuthedUser = {
   id: string;
@@ -24,6 +25,44 @@ function jsonError(status: number, message: string): Response {
   });
 }
 
+type AuthReader = {
+  auth: {
+    getClaims: (jwt?: string) => Promise<{
+      data: { claims?: { sub?: unknown; email?: unknown } } | null;
+      error: { message?: string } | null;
+    }>;
+    getUser: (jwt?: string) => Promise<{ data: { user: { id: string; email?: string | null } | null } }>;
+  };
+};
+
+/**
+ * Cookie session or Bearer JWT (argument, never via the `accessToken` client option).
+ */
+export async function resolveUserIdFromAuth(
+  supabase: AuthReader,
+  bearerJwt?: string,
+): Promise<{ userId: string; email: string }> {
+  try {
+    const { data, error } = bearerJwt
+      ? await supabase.auth.getClaims(bearerJwt)
+      : await supabase.auth.getClaims();
+    const userId = data?.claims?.sub ? String(data.claims.sub) : "";
+    const emailFromClaims = typeof data?.claims?.email === "string" ? data.claims.email : "";
+    if (!error && userId) return { userId, email: emailFromClaims };
+
+    const { data: userData } = bearerJwt
+      ? await supabase.auth.getUser(bearerJwt)
+      : await supabase.auth.getUser();
+    if (!userData.user) {
+      throw new HttpError(401, "Войдите в аккаунт.");
+    }
+    return { userId: userData.user.id, email: userData.user.email ?? emailFromClaims };
+  } catch (err) {
+    if (err instanceof HttpError) throw err;
+    throw new HttpError(401, "Войдите в аккаунт.");
+  }
+}
+
 /**
  * Resolve the signed-in user from cookies OR `Authorization: Bearer <jwt>`
  * (Expo). Role is never read from user_metadata — only `profiles` (and the
@@ -37,23 +76,7 @@ export async function requireUser(): Promise<AuthedUser> {
   if (!supabase) throw new HttpError(503, "Supabase is not configured on this server.");
 
   const bearer = await readRequestAccessToken();
-  const { data, error } = bearer
-    ? await supabase.auth.getClaims(bearer)
-    : await supabase.auth.getClaims();
-  let userId = data?.claims?.sub ? String(data.claims.sub) : "";
-  let emailFromClaims =
-    typeof data?.claims?.email === "string" ? data.claims.email : "";
-
-  if (error || !userId) {
-    const { data: userData } = bearer
-      ? await supabase.auth.getUser(bearer)
-      : await supabase.auth.getUser();
-    if (!userData.user) {
-      throw new HttpError(401, "Войдите в аккаунт.");
-    }
-    userId = userData.user.id;
-    emailFromClaims = userData.user.email ?? emailFromClaims;
-  }
+  const { userId, email: emailFromClaims } = await resolveUserIdFromAuth(supabase, bearer || undefined);
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
@@ -62,7 +85,7 @@ export async function requireUser(): Promise<AuthedUser> {
     .maybeSingle();
 
   if (profileError) {
-    throw new HttpError(500, profileError.message);
+    throw new HttpError(500, publicErrorMessage(profileError, "Не удалось загрузить профиль."));
   }
   if (!profile || !isUserRole(profile.role)) {
     throw new HttpError(403, "Профиль не найден. Завершите регистрацию.");
@@ -84,7 +107,7 @@ export async function requireUserResponse(): Promise<
     return { user };
   } catch (err) {
     if (err instanceof HttpError) return { error: jsonError(err.status, err.message) };
-    return { error: jsonError(500, err instanceof Error ? err.message : "Server error") };
+    return { error: jsonError(500, publicErrorMessage(err, "Не удалось проверить вход.")) };
   }
 }
 

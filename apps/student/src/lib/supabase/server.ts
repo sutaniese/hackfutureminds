@@ -1,7 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies, headers } from "next/headers";
 import { readBearerToken } from "@/lib/server/bearer-token";
+import { createBearerSupabaseClient } from "./bearer-client";
 import { getSupabaseAnonKey, getSupabaseUrl, isSupabaseConfigured } from "./env";
 
 /**
@@ -10,8 +10,9 @@ import { getSupabaseAnonKey, getSupabaseUrl, isSupabaseConfigured } from "./env"
  * refreshes the session on each request.
  *
  * Expo Go sends `Authorization: Bearer <access_token>` instead of cookies.
- * Current supabase-js docs: pass that JWT via `accessToken` (not only a global
- * Authorization header) so PostgREST RLS and auth.getClaims(jwt) share one token.
+ * Build a normal client (never the `accessToken` option) and pass that JWT to
+ * `auth.getClaims(jwt)` / `auth.getUser(jwt)`. The Bearer header is enough for
+ * PostgREST RLS. `accessToken` is third-party auth and blocks supabase.auth.*.
  */
 export async function readRequestAccessToken(): Promise<string> {
   const headerStore = await headers();
@@ -22,13 +23,8 @@ export async function createServerSupabase() {
   if (!isSupabaseConfigured()) return null;
 
   const token = await readRequestAccessToken();
-
   if (token) {
-    return createClient(getSupabaseUrl(), getSupabaseAnonKey(), {
-      accessToken: async () => token,
-      global: { headers: { Authorization: `Bearer ${token}` } },
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    });
+    return createBearerSupabaseClient(getSupabaseUrl(), getSupabaseAnonKey(), token);
   }
 
   const cookieStore = await cookies();
@@ -51,3 +47,5 @@ export async function createServerSupabase() {
     },
   });
 }
+
+export { createBearerSupabaseClient };

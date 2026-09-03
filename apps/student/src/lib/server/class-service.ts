@@ -14,6 +14,8 @@ import { mergeClassExams } from "@/lib/learning/class-overview";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { requireRole, type AuthedUser } from "@/lib/server/require-user";
 import { HttpError } from "@/lib/server/require-user";
+import { joinFailureMessage, publicErrorMessage } from "@/lib/server/public-error";
+import { asArray } from "@/lib/safe-list";
 
 export type { StudentClassOverview, StudentExamItem, StudentHomeworkItem };
 export type ClassRow = {
@@ -42,7 +44,7 @@ export async function listClassesForUser(user: AuthedUser): Promise<ClassRow[]> 
     .from("classes")
     .select("id, name, invite_code, teacher_id, created_at")
     .order("created_at", { ascending: true });
-  if (error) throw new HttpError(500, error.message);
+  if (error) throw new HttpError(500, publicErrorMessage(error, "Не удалось загрузить классы."));
   const classes = (data ?? []) as ClassRecord[];
   if (classes.length === 0) return [];
 
@@ -51,7 +53,7 @@ export async function listClassesForUser(user: AuthedUser): Promise<ClassRow[]> 
     .from("class_members")
     .select("class_id, student_id")
     .in("class_id", ids);
-  if (memberError) throw new HttpError(500, memberError.message);
+  if (memberError) throw new HttpError(500, publicErrorMessage(memberError, "Не удалось загрузить классы."));
 
   const byClass = new Map<string, string[]>();
   for (const row of members ?? []) {
@@ -104,7 +106,7 @@ export async function deleteClassForTeacher(user: AuthedUser, classId: string): 
     .delete({ count: "exact" })
     .eq("id", classId)
     .eq("teacher_id", user.id);
-  if (error) throw new HttpError(500, error.message);
+  if (error) throw new HttpError(500, publicErrorMessage(error, "Не удалось удалить класс."));
   return (count ?? 0) > 0;
 }
 
@@ -114,9 +116,8 @@ export async function joinClassAsStudent(user: AuthedUser, inviteCode: string) {
   if (!supabase) throw new HttpError(503, "Supabase is not configured.");
   const { data, error } = await supabase.rpc("join_class_by_invite", { p_code: inviteCode });
   if (error) {
-    const msg = error.message || "Не удалось присоединиться";
-    if (msg.includes("class not found")) throw new HttpError(404, "Класс не найден по коду");
-    throw new HttpError(400, msg);
+    const mapped = joinFailureMessage(error.message || "");
+    throw new HttpError(mapped.status, mapped.message);
   }
   const classId = String(data);
   const { data: cls } = await supabase
@@ -327,10 +328,26 @@ export async function getStudentClassOverview(user: AuthedUser): Promise<Student
         }
       : null,
     memberCount,
-    classmates,
-    homework,
-    exams,
+    classmates: asArray(classmates),
+    homework: asArray(homework),
+    exams: asArray(exams),
   };
+}
+
+export async function removeStudentFromTeacherClasses(user: AuthedUser, studentId: string): Promise<boolean> {
+  requireRole(user, "teacher");
+  const supabase = await createServerSupabase();
+  if (!supabase) throw new HttpError(503, "Supabase is not configured.");
+  const classes = await listClassesForUser(user);
+  const classIds = asArray(classes).map((c) => c.id);
+  if (classIds.length === 0) return false;
+  const { error, count } = await supabase
+    .from("class_members")
+    .delete({ count: "exact" })
+    .eq("student_id", studentId)
+    .in("class_id", classIds);
+  if (error) throw new HttpError(500, publicErrorMessage(error, "Не удалось удалить ученика."));
+  return (count ?? 0) > 0;
 }
 
 export async function writeOwnProgress(
@@ -409,16 +426,17 @@ export async function classBoard(user: AuthedUser, classId?: string) {
     ...((custom ?? []).map((row: { topic: Topic }) => row.topic) as Topic[]),
   ];
 
-  if (active.studentIds.length === 0) {
+  const studentIds = asArray<string>(active.studentIds);
+  if (studentIds.length === 0) {
     return { classes, students: [], heatmap: buildHeatmap(catalog, []) };
   }
 
   const [{ data: profiles }, { data: learningProfiles }, { data: learningStates }, { data: clipRows }] =
     await Promise.all([
-      supabase.from("profiles").select("id, email, display_name").in("id", active.studentIds),
-      supabase.from("learning_profiles").select("*").in("user_id", active.studentIds),
-      supabase.from("learning_state").select("*").in("user_id", active.studentIds),
-      supabase.from("clip_events").select("user_id, event").in("user_id", active.studentIds),
+      supabase.from("profiles").select("id, email, display_name").in("id", studentIds),
+      supabase.from("learning_profiles").select("*").in("user_id", studentIds),
+      supabase.from("learning_state").select("*").in("user_id", studentIds),
+      supabase.from("clip_events").select("user_id, event").in("user_id", studentIds),
     ]);
 
   const profileById = new Map((profiles ?? []).map((p) => [p.id, p]));
@@ -433,7 +451,7 @@ export async function classBoard(user: AuthedUser, classId?: string) {
     clipsById.set(row.user_id, current);
   }
 
-  const students = active.studentIds.map((id) => {
+  const students = studentIds.map((id) => {
     const profileRow = profileById.get(id);
     const lp = lpById.get(id);
     const ls = lsById.get(id);

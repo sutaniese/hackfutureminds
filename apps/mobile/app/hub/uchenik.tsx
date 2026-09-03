@@ -19,7 +19,10 @@ export default function StudentsCrmScreen() {
 
   useEffect(() => {
     void apiGet<{ students?: StudentRow[]; data?: StudentRow[] }>("/api/students")
-      .then((data) => setStudents(data.students ?? data.data ?? []))
+      .then((data) => {
+        const list = data?.students ?? data?.data ?? [];
+        setStudents(Array.isArray(list) ? list : []);
+      })
       .catch((err) => setError(err instanceof Error ? err.message : t("err.network")));
   }, [t]);
 

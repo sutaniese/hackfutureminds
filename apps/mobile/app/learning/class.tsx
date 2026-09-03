@@ -105,7 +105,9 @@ export default function ClassScreen() {
         localOnly: true,
       });
       setLocalNote(t("class.needsServer"));
-      setError(err instanceof Error ? err.message : t("class.joinFail"));
+      const raw = err instanceof Error ? err.message : "";
+      const leaked = /accessToken option|getClaims is not possible|@supabase\/supabase-js/i.test(raw);
+      setError(!raw || leaked || raw.length > 160 ? t("class.joinFail") : raw);
     } finally {
       setBusy(false);
     }
@@ -161,8 +163,8 @@ export default function ClassScreen() {
       <Card>
         <Title>{t("class.homework")}</Title>
         <Body>{t("class.homeworkHint")}</Body>
-        {!overview?.homework.length ? <Body>{t("class.hwEmpty")}</Body> : null}
-        {overview?.homework.map((item) => (
+        {!(Array.isArray(overview?.homework) ? overview.homework : []).length ? <Body>{t("class.hwEmpty")}</Body> : null}
+        {(Array.isArray(overview?.homework) ? overview.homework : []).map((item) => (
           <Body key={item.id}>
             {item.title} · {t(item.status === "done" ? "class.hwDone" : item.status === "in_progress" ? "class.hwDoing" : "class.hwAssigned")}
           </Body>
@@ -171,8 +173,8 @@ export default function ClassScreen() {
 
       <Card>
         <Title>{t("class.exams")}</Title>
-        {!overview?.exams.length ? <Body>{t("class.examEmpty")}</Body> : null}
-        {overview?.exams.map((item) => (
+        {!(Array.isArray(overview?.exams) ? overview.exams : []).length ? <Body>{t("class.examEmpty")}</Body> : null}
+        {(Array.isArray(overview?.exams) ? overview.exams : []).map((item) => (
           <Body key={`${item.title}-${item.date}`}>{item.title} · {item.source === "profile" ? t("class.examProfile") : t("class.examTeacher")}</Body>
         ))}
       </Card>
