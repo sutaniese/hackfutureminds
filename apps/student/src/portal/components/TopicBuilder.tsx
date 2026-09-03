@@ -436,8 +436,8 @@ export function TopicBuilder() {
             </div>
             {clipNote ? <p className="text-sm font-semibold text-pathwise-ink">{clipNote}</p> : null}
             {clipScript ? (
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(240px,320px)]">
-                <div className="space-y-3">
+              <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+                <div className="space-y-3 min-w-0">
                   {clipScript.scenes.map((scene, index) => (
                     <div key={scene.id}>
                       <label htmlFor={`clip-narration-${scene.id}`} className="text-xs font-semibold text-pathwise-muted">
@@ -465,7 +465,12 @@ export function TopicBuilder() {
                     </div>
                   ))}
                 </div>
-                <LiveScenePlayer script={clipScript} topicId="teacher-preview" preview logEvents={false} />
+                <div className="lg:sticky lg:top-36 lg:self-start">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-pathwise-muted">
+                    {t('builder.clipPreview')}
+                  </p>
+                  <LiveScenePlayer script={clipScript} topicId="teacher-preview" preview logEvents={false} />
+                </div>
               </div>
             ) : null}
           </div>

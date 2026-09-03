@@ -262,76 +262,82 @@ export function LiveScenePlayer({
   };
 
   const accent = CLIP_STAGE.purple;
+  const shellClass = preview
+    ? "mx-auto w-full max-w-[300px] overflow-hidden rounded-[1.6rem] border-4 border-slate-900 bg-slate-950 shadow-lg"
+    : "w-full max-w-[390px] overflow-hidden rounded-[2.4rem] border-8 border-slate-900 bg-slate-950 shadow-2xl";
+  const framePad = preview ? "px-4 pb-4 pt-6" : "px-5 pb-6 pt-8";
 
   return (
-    <div className={preview ? "w-full overflow-hidden rounded-[1.6rem] border-4 border-slate-900 bg-slate-950" : "w-full max-w-[390px] overflow-hidden rounded-[2.4rem] border-8 border-slate-900 bg-slate-950 shadow-2xl"}>
+    <div className={shellClass}>
       <div className="relative aspect-[9/16] w-full bg-black text-white">
-      <div
-        className="relative flex h-full min-h-[520px] flex-col px-5 pb-6 pt-8"
-        style={{ background: `linear-gradient(180deg, ${CLIP_STAGE.inkSoft} 0%, ${CLIP_STAGE.ink} 100%)` }}
-      >
-        <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-white/10">
-          <div className="h-full rounded-full bg-[#6C63FF] transition-all duration-500" style={{ width: `${Math.round(progress * 100)}%` }} />
-        </div>
-
-        {phase === "quiz" ? (
-          <div className="mt-auto rounded-2xl bg-white p-4 text-slate-900">
-            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#554dd6]">{t("clips.quizNow")}</p>
-            <p className="mt-2 text-sm font-black">{quiz.prompt}</p>
-            <AnswerField task={quiz} value={answer} onChange={setAnswer} />
-            <button
-              type="button"
-              disabled={answer === "" || quizDone !== null}
-              onClick={() => {
-                const ok = isAnswerCorrect(quiz, answer);
-                setQuizDone(ok);
-                fire(ok ? "quiz_right" : "quiz_wrong");
-                if (!ok) onWrongAnswer?.();
-              }}
-              className="pw-btn-primary mt-3 w-full text-sm disabled:opacity-50"
-            >
-              {t("clips.answer")}
-            </button>
-            {quizDone !== null ? (
-              <p className={`mt-2 text-sm font-bold ${quizDone ? "text-emerald-600" : "text-[#E75555]"}`}>
-                {quizDone ? t("clips.ok") : t("clips.bad")}
-              </p>
-            ) : null}
+        <div
+          className={`absolute inset-0 flex flex-col ${framePad}`}
+          style={{ background: `linear-gradient(180deg, ${CLIP_STAGE.inkSoft} 0%, ${CLIP_STAGE.ink} 100%)` }}
+        >
+          <div className="mb-3 shrink-0 h-1.5 overflow-hidden rounded-full bg-white/10">
+            <div className="h-full rounded-full bg-[#6C63FF] transition-all duration-500" style={{ width: `${Math.round(progress * 100)}%` }} />
           </div>
-        ) : (
-          <>
-            {scene ? <SceneVisual scene={scene} accent={accent} /> : null}
-            <div className="mt-auto space-y-3">
-              <div className="rounded-2xl bg-black/35 px-4 py-3">
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#A99CFF]">
-                  {t("clips.beatLine", { label: scene?.heading ?? "", a: sceneIndex + 1, b: script.scenes.length })}
+
+          {phase === "quiz" ? (
+            <div className="mt-auto shrink-0 rounded-2xl bg-white p-4 text-slate-900">
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#554dd6]">{t("clips.quizNow")}</p>
+              <p className="mt-2 text-sm font-black">{quiz.prompt}</p>
+              <AnswerField task={quiz} value={answer} onChange={setAnswer} />
+              <button
+                type="button"
+                disabled={answer === "" || quizDone !== null}
+                onClick={() => {
+                  const ok = isAnswerCorrect(quiz, answer);
+                  setQuizDone(ok);
+                  fire(ok ? "quiz_right" : "quiz_wrong");
+                  if (!ok) onWrongAnswer?.();
+                }}
+                className="pw-btn-primary mt-3 w-full text-sm disabled:opacity-50"
+              >
+                {t("clips.answer")}
+              </button>
+              {quizDone !== null ? (
+                <p className={`mt-2 text-sm font-bold ${quizDone ? "text-emerald-600" : "text-[#E75555]"}`}>
+                  {quizDone ? t("clips.ok") : t("clips.bad")}
                 </p>
-                <p className="mt-1 text-sm font-semibold leading-6 text-[#F7F6FF]">{scene?.narration}</p>
-              </div>
-              <div className="flex gap-2">
-                {phase === "idle" ? (
-                  <button type="button" onClick={start} className="min-h-12 flex-1 rounded-full bg-[#6C63FF] text-sm font-bold text-white">
-                    {t("clips.tapToPlay")}
-                  </button>
-                ) : null}
-                {phase === "play" ? (
-                  <button type="button" onClick={pause} className="min-h-12 flex-1 rounded-full bg-white/10 text-sm font-bold text-white">
-                    {t("clips.pause")}
-                  </button>
-                ) : null}
-                {phase === "paused" ? (
-                  <button type="button" onClick={start} className="min-h-12 flex-1 rounded-full bg-[#6C63FF] text-sm font-bold text-white">
-                    {t("clips.tapToPlay")}
-                  </button>
-                ) : null}
-                <button type="button" onClick={replay} className="min-h-12 flex-1 rounded-full bg-white/10 text-sm font-bold text-white">
-                  {t("clips.replay")}
-                </button>
-              </div>
+              ) : null}
             </div>
-          </>
-        )}
-      </div>
+          ) : (
+            <>
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
+                {scene ? <SceneVisual scene={scene} accent={accent} /> : null}
+              </div>
+              <div className="mt-3 shrink-0 space-y-3">
+                <div className="rounded-2xl bg-black/35 px-4 py-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#A99CFF]">
+                    {t("clips.beatLine", { label: scene?.heading ?? "", a: sceneIndex + 1, b: script.scenes.length })}
+                  </p>
+                  <p className="mt-1 text-sm font-semibold leading-6 text-[#F7F6FF]">{scene?.narration}</p>
+                </div>
+                <div className="flex gap-2">
+                  {phase === "idle" ? (
+                    <button type="button" onClick={start} className="min-h-11 flex-1 rounded-full bg-[#6C63FF] text-sm font-bold text-white">
+                      {t("clips.tapToPlay")}
+                    </button>
+                  ) : null}
+                  {phase === "play" ? (
+                    <button type="button" onClick={pause} className="min-h-11 flex-1 rounded-full bg-white/10 text-sm font-bold text-white">
+                      {t("clips.pause")}
+                    </button>
+                  ) : null}
+                  {phase === "paused" ? (
+                    <button type="button" onClick={start} className="min-h-11 flex-1 rounded-full bg-[#6C63FF] text-sm font-bold text-white">
+                      {t("clips.tapToPlay")}
+                    </button>
+                  ) : null}
+                  <button type="button" onClick={replay} className="min-h-11 flex-1 rounded-full bg-white/10 text-sm font-bold text-white">
+                    {t("clips.replay")}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
