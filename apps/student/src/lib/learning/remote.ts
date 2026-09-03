@@ -133,7 +133,7 @@ export async function deleteCustomTopicRemote(topicId: string) {
 export async function recordClipEvent(input: {
   clipId: string;
   topicId: string;
-  event: "start" | "complete" | "drop" | "quiz_wrong" | "quiz_right";
+  event: "start" | "complete" | "drop" | "quiz_wrong" | "quiz_right" | "stuck";
 }) {
   if (!canSyncRemote()) return;
   try {
