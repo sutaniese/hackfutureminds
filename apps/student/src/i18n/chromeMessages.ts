@@ -802,6 +802,7 @@ export const CHROME_MESSAGES: Record<string, Record<Locale, string>> = {
   "builder.clipBuilding": TR("Собираем клип…", "Building the clip…", "Клип жиналуда…"),
   "builder.clipRegen": TR("Пересобрать", "Regenerate", "Қайта жинау"),
   "builder.clipNarration": TR("Текст озвучки", "Narration", "Дауыстау мәтіні"),
+  "builder.clipPreview": TR("Превью клипа", "Clip preview", "Клип алдын ала көрінісі"),
   "builder.clipReady": TR("Клип готов — {{n}} сцен, около {{sec}} с.", "Clip ready — {{n}} scenes, about {{sec}}s.", "Клип дайын — {{n}} сахна, шамамен {{sec}} с."),
   "builder.clipNeedPrompt": TR("Напишите, что объяснить в клипе.", "Write what the clip should explain.", "Клипте не түсіндіру керектігін жазыңыз."),
   "builder.clipFail": TR("Не удалось собрать клип. Показан сценарий из вашего текста.", "Could not build the clip. Showing a script from your text.", "Клип жиналмады. Сіздің мәтіннен сценарий көрсетіледі."),
