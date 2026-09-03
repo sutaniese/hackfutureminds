@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { clipPublicPath, topicHasLiveClip, videoClipFor } from "@pathwise/shared";
+import { clipPublicPath, videoClipFor } from "@pathwise/shared";
 import { useI18n } from "@/i18n/I18nProvider";
 import { ContentCard } from "@/components/ui/PageHero";
 import { AnswerField } from "@/components/learning/AnswerField";
@@ -149,14 +149,14 @@ export function ClipPlayer({
     setPhase("quiz");
   };
 
-  if (topicHasLiveClip(topic) && topic?.liveClip) {
+  if (topic?.clipScript?.scenes?.length) {
     return (
       <div className="flex flex-col items-center gap-5">
         <div className="w-full max-w-[390px]">
-          <LiveClipPlayer
-            script={topic.liveClip}
+          <LiveScenePlayer
+            script={topic.clipScript}
             topicId={topicId}
-            clipId={`live-${topicId}`}
+            quizTask={topic.tasks[0] ?? null}
             onWrongAnswer={onWrongAnswer}
           />
         </div>
