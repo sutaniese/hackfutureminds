@@ -16,3 +16,4 @@ export * from "./universities";
 export * from "./grants";
 export * from "./clips";
 export * from "./grade-access";
+export * from "./live-clip-script";
