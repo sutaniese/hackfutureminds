@@ -16,7 +16,8 @@ export function StudentNotesPanel({ studentId }: Props) {
   const reload = useCallback(async () => {
     setError(null)
     try {
-      setNotes(await api.listNotes(studentId))
+      const notes = await api.listNotes(studentId)
+      setNotes(Array.isArray(notes) ? notes : [])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка загрузки заметок')
     }

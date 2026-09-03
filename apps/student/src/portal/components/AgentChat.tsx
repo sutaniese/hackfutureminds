@@ -4,6 +4,7 @@ import { api, type ChatMessage } from '../lib/api'
 import { useStudents } from '../state/StudentContext'
 import { isSupabaseConfigured } from '@/lib/supabase/env'
 import { pullClassBoard } from '@/lib/learning/remote'
+import { asArray } from '@/lib/safe-list'
 
 type BoardStudent = {
   id: string
@@ -14,7 +15,8 @@ type BoardStudent = {
 
 export function AgentChat() {
   const { t } = useI18n()
-  const { activeStudent, students, activeStudentId, setActiveStudentId } = useStudents()
+  const { activeStudent, students: studentsRaw, activeStudentId, setActiveStudentId } = useStudents()
+  const students = asArray(studentsRaw)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
@@ -31,13 +33,15 @@ export function AgentChat() {
     void pullClassBoard()
       .then((board) => {
         if (cancelled) return
-        setClassId(board.classes[0]?.id ?? '')
+        const classes = asArray<{ id: string }>(board?.classes)
+        const students = asArray<typeof board.students[number]>(board?.students)
+        setClassId(classes[0]?.id ?? '')
         setBoardStudents(
-          board.students.map((s) => ({
+          students.map((s) => ({
             id: s.id,
             name: s.name || s.snapshot.name,
             email: s.email,
-            classId: board.classes[0]?.id,
+            classId: classes[0]?.id,
           })),
         )
       })
@@ -67,7 +71,7 @@ export function AgentChat() {
           await api.upsertStudent(activeStudent)
         }
         const conv = await api.chatHistory(activeStudentId)
-        if (!cancelled) setMessages(conv.messages)
+        if (!cancelled) setMessages(asArray(conv?.messages))
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : t('teacher.reqFail'))
       }

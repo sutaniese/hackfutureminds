@@ -1,6 +1,7 @@
 "use client";
 
 import { getCurrentUser } from "@/lib/auth";
+import { asArray } from "@/lib/safe-list";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { LearningProfile, LearningState } from "./store";
 import type { Topic } from "./types";
@@ -74,7 +75,12 @@ export async function pullClassBoard(classId?: string) {
       clipStats: { watched: number; dropped: number; stuck: number };
     }>;
     heatmap: Array<{ topicId: string; title: string; cells: Array<{ studentId: string; failing: boolean; accuracy: number | null }> }>;
-  }>(`/api/class/board${query}`);
+  }>(`/api/class/board${query}`).then((board) => ({
+    ...board,
+    classes: asArray(board?.classes),
+    students: asArray(board?.students),
+    heatmap: asArray(board?.heatmap),
+  }));
 }
 
 export async function joinClassByCode(inviteCode: string) {
@@ -104,7 +110,7 @@ export async function createClassRemote(name: string) {
 export async function listClassesRemote() {
   return jsonFetch<{ classes: Array<{ id: string; name: string; inviteCode: string; studentIds: string[]; createdAt: string }> }>(
     "/api/classes",
-  ).then((r) => r.classes);
+  ).then((r) => asArray(r?.classes));
 }
 
 export async function deleteClassRemote(id: string) {

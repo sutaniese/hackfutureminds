@@ -1,4 +1,5 @@
 import type { StudentProfile } from '../types/pathwise'
+import { asArray } from '@/lib/safe-list'
 
 export type Lang = 'kk' | 'ru' | 'en'
 
@@ -48,7 +49,7 @@ async function jsonFetch<T>(input: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  listStudents: () => jsonFetch<{ students: ServerStudent[] }>('/api/students').then((r) => r.students),
+  listStudents: () => jsonFetch<{ students: ServerStudent[] }>('/api/students').then((r) => asArray<ServerStudent>(r?.students)),
   getStudent: (id: string) => jsonFetch<{ student: ServerStudent }>(`/api/students/${encodeURIComponent(id)}`).then((r) => r.student),
   upsertStudent: (s: Partial<ServerStudent>) =>
     jsonFetch<{ student: ServerStudent }>('/api/students', { method: 'POST', body: JSON.stringify(s) }).then((r) => r.student),
@@ -60,7 +61,7 @@ export const api = {
   deleteStudent: (id: string) =>
     jsonFetch<{ ok: boolean }>(`/api/students/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 
-  listClasses: () => jsonFetch<{ classes: ServerClass[] }>('/api/classes').then((r) => r.classes),
+  listClasses: () => jsonFetch<{ classes: ServerClass[] }>('/api/classes').then((r) => asArray<ServerClass>(r?.classes)),
   createClass: (name: string) =>
     jsonFetch<{ class: ServerClass }>('/api/classes', { method: 'POST', body: JSON.stringify({ name }) }).then((r) => r.class),
   joinClass: (inviteCode: string, studentId?: string) =>
@@ -72,7 +73,7 @@ export const api = {
     jsonFetch<{ ok: boolean }>(`/api/classes/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 
   listNotes: (studentId: string) =>
-    jsonFetch<{ notes: StudentNote[] }>(`/api/students/${encodeURIComponent(studentId)}/notes`).then((r) => r.notes),
+    jsonFetch<{ notes: StudentNote[] }>(`/api/students/${encodeURIComponent(studentId)}/notes`).then((r) => asArray<StudentNote>(r?.notes)),
   saveNote: (studentId: string, note: { title: string; content: string; fileName?: string }) =>
     jsonFetch<{ note: StudentNote }>(`/api/students/${encodeURIComponent(studentId)}/notes`, {
       method: 'POST',

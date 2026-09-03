@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { listPublicUsers, subscribeAuth } from '@/lib/auth'
 import { readStudentProfiles, type StudentProfileSnapshot } from '@/lib/student-profile-store'
 import { api, type ServerStudent } from '../lib/api'
+import { asArray } from '@/lib/safe-list'
 
 type Ctx = {
   students: ServerStudent[]
@@ -192,8 +193,8 @@ export function StudentProvider({ children }: { children: ReactNode }) {
     setError(null)
     const localList = localStudentProfiles()
     try {
-      const serverList = await api.listStudents()
-      const list = await syncLocalStudentsToServer(serverList, localList)
+      const serverList = asArray<ServerStudent>(await api.listStudents())
+      const list = await syncLocalStudentsToServer(serverList, asArray(localList))
       setStudents(list)
       if (!activeStudentId && list[0]) setActiveStudentId(list[0].id)
       else if (activeStudentId && !list.find((s) => s.id === activeStudentId) && list[0]) {

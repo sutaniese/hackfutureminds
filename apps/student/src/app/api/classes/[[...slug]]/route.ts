@@ -9,6 +9,7 @@ import {
 } from "@/lib/server/class-service";
 import { HttpError } from "@/lib/server/require-user";
 import { requireUserResponse } from "@/lib/server/require-user";
+import { publicErrorMessage } from "@/lib/server/public-error";
 
 export const runtime = "nodejs";
 
@@ -56,7 +57,7 @@ async function handleSupabase(request: Request, ctx: { params: Promise<{ slug?: 
     return json({ error: "Not Found" }, 404);
   } catch (err) {
     if (err instanceof HttpError) return json({ error: err.message }, err.status);
-    return json({ error: err instanceof Error ? err.message : "Server error" }, 500);
+    return json({ error: publicErrorMessage(err, "Не удалось выполнить запрос.") }, 500);
   }
 }
 
