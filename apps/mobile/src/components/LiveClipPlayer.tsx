@@ -109,6 +109,7 @@ export function LiveClipPlayer({
   const completedRef = useRef(false);
   const spokenRef = useRef(false);
   const pausedRef = useRef(false);
+  const advancingRef = useRef(false);
 
   const scene = script.scenes[index];
   const quiz = liveClipQuizTask(script, topicId);
@@ -162,6 +163,11 @@ export function LiveClipPlayer({
   }, [phase, index, scene?.id]);
 
   function goNext() {
+    if (advancingRef.current) return;
+    advancingRef.current = true;
+    setTimeout(() => {
+      advancingRef.current = false;
+    }, 80);
     setIndex((current) => {
       if (current >= script.scenes.length - 1) {
         if (!completedRef.current) {
