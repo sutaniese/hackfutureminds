@@ -1,0 +1,23 @@
+{
+  "name": "@pathwise/topic-clips",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Remotion source for teñ. 40–60s catalog topic videos. Re-render: npm run render",
+  "scripts": {
+    "tts": "node scripts/tts.mjs",
+    "render": "node scripts/render-all.mjs",
+    "build:clips": "node scripts/tts.mjs && node scripts/render-all.mjs",
+    "studio": "remotion studio src/index.ts"
+  },
+  "dependencies": {
+    "@remotion/bundler": "^4.0.520",
+    "@remotion/cli": "^4.0.520",
+    "@remotion/renderer": "^4.0.520",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.520",
+    "typescript": "^5.9.3"
+  }
+}

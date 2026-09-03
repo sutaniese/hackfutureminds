@@ -415,7 +415,7 @@ export const CHROME_MESSAGES: Record<string, Record<Locale, string>> = {
 
   "clips.kicker": TR("Клипы", "Clips", "Клиптер"),
   "clips.title": TR("40–60 секунд, как сторис", "40–60 seconds, like stories", "40–60 секунд, сторис сияқты"),
-  "clips.desc": TR("Готовые клипы по квадратным уравнениям, Ньютону и Python. Четвёртый собирается из конспекта через Groq и озвучку.", "Ready clips on quadratics, Newton and Python. A fourth one is built from notes via Groq and speech.", "Квадрат теңдеулер, Ньютон және Python бойынша дайын клиптер. Төртіншісі конспекттен Groq және дауыс арқылы жиналады."),
+  "clips.desc": TR("Готовое 40–60-секундное видео по каждой теме каталога. В конце — одно задание из банка: ошибка оставляет на навыке, верный ответ ведёт к следующему слабому.", "A finished 40–60s video for every catalog topic. After it ends, one bank question: a miss stays on the skill, a hit goes to the next weak one.", "Каталогтағы әр тақырыпқа 40–60 секундтық дайын бейне. Соңында банктен бір тапсырма: қате — сол дағдыда, дұрыс — келесі әлсіз дағдыға."),
   "clips.loading": TR("Клипы загружаются…", "Clips are loading…", "Клиптер жүктелуде…"),
   "clips.live": TR("Живой клип (Groq)", "Live clip (Groq)", "Тікелей клип (Groq)"),
   "clips.preset.quad": TR("Квадратные уравнения", "Quadratic equations", "Квадрат теңдеулер"),
@@ -427,10 +427,12 @@ export const CHROME_MESSAGES: Record<string, Record<Locale, string>> = {
   "clips.bad": TR("Ошибка — этот навык ещё раз.", "Miss — this skill again.", "Қате — осы дағдыны қайта."),
   "clips.restart": TR("Сначала", "Restart", "Басынан"),
   "clips.next": TR("Дальше", "Next", "Әрі"),
+  "clips.source.video": TR("готовое видео teñ.", "baked teñ. video", "дайын teñ. бейне"),
   "clips.source.baked": TR("готовые клипы в репозитории", "baked clips in the repo", "репозиторийдегі дайын клиптер"),
   "clips.source.ai": TR("Groq по конспекту", "Groq from the notes", "Конспекттен Groq"),
   "clips.source.local": TR("локальный сценарий", "local script", "жергілікті сценарий"),
-  "clips.sourceLine": TR("Источник: {{source}}. Видео API нет.", "Source: {{source}}. No video API.", "Дереккөз: {{source}}. Бейне API жоқ."),
+  "clips.sourceLine": TR("Источник: {{source}}.", "Source: {{source}}.", "Дереккөз: {{source}}."),
+  "clips.quizNow": TR("Проверка", "Check", "Тексеру"),
   "clips.openTopic": TR("Открыть тему →", "Open topic →", "Тақырыпты ашу →"),
   "clips.building": TR("Собираем клип…", "Building clip…", "Клип жиналуда…"),
 

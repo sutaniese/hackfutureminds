@@ -12,6 +12,7 @@
     "./universities": "./src/universities.ts",
     "./grants": "./src/grants.ts",
     "./brand": "./src/brand.ts",
-    "./links": "./src/links.ts"
+    "./links": "./src/links.ts",
+    "./clips": "./src/clips.ts"
   }
 }

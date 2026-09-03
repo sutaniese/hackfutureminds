@@ -1,0 +1,15 @@
+export const CLIP = {
+  width: 720,
+  height: 1280,
+  fps: 30,
+  ink: "#07060F",
+  inkSoft: "#12101C",
+  purple: "#6C63FF",
+  purpleSoft: "#A99CFF",
+  white: "#F7F6FF",
+  muted: "#C7C3E0",
+  card: "#161326",
+  cardLine: "#2A2550",
+  mint: "#43D19E",
+  wordmark: "teñ.",
+} as const;

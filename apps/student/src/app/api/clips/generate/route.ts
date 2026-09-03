@@ -1,3 +1,4 @@
+import { clipPublicPath, videoClipFor } from "@pathwise/shared";
 import { groqChat, isGroqConfigured } from "@/lib/learning/groq-chat";
 import { parseBeatsFromModel, fallbackBeats, type LearningClip } from "@/lib/learning/clips/types";
 import { bakedClipFor, localClipForTopic } from "@/lib/learning/clips";
@@ -16,8 +17,13 @@ function json(data: unknown, status = 200) {
 export async function GET(request: Request) {
   const topicId = new URL(request.url).searchParams.get("topicId") || "math-quadratic";
   const locale = new URL(request.url).searchParams.get("locale") === "kk" ? "kk" : "ru";
+  const video = videoClipFor(topicId, locale);
   const clip = bakedClipFor(topicId, locale) ?? localClipForTopic(topicId, locale);
-  return json({ clip });
+  return json({
+    clip,
+    source: video ? "video" : "baked",
+    videoUrl: clipPublicPath(topicId, locale),
+  });
 }
 
 export async function POST(request: Request) {

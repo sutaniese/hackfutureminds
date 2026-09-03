@@ -6,7 +6,7 @@
   "workspaces": [
     "apps/student",
     "apps/mobile",
-    "packages/*"
+    "packages/shared"
   ],
   "engines": {
     "node": ">=20"
