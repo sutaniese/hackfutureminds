@@ -6,7 +6,9 @@ import { readLastGeneratePayload, writeLastGeneratePayload } from "@/lib/gamific
 import { syncCurrentStudentProfile } from "@/lib/student-profile-store";
 import { readCurrentOnboarding } from "@/lib/student-progress";
 import { readLearningProfile } from "@/lib/learning/store";
+import { canAccessUniversityLayer } from "@pathwise/shared";
 import { resolveActiveLearningGoal } from "@/lib/learning/goal-priority";
+import { useLearning } from "@/components/learning/useLearning";
 import { ResultsGamificationBar } from "@/components/results/ResultsGamificationBar";
 import { CrossAppPromo } from "@/components/results/CrossAppPromo";
 import { useUserProgress } from "@/components/gamification/UserProgressProvider";
@@ -75,6 +77,7 @@ async function fetchProgramRecommendations(
 export function ResultsGenerateClient() {
   const { t, locale } = useI18n();
   const { awardXp, earnBadge, setProfileCompletion } = useUserProgress();
+  const { profile } = useLearning();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<GenerateResponse | null>(null);
@@ -103,6 +106,7 @@ export function ResultsGenerateClient() {
   }, [locale]);
 
   const hasOnboarding = !!onboarding;
+  const allowUniversity = canAccessUniversityLayer(profile?.grade);
 
   const run = useCallback(async () => {
     const o = readCurrentOnboarding();
@@ -248,7 +252,7 @@ export function ResultsGenerateClient() {
 
       {data && (
         <div className="grid gap-5 xl:grid-cols-3" aria-label={t("results.ariaAll")}>
-          {programRecommendations.length > 0 ? (
+          {allowUniversity && programRecommendations.length > 0 ? (
             <section className="pw-slide-up pw-card overflow-hidden border-t-4 border-t-[#6C63FF] xl:col-span-3">
               <div className="px-5 py-4">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-pathwise-accent-strong">
@@ -389,7 +393,8 @@ export function ResultsGenerateClient() {
             </ul>
           </section>
 
-          {/* Financial Route */}
+          {/* Financial Route — university / grants layer, grades 10–12 only */}
+          {allowUniversity ? (
           <section className="pw-slide-up pw-card overflow-hidden border-t-4 border-t-[#FF6B6B]" style={{ animationDelay: "0.1s" }}>
             <div className="px-5 py-4">
               <h2 className="flex items-center gap-2 text-lg font-bold">
@@ -446,6 +451,7 @@ export function ResultsGenerateClient() {
               )}
             </div>
           </section>
+          ) : null}
 
           {/* Resume */}
           <section className="pw-slide-up pw-card overflow-hidden border-t-4 border-t-[#6C63FF]" style={{ animationDelay: "0.2s" }}>

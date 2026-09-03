@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { canAccessUniversityLayer, nextOnboardingStepIndex } from "@pathwise/shared";
+import { useLearning } from "@/components/learning/useLearning";
 import { useI18n } from "@/i18n/I18nProvider";
 import {
   ONBOARDING_SUBJECT_OPTIONS,
@@ -52,7 +54,10 @@ function achievementCount(value: string): number {
 
 export function OnboardingChat() {
   const { t } = useI18n();
+  const { profile } = useLearning();
   const { awardXp, earnBadge, setProfileCompletion } = useUserProgress();
+  const grade = profile?.grade;
+  const allowUniversity = canAccessUniversityLayer(grade);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<OnboardingAnswers>(() => createEmptyAnswers());
   const [complete, setComplete] = useState(false);
@@ -70,10 +75,13 @@ export function OnboardingChat() {
   }, []);
 
   const canNext = isStepSatisfied(step, answers);
-  const isLast = step === TOTAL_ONBOARDING_STEPS - 1;
+  const isLast = nextOnboardingStepIndex(step, grade, 1) > 6;
   const question = t(qKey(step));
 
-  const goBack = useCallback(() => { if (step > 0) setStep((s) => s - 1); }, [step]);
+  const goBack = useCallback(() => {
+    const prev = nextOnboardingStepIndex(step, grade, -1);
+    if (prev >= 0) setStep(prev);
+  }, [grade, step]);
 
   const goNext = useCallback(() => {
     if (!isStepSatisfied(step, answers)) return;
@@ -88,9 +96,16 @@ export function OnboardingChat() {
       }
     }
 
-    if (isLast) setComplete(true);
-    else setStep((s) => s + 1);
-  }, [answers, awardXp, earnBadge, isLast, setProfileCompletion, step]);
+    const next = nextOnboardingStepIndex(step, grade, 1);
+    if (next > 6) {
+      if (!allowUniversity && !answers.studyLocation) {
+        setAnswers((prev) => ({ ...prev, studyLocation: "kazakhstan" }));
+      }
+      setComplete(true);
+      return;
+    }
+    setStep(next);
+  }, [allowUniversity, answers, awardXp, earnBadge, grade, setProfileCompletion, step]);
 
   useEffect(() => {
     if (complete) {

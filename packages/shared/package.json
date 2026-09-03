@@ -13,6 +13,7 @@
     "./grants": "./src/grants.ts",
     "./brand": "./src/brand.ts",
     "./links": "./src/links.ts",
-    "./clips": "./src/clips.ts"
+    "./clips": "./src/clips.ts",
+    "./grade-access": "./src/grade-access.ts"
   }
 }

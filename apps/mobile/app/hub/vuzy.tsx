@@ -1,6 +1,10 @@
+import { canAccessUniversityLayer } from "@pathwise/shared";
+import { useRouter } from "expo-router";
 import { Screen } from "../../src/components/Screen";
-import { Body, Card, Kicker, Title } from "../../src/components/ui";
+import { Body, Card, Kicker, PrimaryButton, Title } from "../../src/components/ui";
+import { useAuth } from "../../src/context/AuthContext";
 import { useI18n } from "../../src/context/I18nContext";
+import { useLearning } from "../../src/context/LearningContext";
 
 const UNIVERSITIES = [
   { id: "nu", name: "Nazarbayev University", city: "Astana" },
@@ -17,6 +21,21 @@ const UNIVERSITIES = [
 
 export default function UniversitiesScreen() {
   const { t } = useI18n();
+  const router = useRouter();
+  const { user } = useAuth();
+  const { profile } = useLearning();
+  if (user?.role === "student" && !canAccessUniversityLayer(profile?.grade)) {
+    return (
+      <Screen>
+        <Card>
+          <Kicker>{t("uni.kicker")}</Kicker>
+          <Title>{t("guard.grade.title")}</Title>
+          <Body>{t("guard.grade.body")}</Body>
+          <PrimaryButton label={t("guard.grade.cta")} onPress={() => router.replace("/learning")} />
+        </Card>
+      </Screen>
+    );
+  }
   return (
     <Screen>
       <Card>

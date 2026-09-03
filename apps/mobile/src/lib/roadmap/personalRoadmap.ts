@@ -1,3 +1,4 @@
+import { canAccessUniversityLayer } from "@pathwise/shared";
 import { ONBOARDING_SUBJECT_OPTIONS } from "../onboarding-constants";
 import { BASE_TOPICS, subjectTitle } from "../learning/catalog";
 import {
@@ -217,6 +218,7 @@ export function buildPersonalRoadmap(input: {
   const exam = profile?.examDate;
   const diagSubject = diagnostic ? subjectTitle(diagnostic.subjectId) : null;
   const grade = profile?.grade ?? diagnostic?.grade;
+  const allowUniversity = canAccessUniversityLayer(grade);
   const level = diagnostic ? levelLabel(locale, diagnostic.level) : null;
   const style = workStyleLabel(locale, answers?.workPreference ?? null);
   const subjects = subjectListLocalized(
@@ -362,7 +364,7 @@ export function buildPersonalRoadmap(input: {
         title: L(locale, "roadmap.school.1.title"),
         subtitle: track.label,
         phase: L(locale, "roadmap.phase.now"),
-        detail: L(locale, "roadmap.school.1.detail", {
+        detail: L(locale, allowUniversity ? "roadmap.school.1.detail" : "roadmap.school.1.detail.middle", {
           subject: diagSubject ?? subjects,
           goal: goalLabel,
         }),
@@ -409,7 +411,7 @@ export function buildPersonalRoadmap(input: {
         title: L(locale, "roadmap.school.4.title"),
         subtitle: L(locale, "roadmap.school.4.sub"),
         phase: L(locale, "roadmap.phase.3to5m"),
-        detail: L(locale, "roadmap.school.4.detail"),
+        detail: L(locale, allowUniversity ? "roadmap.school.4.detail" : "roadmap.school.4.detail.middle"),
         actions: [
           L(locale, "roadmap.school.4.a1"),
           L(locale, "roadmap.school.4.a2"),
@@ -423,13 +425,13 @@ export function buildPersonalRoadmap(input: {
       node({
         id: "grants",
         title: L(locale, "roadmap.school.5.title"),
-        subtitle: L(locale, "roadmap.school.5.sub"),
+        subtitle: L(locale, allowUniversity ? "roadmap.school.5.sub" : "roadmap.school.5.sub.middle"),
         phase: L(locale, "roadmap.phase.5to7m"),
         detail: L(locale, "roadmap.school.5.detail"),
         actions: [
           L(locale, "roadmap.school.5.a1"),
           L(locale, "roadmap.school.5.a2"),
-          L(locale, "roadmap.school.5.a3"),
+          L(locale, allowUniversity ? "roadmap.school.5.a3" : "roadmap.school.5.a3.middle"),
         ],
         metric: L(locale, "roadmap.school.5.metric"),
         x: 78,
@@ -441,7 +443,7 @@ export function buildPersonalRoadmap(input: {
         title: L(locale, "roadmap.school.6.title"),
         subtitle: exam ? L(locale, "roadmap.date.by", { date: exam }) : L(locale, "roadmap.school.6.sub"),
         phase: L(locale, "roadmap.phase.term"),
-        detail: L(locale, "roadmap.school.6.detail"),
+        detail: L(locale, allowUniversity ? "roadmap.school.6.detail" : "roadmap.school.6.detail.middle"),
         actions: [
           L(locale, "roadmap.school.6.a1"),
           L(locale, "roadmap.school.6.a2"),

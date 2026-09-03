@@ -10,6 +10,8 @@ import {
   roleForPath,
   type UserRole,
 } from "@/lib/site-nav";
+import { canAccessUniversityLayer, isUniversityNavHref } from "@pathwise/shared";
+import { useLearning } from "@/components/learning/useLearning";
 import { useSelectedRole } from "./useSelectedRole";
 import { useAuth } from "./useAuth";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -79,6 +81,7 @@ export function RoleRouteGuard({ children }: { children: React.ReactNode }) {
   const { role, ready } = useSelectedRole();
   const { user, status } = useAuth();
   const { t } = useI18n();
+  const { profile } = useLearning();
   const effectiveRole = role ?? roleForPath(pathname);
 
   // Auto-redirect guests away from private pages to /login (preserves redirect target).
@@ -126,6 +129,22 @@ export function RoleRouteGuard({ children }: { children: React.ReactNode }) {
         currentRole={effectiveRole}
         primaryHref={ROLE_ENTRY_PATHS[effectiveRole]}
         primaryLabel={t("guard.cabinet")}
+      />
+    );
+  }
+
+  if (
+    effectiveRole === "student" &&
+    isUniversityNavHref(pathname) &&
+    !canAccessUniversityLayer(profile?.grade)
+  ) {
+    return (
+      <GuardMessage
+        title={t("guard.grade.title")}
+        description={t("guard.grade.body")}
+        currentRole={effectiveRole}
+        primaryHref="/learning"
+        primaryLabel={t("guard.grade.cta")}
       />
     );
   }

@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
@@ -9,6 +9,16 @@ import { I18nProvider } from "../src/context/I18nContext";
 import { LearningProvider } from "../src/context/LearningContext";
 import { colors } from "../src/lib/theme";
 import { hydrateMemoryStorage } from "../src/lib/storage";
+
+/** Hide bottom nav during focused single-screen flows. */
+function NavGuard() {
+  const pathname = usePathname();
+  const hiddenRoutes = ["/learning/diagnostics"];
+  if (hiddenRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
+    return null;
+  }
+  return <RoleTabs />;
+}
 
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
@@ -32,7 +42,7 @@ export default function RootLayout() {
           <LearningProvider>
             <StatusBar style="dark" />
             <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
-            <RoleTabs />
+            <NavGuard />
           </LearningProvider>
         </AuthProvider>
       </I18nProvider>

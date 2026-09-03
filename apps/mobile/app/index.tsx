@@ -2,13 +2,16 @@ import { useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
 import { Body, Card, Kicker, PrimaryButton, SecondaryButton, Stat, Title } from "../src/components/ui";
 import { Screen } from "../src/components/Screen";
+import { canAccessUniversityLayer } from "@pathwise/shared";
 import { useAuth } from "../src/context/AuthContext";
 import { useI18n } from "../src/context/I18nContext";
+import { useLearning } from "../src/context/LearningContext";
 import { cabinetPathForRole } from "../src/lib/site-nav";
 
 export default function HomeScreen() {
   const { t, palette } = useI18n();
   const { user, logout } = useAuth();
+  const { profile } = useLearning();
   const router = useRouter();
 
   if (user && user.role !== "student") {
@@ -35,7 +38,9 @@ export default function HomeScreen() {
           onPress={() => router.push(user ? "/learning" : "/register")}
         />
         <SecondaryButton label={t("home.landing.ctaSecondary")} onPress={() => router.push("/learning/diagnostics")} />
-        <SecondaryButton label={t("home.landing.ctaGrants")} onPress={() => router.push("/grants")} />
+        {canAccessUniversityLayer(profile?.grade) ? (
+          <SecondaryButton label={t("home.landing.ctaGrants")} onPress={() => router.push("/grants")} />
+        ) : null}
       </Card>
 
       <View style={{ flexDirection: "row", gap: 8 }}>

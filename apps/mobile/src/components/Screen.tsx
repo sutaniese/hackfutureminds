@@ -9,14 +9,17 @@ export function Screen({
   children,
   scroll = true,
   paddedBottom = 108,
+  hideNav = false,
 }: {
   children: ReactNode;
   scroll?: boolean;
   paddedBottom?: number;
+  /** Set to true inside diagnostics to suppress the bottom nav padding. */
+  hideNav?: boolean;
 }) {
   const { palette } = useI18n();
   const inner = (
-    <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: paddedBottom, gap: 14 }}>
+    <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: hideNav ? 16 : paddedBottom, gap: 14 }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
         <TenWordmark />
         <LangToggle />
