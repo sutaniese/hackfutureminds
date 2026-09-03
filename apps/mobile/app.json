@@ -15,19 +15,29 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "info.nurakhmet.ten"
+      "bundleIdentifier": "info.nurakhmet.ten",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "teñ. uses the microphone for the voice mentor and voice control."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FAFAFF"
       },
-      "package": "info.nurakhmet.ten"
+      "package": "info.nurakhmet.ten",
+      "permissions": ["RECORD_AUDIO"]
     },
     "plugins": [
       "expo-router",
       "expo-asset",
       "expo-font",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "teñ. uses the microphone for the voice mentor."
+        }
+      ],
       [
         "expo-video",
         {

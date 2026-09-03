@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { RoleTabs } from "../src/components/RoleTabs";
+import { VoiceCoach } from "../src/components/VoiceCoach";
 import { AuthProvider } from "../src/context/AuthContext";
 import { I18nProvider } from "../src/context/I18nContext";
 import { LearningProvider } from "../src/context/LearningContext";
@@ -43,6 +44,7 @@ export default function RootLayout() {
             <StatusBar style="dark" />
             <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
             <NavGuard />
+            <VoiceCoach />
           </LearningProvider>
         </AuthProvider>
       </I18nProvider>

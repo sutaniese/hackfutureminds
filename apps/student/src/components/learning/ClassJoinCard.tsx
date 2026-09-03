@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { joinClassByCode } from "@/lib/learning/remote";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -9,6 +9,7 @@ import { isInviteCodeFormat, normalizeInviteCode } from "@/lib/learning/invite";
 import { ContentCard } from "@/components/ui/PageHero";
 import { useI18n } from "@/i18n/I18nProvider";
 import { humanClientError } from "@/lib/client-error";
+import { VOICE_CONTROL_EVENT, type VoiceUiEvent } from "@/lib/voice/bus";
 
 export function ClassJoinCard({
   currentCode,
@@ -26,11 +27,10 @@ export function ClassJoinCard({
   const [busy, setBusy] = useState(false);
   const configured = isSupabaseConfigured();
 
-  async function onSubmit(event: FormEvent) {
-    event.preventDefault();
+  async function joinWith(raw: string) {
     setError(null);
     setMessage(null);
-    const invite = normalizeInviteCode(code);
+    const invite = normalizeInviteCode(raw);
     if (!invite) return;
     setBusy(true);
     try {
@@ -70,6 +70,25 @@ export function ClassJoinCard({
     } finally {
       setBusy(false);
     }
+  }
+
+  useEffect(() => {
+    const onVoice = (event: Event) => {
+      const detail = (event as CustomEvent<VoiceUiEvent>).detail;
+      if (detail?.type === "join_class" && detail.inviteCode) {
+        setCode(detail.inviteCode);
+        void joinWith(detail.inviteCode);
+      }
+    };
+    window.addEventListener(VOICE_CONTROL_EVENT, onVoice);
+    return () => window.removeEventListener(VOICE_CONTROL_EVENT, onVoice);
+    // joinWith is stable enough for this card lifetime
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [configured, t]);
+
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault();
+    await joinWith(code);
   }
 
   const form = (

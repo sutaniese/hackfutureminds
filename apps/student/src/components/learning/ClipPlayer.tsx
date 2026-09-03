@@ -15,6 +15,7 @@ import { isAnswerCorrect } from "@/lib/learning/types";
 import { recordClipEvent } from "@/lib/learning/remote";
 import { weakSpots } from "@/lib/learning/recommend";
 import { useLearning } from "./useLearning";
+import { VOICE_CONTROL_EVENT, type VoiceUiEvent } from "@/lib/voice/bus";
 
 export function ClipPlayer({
   lockedTopicId,
@@ -107,6 +108,27 @@ export function ClipPlayer({
     },
     [clipLocale, dropIfUnfinished, loadFallback],
   );
+
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q")?.trim();
+    if (!q) return;
+    const match = BASE_TOPICS.find((item) => item.title.toLowerCase().includes(q.toLowerCase()) || item.id.includes(q.toLowerCase()));
+    if (match) selectTopic(match.id);
+  }, [selectTopic]);
+
+  useEffect(() => {
+    const onVoice = (event: Event) => {
+      const detail = (event as CustomEvent<VoiceUiEvent>).detail;
+      if (!detail || detail.type !== "clip") return;
+      if (detail.verb === "open" && detail.topicQuery) {
+        const q = detail.topicQuery.toLowerCase();
+        const match = BASE_TOPICS.find((item) => item.title.toLowerCase().includes(q) || item.id.includes(q));
+        if (match) selectTopic(match.id);
+      }
+    };
+    window.addEventListener(VOICE_CONTROL_EVENT, onVoice);
+    return () => window.removeEventListener(VOICE_CONTROL_EVENT, onVoice);
+  }, [selectTopic]);
 
   useEffect(() => {
     return () => {
