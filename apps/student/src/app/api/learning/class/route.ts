@@ -2,6 +2,8 @@ import { HttpError } from "@/lib/server/require-user";
 import { requireUserResponse } from "@/lib/server/require-user";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { getStudentClassOverview } from "@/lib/server/class-service";
+import { publicErrorMessage } from "@/lib/server/public-error";
+import { asArray } from "@/lib/safe-list";
 
 export const runtime = "nodejs";
 
@@ -27,9 +29,14 @@ export async function GET() {
   if (error) return error;
   try {
     const overview = await getStudentClassOverview(user);
-    return json(overview);
+    return json({
+      ...overview,
+      classmates: asArray(overview.classmates),
+      homework: asArray(overview.homework),
+      exams: asArray(overview.exams),
+    });
   } catch (err) {
     if (err instanceof HttpError) return json({ error: err.message }, err.status);
-    return json({ error: err instanceof Error ? err.message : "Server error" }, 500);
+    return json({ error: publicErrorMessage(err, "Не удалось загрузить класс.") }, 500);
   }
 }

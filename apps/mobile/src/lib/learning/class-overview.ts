@@ -4,6 +4,7 @@ export type StudentHomeworkItem = {
   summary: string;
   author?: string;
   status: "assigned" | "in_progress" | "done";
+  hasClip?: boolean;
 };
 
 export type StudentExamItem = {

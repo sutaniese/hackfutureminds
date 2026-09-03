@@ -8,6 +8,7 @@ import { saveLocalClassJoin } from "@/lib/learning/class-local";
 import { isInviteCodeFormat, normalizeInviteCode } from "@/lib/learning/invite";
 import { ContentCard } from "@/components/ui/PageHero";
 import { useI18n } from "@/i18n/I18nProvider";
+import { humanClientError } from "@/lib/client-error";
 
 export function ClassJoinCard({
   currentCode,
@@ -65,7 +66,7 @@ export function ClassJoinCard({
         localOnly: false,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("class.joinFail"));
+      setError(humanClientError(err, t("class.joinFail")));
     } finally {
       setBusy(false);
     }

@@ -14,6 +14,7 @@ import {
 import type { Topic } from "@/lib/learning/types";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { pullClassBoard } from "@/lib/learning/remote";
+import { asArray } from "@/lib/safe-list";
 import { downloadLearningProgressReport } from "../lib/exportLearningProgress";
 
 function levelTone(level: 1 | 2 | 3 | 4) {
@@ -75,9 +76,10 @@ export function ClassLearningDashboard() {
     if (isSupabaseConfigured()) {
       try {
         const board = await pullClassBoard();
-        setBoardStudents(board.students);
-        setHeatmap(board.heatmap);
-        setRoster(board.students.map((s) => s.snapshot));
+        const students = asArray<BoardStudent>(board?.students);
+        setBoardStudents(students);
+        setHeatmap(asArray<HeatCell>(board?.heatmap));
+        setRoster(students.map((s) => s.snapshot));
         setError(null);
         return;
       } catch (err) {

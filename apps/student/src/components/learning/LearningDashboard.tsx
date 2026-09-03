@@ -274,7 +274,7 @@ export function LearningDashboard() {
                         <p className="text-base font-black text-pathwise-ink transition-colors duration-200 group-hover:text-[#554dd6]">
                           {item.topic.title}
                         </p>
-                        <ClipBadge topicId={item.topic.id} />
+                        <ClipBadge topicId={item.topic.id} live={Boolean(item.topic.clipScript)} />
                       </div>
                       <Pill tone={item.priority === "high" ? "warn" : item.priority === "medium" ? "accent" : "muted"}>
                         {t(`priority.${item.priority}`)}
@@ -336,7 +336,12 @@ export function LearningDashboard() {
                     {spot.topicTitle ? (
                       <p className="mt-1 flex flex-wrap items-center gap-2 text-xs font-semibold text-pathwise-muted">
                         {spot.topicTitle}
-                        {spot.topicId ? <ClipBadge topicId={spot.topicId} /> : null}
+                        {spot.topicId ? (
+                          <ClipBadge
+                            topicId={spot.topicId}
+                            live={Boolean(topics.find((topic) => topic.id === spot.topicId)?.clipScript)}
+                          />
+                        ) : null}
                       </p>
                     ) : null}
                     <div className="mt-2.5">
@@ -493,7 +498,7 @@ export function LearningDashboard() {
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="text-sm font-bold text-pathwise-ink">{item.topic.title}</p>
-                      <ClipBadge topicId={item.topic.id} />
+                      <ClipBadge topicId={item.topic.id} live={Boolean(item.topic.clipScript)} />
                     </div>
                     <p className="text-xs font-semibold text-pathwise-muted">
                       {t("learn.srsMeta", { n: item.intervalDays, date: dateLabel })}

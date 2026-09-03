@@ -2,7 +2,7 @@ import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Screen } from "../../src/components/Screen";
-import { Body, Card, ErrorText, Field, Kicker, PrimaryButton, SecondaryButton, Title } from "../../src/components/ui";
+import { Body, Card, Chip, ErrorText, Field, Kicker, PrimaryButton, SecondaryButton, Title } from "../../src/components/ui";
 import { useAuth } from "../../src/context/AuthContext";
 import { useI18n } from "../../src/context/I18nContext";
 import { useLearning } from "../../src/context/LearningContext";
@@ -105,7 +105,9 @@ export default function ClassScreen() {
         localOnly: true,
       });
       setLocalNote(t("class.needsServer"));
-      setError(err instanceof Error ? err.message : t("class.joinFail"));
+      const raw = err instanceof Error ? err.message : "";
+      const leaked = /accessToken option|getClaims is not possible|@supabase\/supabase-js/i.test(raw);
+      setError(!raw || leaked || raw.length > 160 ? t("class.joinFail") : raw);
     } finally {
       setBusy(false);
     }
@@ -161,18 +163,23 @@ export default function ClassScreen() {
       <Card>
         <Title>{t("class.homework")}</Title>
         <Body>{t("class.homeworkHint")}</Body>
-        {!overview?.homework.length ? <Body>{t("class.hwEmpty")}</Body> : null}
-        {overview?.homework.map((item) => (
-          <Body key={item.id}>
-            {item.title} · {t(item.status === "done" ? "class.hwDone" : item.status === "in_progress" ? "class.hwDoing" : "class.hwAssigned")}
-          </Body>
+        {!(Array.isArray(overview?.homework) ? overview.homework : []).length ? <Body>{t("class.hwEmpty")}</Body> : null}
+        {(Array.isArray(overview?.homework) ? overview.homework : []).map((item) => (
+          <Card key={item.id} style={{ padding: 12 }}>
+            <Body>
+              {item.title} · {t(item.status === "done" ? "class.hwDone" : item.status === "in_progress" ? "class.hwDoing" : "class.hwAssigned")}
+            </Body>
+            {item.hasClip ? (
+              <Chip label={t("clips.badge")} selected={false} onPress={() => router.push(`/learning/topic/${item.id}`)} />
+            ) : null}
+          </Card>
         ))}
       </Card>
 
       <Card>
         <Title>{t("class.exams")}</Title>
-        {!overview?.exams.length ? <Body>{t("class.examEmpty")}</Body> : null}
-        {overview?.exams.map((item) => (
+        {!(Array.isArray(overview?.exams) ? overview.exams : []).length ? <Body>{t("class.examEmpty")}</Body> : null}
+        {(Array.isArray(overview?.exams) ? overview.exams : []).map((item) => (
           <Body key={`${item.title}-${item.date}`}>{item.title} · {item.source === "profile" ? t("class.examProfile") : t("class.examTeacher")}</Body>
         ))}
       </Card>

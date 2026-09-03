@@ -89,8 +89,8 @@ export type Topic = {
   custom?: boolean;
   /** Автор темы (учитель) — для панели учителя. */
   author?: string;
-  /** Живой клип (сцены JSON), если учитель собрал его в конструкторе. */
-  liveClip?: LiveClipScript;
+  /** Живой клип (JSON-сцены), без видеофайла. */
+  clipScript?: LiveClipScript | null;
 };
 
 export type Subject = {

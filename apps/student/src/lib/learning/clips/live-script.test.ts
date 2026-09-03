@@ -1,86 +1,135 @@
 import { describe, expect, it } from "vitest";
 import {
-  LIVE_CLIP_MAX_SCENES,
   estimateDurationSec,
-  fallbackLiveClip,
-  topicHasWatchableClip,
-  totalNarrationWords,
+  fallbackLiveClipScript,
+  LIVE_CLIP_MAX_SEC,
+  LIVE_CLIP_MIN_SEC,
 } from "@pathwise/shared";
-import { coerceLiveClipScript, liveClipFromModelText, liveClipScriptSchema } from "./live-script";
+import { parseLiveClipScript, parseLiveClipScriptFromModel } from "./live-script";
 
-const FALLBACK = {
-  title: "Квадратные уравнения",
-  prompt: "Объясни дискриминант и формулу корней. Покажи D = b^2 - 4ac и когда два корня.",
-  language: "ru" as const,
-  skillId: "Дискриминант",
-};
+const TEACHER_TEXT =
+  "Квадратное уравнение ax^2+bx+c=0. Дискриминант D=b^2-4ac. Если D>0 — два корня, D=0 — один корень, D<0 — нет действительных корней. Формула корней x=(-b±√D)/(2a).";
 
-describe("live clip script", () => {
-  it("validates a complete script with zod", () => {
-    const script = fallbackLiveClip(FALLBACK);
-    const parsed = liveClipScriptSchema.safeParse(script);
-    expect(parsed.success).toBe(true);
-    expect(script.scenes.length).toBeLessThanOrEqual(LIVE_CLIP_MAX_SCENES);
-    expect(script.quiz.options).toHaveLength(3);
-  });
-
-  it("falls back to a complete template from teacher text", () => {
-    const { script, source } = coerceLiveClipScript({ title: "only title" }, FALLBACK);
-    expect(source).toBe("fallback");
-    expect(liveClipScriptSchema.safeParse(script).success).toBe(true);
-    expect(script.scenes.length).toBeGreaterThanOrEqual(4);
-    expect(script.quiz.options[0].length).toBeGreaterThan(0);
-    expect(script.title).toBe(FALLBACK.title);
-  });
-
-  it("never returns half-valid JSON from broken model text", () => {
-    const { script } = liveClipFromModelText("конечно: {\"scenes\":[{}]} хвост", FALLBACK);
-    expect(script.scenes.every((scene) => scene.narration && scene.heading && scene.visual)).toBe(true);
-    expect(script.quiz.options).toHaveLength(3);
-    expect(typeof script.quiz.correctIndex).toBe("number");
-  });
-
-  it("normalizes a near-valid payload instead of dropping it", () => {
-    const { script, source } = coerceLiveClipScript(
+function validScript() {
+  return {
+    title: "Квадратные уравнения",
+    durationSec: 48,
+    language: "ru" as const,
+    scenes: [
       {
-        title: "Дискриминант",
-        language: "ru",
-        durationSec: 52,
-        scenes: [
-          { id: "a", heading: "Зачем", narration: "Дискриминант говорит, сколько корней.", visual: "diagram" },
-          { id: "b", heading: "Формула", narration: "D равно b в квадрате минус четыре a c.", visual: "formula", formula: "D = b^2 - 4ac" },
-          { id: "c", heading: "Смысл", narration: "Если D больше нуля — два корня.", visual: "bullets", body: "D>0 два\nD=0 один" },
-          { id: "d", heading: "Проверка", narration: "Подставь коэффициенты и сравни знак D.", visual: "compare" },
-        ],
-        quiz: {
-          question: "Когда два корня?",
-          options: ["D>0", "D<0", "a=0"],
-          correctIndex: 0,
-          explanation: "Положительный дискриминант.",
-          skillId: "Дискриминант",
-        },
+        id: "s1",
+        heading: "Квадратные уравнения",
+        body: "ax^2+bx+c=0",
+        formula: "ax^2+bx+c=0",
+        narration: "Квадратное уравнение — это уравнение вида a x квадрат плюс b x плюс c равно нулю.",
+        visual: "formula" as const,
       },
-      FALLBACK,
-    );
-    expect(source === "schema" || source === "normalized").toBe(true);
-    expect(script.scenes).toHaveLength(4);
-    expect(script.quiz.correctIndex).toBe(0);
+      {
+        id: "s2",
+        heading: "Дискриминант",
+        formula: "D=b^2-4ac",
+        narration: "Считаем дискриминант: бэ квадрат минус четыре а цэ. Знак D говорит, сколько корней.",
+        visual: "formula" as const,
+      },
+      {
+        id: "s3",
+        heading: "Случаи",
+        body: "D>0 два корня. D=0 один корень. D<0 нет действительных.",
+        narration: "Если D больше нуля — два корня, равно нулю — один, меньше нуля — нет действительных корней.",
+        visual: "compare" as const,
+      },
+      {
+        id: "s4",
+        heading: "Формула",
+        formula: "x=(-b±√D)/(2a)",
+        narration: "Корни считаем по формуле: минус бэ плюс-минус корень из D, всё делим на два а.",
+        visual: "formula" as const,
+      },
+    ],
+    quiz: {
+      question: "Что показывает дискриминант?",
+      options: ["Число действительных корней", "Сумму коэффициентов", "Свободный член"],
+      correctIndex: 0,
+      explanation: "Знак и равенство нулю D задают число действительных корней.",
+      skillId: "discriminant",
+    },
+  };
+}
+
+describe("liveClipScript zod", () => {
+  it("accepts a complete scene script", () => {
+    const parsed = parseLiveClipScript(validScript());
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.script.scenes).toHaveLength(4);
+      expect(parsed.script.quiz.options).toHaveLength(3);
+    }
   });
 
-  it("estimates 40–60s from word count at ~2.5 words/sec", () => {
-    expect(estimateDurationSec(100)).toBe(40);
-    expect(estimateDurationSec(125)).toBe(50);
-    expect(estimateDurationSec(140)).toBe(56);
-    expect(estimateDurationSec(200)).toBe(70);
-    const script = fallbackLiveClip(FALLBACK);
-    expect(script.durationSec).toBeGreaterThanOrEqual(40);
-    expect(script.durationSec).toBeLessThanOrEqual(70);
-    expect(totalNarrationWords(script.scenes)).toBeLessThanOrEqual(160);
+  it("rejects a half-valid payload instead of passing it through", () => {
+    const broken = {
+      title: "Тема",
+      durationSec: 50,
+      language: "ru",
+      scenes: [{ id: "s1", heading: "H", narration: "text", visual: "map" }],
+      quiz: { question: "q", options: ["a", "b"], correctIndex: 0, explanation: "e", skillId: "s" },
+    };
+    const parsed = parseLiveClipScript(broken);
+    expect(parsed.ok).toBe(false);
+    if (!parsed.ok) {
+      expect(parsed.issues.length).toBeGreaterThan(0);
+    }
   });
 
-  it("marks a custom topic with liveClip as watchable", () => {
-    const script = fallbackLiveClip(FALLBACK);
-    expect(topicHasWatchableClip({ id: "custom-demo", liveClip: script }, "ru")).toBe(true);
-    expect(topicHasWatchableClip({ id: "custom-demo" }, "ru")).toBe(false);
+  it("rejects prose wrapped as if it were JSON", () => {
+    const parsed = parseLiveClipScriptFromModel("Клип про квадратные уравнения без JSON.");
+    expect(parsed.ok).toBe(false);
+  });
+});
+
+describe("deterministic fallback", () => {
+  it("builds a full script from the teacher's own text", () => {
+    const script = fallbackLiveClipScript({
+      title: "Квадратные уравнения",
+      prompt: TEACHER_TEXT,
+      language: "ru",
+      skillId: "quadratic",
+    });
+    expect(script.scenes.length).toBeGreaterThanOrEqual(1);
+    expect(script.scenes.length).toBeLessThanOrEqual(6);
+    expect(script.quiz.options).toHaveLength(3);
+    expect(script.scenes.some((scene) => scene.narration.includes("ax^2") || scene.body?.includes("Дискриминант") || scene.narration.includes("Дискриминант") || scene.body?.includes("ax^2"))).toBe(true);
+    expect(parseLiveClipScript(script).ok).toBe(true);
+  });
+
+  it("keeps Kazakh language on the fallback script", () => {
+    const script = fallbackLiveClipScript({
+      title: "Квадрат теңдеулер",
+      prompt: TEACHER_TEXT,
+      language: "kk",
+    });
+    expect(script.language).toBe("kk");
+    expect(script.quiz.question.includes("тақырыбында") || script.scenes[0]?.narration.includes("тақырыбын")).toBe(true);
+  });
+});
+
+describe("40–60s duration estimate", () => {
+  it("clamps the fallback and a valid model script into 40–60 seconds", () => {
+    const fallback = fallbackLiveClipScript({
+      title: "Квадратные уравнения",
+      prompt: TEACHER_TEXT,
+      language: "ru",
+    });
+    const estimated = estimateDurationSec(fallback);
+    expect(estimated).toBeGreaterThanOrEqual(LIVE_CLIP_MIN_SEC);
+    expect(estimated).toBeLessThanOrEqual(LIVE_CLIP_MAX_SEC);
+    expect(fallback.durationSec).toBe(estimated);
+
+    const parsed = parseLiveClipScript(validScript());
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.script.durationSec).toBeGreaterThanOrEqual(LIVE_CLIP_MIN_SEC);
+      expect(parsed.script.durationSec).toBeLessThanOrEqual(LIVE_CLIP_MAX_SEC);
+    }
   });
 });

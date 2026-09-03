@@ -7,7 +7,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 import { ContentCard } from "@/components/ui/PageHero";
 import { AnswerField } from "@/components/learning/AnswerField";
 import { Pill } from "@/components/learning/LearningUI";
-import { LiveClipPlayer } from "@/components/learning/live-clip/LiveClipPlayer";
+import { LiveScenePlayer } from "./LiveScenePlayer";
 import { localClipForTopic } from "@/lib/learning/clips";
 import type { LearningClip } from "@/lib/learning/clips/types";
 import { BASE_TOPICS, findTask, findTopic, SUBJECTS } from "@/lib/learning/catalog";

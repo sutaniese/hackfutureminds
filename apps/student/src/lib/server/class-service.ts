@@ -14,17 +14,18 @@ import { mergeClassExams } from "@/lib/learning/class-overview";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { requireRole, type AuthedUser } from "@/lib/server/require-user";
 import { HttpError } from "@/lib/server/require-user";
-import type { LiveClipScript } from "@pathwise/shared";
-import { topicHasLiveClip } from "@pathwise/shared";
-
-function topicFromRow(row: { topic?: Topic | null; live_clip?: LiveClipScript | null }): Topic | null {
-  const topic = row.topic;
-  if (!topic) return null;
-  if (topic.liveClip || !row.live_clip) return topic;
-  return { ...topic, liveClip: row.live_clip };
-}
+import { joinFailureMessage, publicErrorMessage } from "@/lib/server/public-error";
+import { asArray } from "@/lib/safe-list";
 
 export type { StudentClassOverview, StudentExamItem, StudentHomeworkItem };
+function topicFromCustomRow(row: { topic?: Topic | null; clip_script?: Topic["clipScript"] }): Topic | null {
+  if (!row.topic) return null;
+  return {
+    ...row.topic,
+    clipScript: row.topic.clipScript ?? row.clip_script ?? null,
+  };
+}
+
 export type ClassRow = {
   id: string;
   name: string;
@@ -51,7 +52,7 @@ export async function listClassesForUser(user: AuthedUser): Promise<ClassRow[]> 
     .from("classes")
     .select("id, name, invite_code, teacher_id, created_at")
     .order("created_at", { ascending: true });
-  if (error) throw new HttpError(500, error.message);
+  if (error) throw new HttpError(500, publicErrorMessage(error, "Не удалось загрузить классы."));
   const classes = (data ?? []) as ClassRecord[];
   if (classes.length === 0) return [];
 
@@ -60,7 +61,7 @@ export async function listClassesForUser(user: AuthedUser): Promise<ClassRow[]> 
     .from("class_members")
     .select("class_id, student_id")
     .in("class_id", ids);
-  if (memberError) throw new HttpError(500, memberError.message);
+  if (memberError) throw new HttpError(500, publicErrorMessage(memberError, "Не удалось загрузить классы."));
 
   const byClass = new Map<string, string[]>();
   for (const row of members ?? []) {
@@ -113,7 +114,7 @@ export async function deleteClassForTeacher(user: AuthedUser, classId: string): 
     .delete({ count: "exact" })
     .eq("id", classId)
     .eq("teacher_id", user.id);
-  if (error) throw new HttpError(500, error.message);
+  if (error) throw new HttpError(500, publicErrorMessage(error, "Не удалось удалить класс."));
   return (count ?? 0) > 0;
 }
 
@@ -123,9 +124,8 @@ export async function joinClassAsStudent(user: AuthedUser, inviteCode: string) {
   if (!supabase) throw new HttpError(503, "Supabase is not configured.");
   const { data, error } = await supabase.rpc("join_class_by_invite", { p_code: inviteCode });
   if (error) {
-    const msg = error.message || "Не удалось присоединиться";
-    if (msg.includes("class not found")) throw new HttpError(404, "Класс не найден по коду");
-    throw new HttpError(400, msg);
+    const mapped = joinFailureMessage(error.message || "");
+    throw new HttpError(mapped.status, mapped.message);
   }
   const classId = String(data);
   const { data: cls } = await supabase
@@ -189,11 +189,11 @@ export async function readOwnProgress(user: AuthedUser) {
   if (classIds.length > 0) {
     const { data: custom } = await supabase
       .from("custom_topics")
-      .select("topic, live_clip, class_id")
+      .select("topic, clip_script, class_id")
       .in("class_id", classIds);
     topics = (custom ?? [])
-      .map((row: { topic: Topic; live_clip?: LiveClipScript | null }) => topicFromRow(row))
-      .filter((item): item is Topic => Boolean(item));
+      .map((row: { topic?: Topic | null; clip_script?: Topic["clipScript"] }) => topicFromCustomRow(row))
+      .filter((topic): topic is Topic => Boolean(topic));
     const { data: cls } = await supabase
       .from("classes")
       .select("id, invite_code")
@@ -315,17 +315,17 @@ export async function getStudentClassOverview(user: AuthedUser): Promise<Student
       .filter((row: { displayName: string }) => row.displayName.length > 0);
   }
 
-  const { data: custom } = await supabase.from("custom_topics").select("topic, live_clip").eq("class_id", classId);
+  const { data: custom } = await supabase.from("custom_topics").select("topic, clip_script").eq("class_id", classId);
   const homework: StudentHomeworkItem[] = (custom ?? [])
-    .map((row: { topic: Topic; live_clip?: LiveClipScript | null }) => topicFromRow(row))
-    .filter((item): item is Topic => Boolean(item))
+    .map((row: { topic?: Topic | null; clip_script?: Topic["clipScript"] }) => topicFromCustomRow(row))
+    .filter((topic): topic is Topic => Boolean(topic))
     .map((topic: Topic) => ({
       id: topic.id,
       title: topic.title,
       summary: topic.summary,
       author: topic.author,
       status: homeworkStatus(topic, state),
-      hasClip: topicHasLiveClip(topic),
+      hasClip: Boolean(topic.clipScript?.scenes?.length),
     }));
 
   return {
@@ -339,10 +339,26 @@ export async function getStudentClassOverview(user: AuthedUser): Promise<Student
         }
       : null,
     memberCount,
-    classmates,
-    homework,
-    exams,
+    classmates: asArray(classmates),
+    homework: asArray(homework),
+    exams: asArray(exams),
   };
+}
+
+export async function removeStudentFromTeacherClasses(user: AuthedUser, studentId: string): Promise<boolean> {
+  requireRole(user, "teacher");
+  const supabase = await createServerSupabase();
+  if (!supabase) throw new HttpError(503, "Supabase is not configured.");
+  const classes = await listClassesForUser(user);
+  const classIds = asArray(classes).map((c) => c.id);
+  if (classIds.length === 0) return false;
+  const { error, count } = await supabase
+    .from("class_members")
+    .delete({ count: "exact" })
+    .eq("student_id", studentId)
+    .in("class_id", classIds);
+  if (error) throw new HttpError(500, publicErrorMessage(error, "Не удалось удалить ученика."));
+  return (count ?? 0) > 0;
 }
 
 export async function writeOwnProgress(
@@ -389,19 +405,14 @@ export async function publishTopic(user: AuthedUser, classId: string, topic: Top
     class_id: classId,
     teacher_id: user.id,
     topic: { ...topic, custom: true, author: user.name || user.email },
-    live_clip: topic.liveClip ?? null,
+    clip_script: topic.clipScript ?? null,
     updated_at: new Date().toISOString(),
   };
   let { error } = await supabase.from("custom_topics").upsert(payload);
-  if (error && /live_clip/i.test(error.message)) {
-    const withoutColumn = {
-      id: payload.id,
-      class_id: payload.class_id,
-      teacher_id: payload.teacher_id,
-      topic: payload.topic,
-      updated_at: payload.updated_at,
-    };
-    ({ error } = await supabase.from("custom_topics").upsert(withoutColumn));
+  if (error && /clip_script/i.test(error.message)) {
+    const { clip_script: _ignored, ...legacy } = payload;
+    void _ignored;
+    ({ error } = await supabase.from("custom_topics").upsert(legacy));
   }
   if (error) throw new HttpError(500, error.message);
   return { ...topic, custom: true as const, author: user.name || user.email };
@@ -427,24 +438,25 @@ export async function classBoard(user: AuthedUser, classId?: string) {
     return { classes, students: [], heatmap: [] };
   }
 
-  const { data: custom } = await supabase.from("custom_topics").select("topic, live_clip").eq("class_id", active.id);
+  const { data: custom } = await supabase.from("custom_topics").select("topic, clip_script").eq("class_id", active.id);
   const catalog: Topic[] = [
     ...BASE_TOPICS,
     ...((custom ?? [])
-      .map((row: { topic: Topic; live_clip?: LiveClipScript | null }) => topicFromRow(row))
-      .filter((item): item is Topic => Boolean(item))),
+      .map((row: { topic?: Topic | null; clip_script?: Topic["clipScript"] }) => topicFromCustomRow(row))
+      .filter((topic): topic is Topic => Boolean(topic))),
   ];
 
-  if (active.studentIds.length === 0) {
+  const studentIds = asArray<string>(active.studentIds);
+  if (studentIds.length === 0) {
     return { classes, students: [], heatmap: buildHeatmap(catalog, []) };
   }
 
   const [{ data: profiles }, { data: learningProfiles }, { data: learningStates }, { data: clipRows }] =
     await Promise.all([
-      supabase.from("profiles").select("id, email, display_name").in("id", active.studentIds),
-      supabase.from("learning_profiles").select("*").in("user_id", active.studentIds),
-      supabase.from("learning_state").select("*").in("user_id", active.studentIds),
-      supabase.from("clip_events").select("user_id, event").in("user_id", active.studentIds),
+      supabase.from("profiles").select("id, email, display_name").in("id", studentIds),
+      supabase.from("learning_profiles").select("*").in("user_id", studentIds),
+      supabase.from("learning_state").select("*").in("user_id", studentIds),
+      supabase.from("clip_events").select("user_id, event").in("user_id", studentIds),
     ]);
 
   const profileById = new Map((profiles ?? []).map((p) => [p.id, p]));
@@ -455,11 +467,11 @@ export async function classBoard(user: AuthedUser, classId?: string) {
     const current = clipsById.get(row.user_id) ?? { watched: 0, dropped: 0, stuck: 0 };
     if (row.event === "complete") current.watched += 1;
     if (row.event === "drop") current.dropped += 1;
-    if (row.event === "quiz_wrong" || row.event === "stuck") current.stuck += 1;
+    if (row.event === "quiz_wrong") current.stuck += 1;
     clipsById.set(row.user_id, current);
   }
 
-  const students = active.studentIds.map((id) => {
+  const students = studentIds.map((id) => {
     const profileRow = profileById.get(id);
     const lp = lpById.get(id);
     const ls = lsById.get(id);

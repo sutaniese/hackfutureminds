@@ -13,6 +13,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { StudentClassOverview, StudentHomeworkItem } from "@/lib/learning/class-overview";
 import { daysLabel } from "@/lib/learning/plural";
 import { localizedCount } from "@/lib/i18n-labels";
+import { asArray } from "@/lib/safe-list";
 
 const EMPTY: StudentClassOverview = {
   configured: false,
@@ -76,8 +77,10 @@ export function StudentClassView() {
         ? { id: "local", name: inviteCode, inviteCode, teacherName: null }
         : null;
 
+  const classmates = asArray(remote.classmates);
   const homework = useMemo(() => {
-    if (remote.homework.length) return remote.homework;
+    const remoteHw = asArray(remote.homework);
+    if (remoteHw.length) return remoteHw;
     return topics
       .filter((topic) => topic.custom)
       .map((topic) => {
@@ -92,13 +95,14 @@ export function StudentClassView() {
           summary: topic.summary,
           author: topic.author,
           status,
-          hasClip: Boolean(topic.liveClip),
+          hasClip: Boolean(topic.clipScript?.scenes?.length),
         };
       });
   }, [remote.homework, state, topics]);
 
   const exams = useMemo(() => {
-    if (remote.exams.length) return remote.exams;
+    const remoteExams = asArray(remote.exams);
+    if (remoteExams.length) return remoteExams;
     if (profile?.examDate) {
       return [{ title: profile.examDate, date: profile.examDate, source: "profile" as const }];
     }
@@ -181,9 +185,9 @@ export function StudentClassView() {
               {t("class.matesCount", { n: memberCount })}
               {locale !== "ru" ? ` · ${localizedCount(locale, "students", memberCount)}` : null}
             </p>
-            {remote.classmates.length > 0 ? (
+            {classmates.length > 0 ? (
               <ul className="mt-2 flex flex-wrap gap-2">
-                {remote.classmates.map((mate) => (
+                {classmates.map((mate) => (
                   <li key={mate.displayName}>
                     <Pill>{mate.displayName}</Pill>
                   </li>
@@ -219,7 +223,7 @@ export function StudentClassView() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <p className="text-sm font-black text-pathwise-ink">{item.title}</p>
-                    <ClipBadge topicId={item.id} />
+                    <ClipBadge topicId={item.id} live={Boolean(item.hasClip)} />
                   </div>
                   <Pill tone={statusTone(item.status)}>
                     {item.status === "done"

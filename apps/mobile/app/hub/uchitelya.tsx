@@ -28,7 +28,7 @@ export default function TeacherCabinetScreen() {
     try {
       if (isSupabaseConfigured()) {
         const data = await apiGet<{ classes: ServerClass[] }>("/api/classes");
-        setClasses(data.classes ?? []);
+        setClasses(Array.isArray(data?.classes) ? data.classes : []);
       } else {
         setClasses(readLocalClasses());
       }
