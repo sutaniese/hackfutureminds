@@ -17,6 +17,15 @@ const BUNDLED: Record<string, number> = {
   "inf-python": require("../../assets/clips/inf-python.mp4"),
 };
 
+function resolveUri(topicId: string, clipLocale: "ru" | "kk", useBundled: boolean): string | number | null {
+  if (useBundled && BUNDLED[topicId]) return BUNDLED[topicId];
+  // Prefer remote production URL (the web server has all 18 clips)
+  const remote = clipProductionUrl(topicId, clipLocale, getApiUrl());
+  if (remote) return remote;
+  // Fallback to bundled for the three bundled topics
+  return BUNDLED[topicId] ?? null;
+}
+
 export function TopicClipPlayer({
   topicId,
   onWrongAnswer,
@@ -31,6 +40,7 @@ export function TopicClipPlayer({
   const [answer, setAnswer] = useState("");
   const [quizMsg, setQuizMsg] = useState<string | null>(null);
   const [useBundled, setUseBundled] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const startedRef = useRef(false);
   const completedRef = useRef(false);
   const clipIdRef = useRef(`clip-${topicId}${clipLocale === "kk" ? "-kk" : ""}`);
@@ -39,13 +49,12 @@ export function TopicClipPlayer({
   const topic = findTopic(topics, topicId) ?? findTopic(BASE_TOPICS, topicId);
   const quizTaskId = videoMeta?.quizTaskId || topic?.tasks[0]?.id || "";
   const quiz = quizTaskId ? findTask(topics, quizTaskId) ?? findTask(BASE_TOPICS, quizTaskId) : null;
-  const uri =
-    useBundled && BUNDLED[topicId]
-      ? BUNDLED[topicId]
-      : clipProductionUrl(topicId, clipLocale, getApiUrl()) ?? BUNDLED[topicId] ?? null;
-  const player = useVideoPlayer(uri ?? BUNDLED["math-quadratic"], (instance) => {
+
+  const uri = resolveUri(topicId, clipLocale, useBundled);
+
+  const player = useVideoPlayer(uri, (instance) => {
     instance.loop = false;
-    instance.play();
+    if (uri) instance.play();
   });
 
   function fire(event: "start" | "complete" | "drop" | "quiz_right" | "quiz_wrong") {
@@ -54,6 +63,7 @@ export function TopicClipPlayer({
 
   useEffect(() => {
     if (!uri || phase !== "video") return;
+    setLoadError(false);
     player.replace(uri);
     player.play();
   }, [topicId, uri, player, phase]);
@@ -74,8 +84,12 @@ export function TopicClipPlayer({
   });
 
   useEventListener(player, "statusChange", ({ status }) => {
-    if (status === "error" && phase === "video" && !useBundled && BUNDLED[topicId]) {
-      setUseBundled(true);
+    if (status === "error" && phase === "video") {
+      if (!useBundled && BUNDLED[topicId]) {
+        setUseBundled(true);
+      } else {
+        setLoadError(true);
+      }
     }
   });
 
@@ -107,11 +121,21 @@ export function TopicClipPlayer({
     onWrongAnswer?.();
   }
 
+  if (!uri && !loadError) {
+    return (
+      <Card>
+        <Kicker>{t("clips.kicker")}</Kicker>
+        <Body>{t("clips.loading")}</Body>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <Kicker>{t("clips.kicker")}</Kicker>
       <Title>{topic?.title ?? topicId}</Title>
-      {phase === "video" ? (
+
+      {phase === "video" && !loadError ? (
         <Card style={{ padding: 0, overflow: "hidden", backgroundColor: "#07060F", borderColor: "#07060F" }}>
           <VideoView
             player={player}
@@ -122,6 +146,10 @@ export function TopicClipPlayer({
         </Card>
       ) : null}
 
+      {phase === "video" && loadError ? (
+        <Body>{t("clips.loading")}</Body>
+      ) : null}
+
       {phase === "quiz" && quiz ? (
         <Card style={{ backgroundColor: palette.ink, borderColor: palette.ink }}>
           <Kicker>{t("clips.quizNow")}</Kicker>
@@ -130,8 +158,12 @@ export function TopicClipPlayer({
             ? quiz.options.map((option, index) => (
                 <Chip key={option} label={option} selected={answer === String(index)} onPress={() => setAnswer(String(index))} />
               ))
-            : <Field label={t("answer.short")} value={answer} onChangeText={setAnswer} />}
-          <PrimaryButton label={t("clips.answer")} onPress={submitQuiz} />
+            : <Field label={t("answer.short")} value={answer} onChangeText={setAnswer} multiline />}
+          <PrimaryButton
+            label={t("clips.answer")}
+            onPress={submitQuiz}
+            disabled={answer.trim() === ""}
+          />
           {quizMsg ? <Body style={{ color: "#FFFFFF" }}>{quizMsg}</Body> : null}
           {!quizMsg ? (
             <Body style={{ color: "#94A3B8" }}>

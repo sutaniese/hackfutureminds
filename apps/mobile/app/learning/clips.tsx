@@ -225,8 +225,8 @@ export default function ClipsScreen() {
             ? quiz.options.map((option, index) => (
                 <Chip key={option} label={option} selected={answer === String(index)} onPress={() => setAnswer(String(index))} />
               ))
-            : <Field label={t("answer.short")} value={answer} onChangeText={setAnswer} />}
-          <PrimaryButton label={t("clips.answer")} onPress={submitQuiz} />
+            : <Field label={t("answer.short")} value={answer} onChangeText={setAnswer} multiline />}
+          <PrimaryButton label={t("clips.answer")} onPress={submitQuiz} disabled={answer.trim() === ""} />
           {quizMsg ? <Body style={{ color: "#FFFFFF" }}>{quizMsg}</Body> : null}
           {!quizMsg ? <Body style={{ color: "#94A3B8" }}>{t("diag.rightAnswer", { answer: taskCorrectLabel(quiz) }).replace(taskCorrectLabel(quiz), "…")}</Body> : null}
         </Card>
@@ -245,8 +245,8 @@ export default function ClipsScreen() {
                   ? quiz.options.map((option, index) => (
                       <Chip key={option} label={option} selected={answer === String(index)} onPress={() => setAnswer(String(index))} />
                     ))
-                  : <Field label={t("answer.short")} value={answer} onChangeText={setAnswer} />}
-                <PrimaryButton label={t("clips.answer")} onPress={submitQuiz} />
+                  : <Field label={t("answer.short")} value={answer} onChangeText={setAnswer} multiline />}
+                <PrimaryButton label={t("clips.answer")} onPress={submitQuiz} disabled={answer.trim() === ""} />
                 {quizMsg ? <Body style={{ color: "#FFFFFF" }}>{quizMsg}</Body> : null}
               </View>
             ) : (

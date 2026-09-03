@@ -156,7 +156,11 @@ export default function DiagnosticsScreen() {
         <Card>
           <Title>{t("diag.askGoal")}</Title>
           <Body>{t("diag.goalHint")}</Body>
-          {LEARNING_GOALS.map((item) => (
+          {LEARNING_GOALS.filter((item) => {
+            // "abroad" goal only relevant for upper grades; hide for grade < 10
+            if (item.id === "abroad" && grade < 10) return false;
+            return true;
+          }).map((item) => (
             <Chip
               key={item.id}
               label={`${t(`goal.${item.id}`)}`}
@@ -190,9 +194,13 @@ export default function DiagnosticsScreen() {
               <Chip key={option} label={option} selected={answer === String(index)} onPress={() => setAnswer(String(index))} />
             ))
           ) : (
-            <Field label={t("answer.short")} value={answer} onChangeText={setAnswer} />
+            <Field label={t("answer.short")} value={answer} onChangeText={setAnswer} multiline />
           )}
-          <PrimaryButton label={records.length + 1 >= DIAGNOSTIC_SIZE ? t("diag.done") : t("diag.answer")} onPress={submitAnswer} />
+          <PrimaryButton
+            label={records.length + 1 >= DIAGNOSTIC_SIZE ? t("diag.done") : t("diag.answer")}
+            onPress={submitAnswer}
+            disabled={answer.trim() === ""}
+          />
         </Card>
       ) : null}
 

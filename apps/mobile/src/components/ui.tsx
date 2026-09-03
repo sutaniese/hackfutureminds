@@ -126,6 +126,7 @@ export function Field({
   secureTextEntry,
   autoCapitalize,
   keyboardType,
+  multiline,
 }: {
   label: string;
   value: string;
@@ -134,6 +135,7 @@ export function Field({
   secureTextEntry?: boolean;
   autoCapitalize?: "none" | "sentences" | "words" | "characters";
   keyboardType?: "default" | "email-address" | "numeric";
+  multiline?: boolean;
 }) {
   const { palette } = useI18n();
   return (
@@ -147,9 +149,12 @@ export function Field({
         secureTextEntry={secureTextEntry}
         autoCapitalize={autoCapitalize}
         keyboardType={keyboardType}
+        multiline={multiline}
+        textAlignVertical={multiline ? "top" : "center"}
         style={[
           styles.input,
           { color: palette.ink, borderColor: palette.border, backgroundColor: palette.surface },
+          multiline ? { minHeight: 80, paddingTop: 10 } : undefined,
         ]}
       />
     </View>

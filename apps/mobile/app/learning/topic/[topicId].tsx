@@ -150,9 +150,14 @@ export default function TopicScreen() {
                 ? task.options.map((option, index) => (
                     <Chip key={option} label={option} selected={answer === String(index)} onPress={() => setAnswer(String(index))} />
                   ))
-                : <Field label={t("answer.short")} value={answer} onChangeText={setAnswer} />}
+                : <Field label={t("answer.short")} value={answer} onChangeText={setAnswer} multiline />}
               <ErrorText message={feedback} />
-              <PrimaryButton label={busy ? t("topic.checking") : t("topic.check")} onPress={check} busy={busy} />
+              <PrimaryButton
+                label={busy ? t("topic.checking") : t("topic.check")}
+                onPress={check}
+                busy={busy}
+                disabled={answer.trim() === ""}
+              />
             </>
           ) : (
             <>
