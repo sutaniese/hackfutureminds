@@ -28,7 +28,6 @@
       "expo-router",
       "expo-asset",
       "expo-font",
-      "expo-speech",
       [
         "expo-video",
         {

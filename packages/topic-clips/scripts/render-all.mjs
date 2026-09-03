@@ -56,8 +56,8 @@ for (const id of ids) {
     }
   }
   console.log(`\n=== render ${id} ===`);
-  await run("npx", [
-    "remotion",
+  const remotionBin = path.join(root, "node_modules/.bin/remotion");
+  await run(remotionBin, [
     "render",
     "src/index.ts",
     id,
