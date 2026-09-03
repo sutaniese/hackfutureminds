@@ -7,8 +7,8 @@
     "hoistingLimits": "workspaces"
   },
   "scripts": {
-    "start": "expo start",
-    "start:tunnel": "expo start --tunnel",
+    "start": "expo start --clear",
+    "start:tunnel": "expo start --tunnel --clear",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "export:ios": "expo export --platform ios",

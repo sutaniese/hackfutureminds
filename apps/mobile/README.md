@@ -13,10 +13,12 @@ From the monorepo root, or from this folder:
 ```bash
 cd apps/mobile
 npm install
-npx expo start
+npx expo start --clear
 ```
 
-Workspace install from the repo root also works (`npm install` then `npm run start --workspace apps/mobile`).
+Always start Metro from `apps/mobile` (or `npm run start --workspace apps/mobile`). `--clear` drops a stale bundle cache.
+
+This app uses **React 19** (Expo SDK 54). The Next.js workspace uses React 18. Metro still watches the repo root so hoisted packages resolve, but it **blocklists** root `react` / `react-dom` and maps those names to `apps/mobile/node_modules`. That is what fixes `Invalid hook call` / `Cannot read property 'useRef' of null` when Expo Go mixed the two copies.
 
 ## 3. Scan the QR
 
