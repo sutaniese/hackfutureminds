@@ -30,6 +30,7 @@ export default function LearningScreen() {
   const [planSource, setPlanSource] = useState<"ai" | "local" | null>(null);
 
   const recs = recommendTopics(topics, profile, state, 5);
+  const teacherTopics = topics.filter((item) => item.custom);
   const weak = weakSpots(topics, state, 5);
   const reviews = reviewQueue(topics, profile, state);
   const summary = learningSummary(topics, profile, state);
@@ -105,6 +106,27 @@ export default function LearningScreen() {
         <SecondaryButton label={t("learn.clips")} onPress={() => router.push("/learning/clips")} />
         <SecondaryButton label={t("learn.takeDiag")} onPress={() => router.push("/learning/diagnostics")} />
       </Card>
+
+      {teacherTopics.length > 0 ? (
+        <Card>
+          <Title>{t("learn.teacherTopics")}</Title>
+          <Body>{t("learn.teacherTopicsHint")}</Body>
+          {teacherTopics.map((item) => {
+            const topic = locale === "kk" ? localizeTopic(item, "kk") : item;
+            return (
+              <Card key={item.id} style={{ padding: 12 }}>
+                <Title>{topic.title}</Title>
+                <Body>{topic.summary}</Body>
+                {topic.theory?.length ? <Body>{t("topic.notes")}</Body> : null}
+                {topic.clipScript ? (
+                  <Chip label={t("clips.badge")} selected={false} onPress={() => router.push(`/learning/topic/${item.id}`)} />
+                ) : null}
+                <PrimaryButton label={t("learn.openTopic")} onPress={() => router.push(`/learning/topic/${item.id}`)} />
+              </Card>
+            );
+          })}
+        </Card>
+      ) : null}
 
       <Card>
         <Title>{t("learn.recs")}</Title>

@@ -16,7 +16,7 @@ import { findLocalClassByInvite, addLocalStudent } from "../../src/lib/teacher-l
 export default function ClassScreen() {
   const { t } = useI18n();
   const { user } = useAuth();
-  const { profile } = useLearning();
+  const { profile, refresh } = useLearning();
   const router = useRouter();
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -70,6 +70,7 @@ export default function ClassScreen() {
         });
         const fresh = await apiGet<StudentClassOverview>("/api/learning/class").catch(() => null);
         if (fresh) setOverview(fresh);
+        refresh();
       } else {
         const localClass = findLocalClassByInvite(invite);
         saveLocalClassJoin({
@@ -166,12 +167,14 @@ export default function ClassScreen() {
         {!(Array.isArray(overview?.homework) ? overview.homework : []).length ? <Body>{t("class.hwEmpty")}</Body> : null}
         {(Array.isArray(overview?.homework) ? overview.homework : []).map((item) => (
           <Card key={item.id} style={{ padding: 12 }}>
+            <Title>{item.title}</Title>
             <Body>
-              {item.title} · {t(item.status === "done" ? "class.hwDone" : item.status === "in_progress" ? "class.hwDoing" : "class.hwAssigned")}
+              {item.summary} · {t(item.status === "done" ? "class.hwDone" : item.status === "in_progress" ? "class.hwDoing" : "class.hwAssigned")}
             </Body>
             {item.hasClip ? (
               <Chip label={t("clips.badge")} selected={false} onPress={() => router.push(`/learning/topic/${item.id}`)} />
             ) : null}
+            <PrimaryButton label={t("learn.openTopic")} onPress={() => router.push(`/learning/topic/${item.id}`)} />
           </Card>
         ))}
       </Card>

@@ -1,4 +1,5 @@
 import * as Clipboard from "expo-clipboard";
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Screen } from "../../src/components/Screen";
 import { Body, Card, ErrorText, Field, Kicker, PrimaryButton, SecondaryButton, Title } from "../../src/components/ui";
@@ -18,6 +19,7 @@ type ServerClass = {
 export default function TeacherCabinetScreen() {
   const { t } = useI18n();
   const { user } = useAuth();
+  const router = useRouter();
   const [name, setName] = useState("11«Б» — профориентация");
   const [classes, setClasses] = useState<Array<ServerClass | LocalTeacherClass>>([]);
   const [error, setError] = useState<string | null>(null);
@@ -127,6 +129,7 @@ export default function TeacherCabinetScreen() {
         <Card>
           <Title>{t("teacher.summary")}</Title>
           <Body>{t("board.emptyDemo")}</Body>
+          <PrimaryButton label={t("nav.teacherLearn")} onPress={() => router.push("/hub/obuchenie")} />
         </Card>
       ) : null}
     </Screen>

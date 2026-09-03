@@ -260,9 +260,13 @@ export function recommendTopics(
   if (!profile) return [];
 
   const subjectTopics = topicsForSubject(topics, profile.subjectId);
+  // Teacher constructor topics must stay visible even if subjectId differs
+  // from the student's diagnostic subject (do not keep only baked catalog ids).
+  const teacherTopics = topics.filter((topic) => topic.custom && !subjectTopics.some((row) => row.id === topic.id));
+  const pool = [...teacherTopics, ...subjectTopics];
   const goals = new Set(profile.goals);
 
-  const scored = subjectTopics.map((topic) => {
+  const scored = pool.map((topic) => {
     const mastery = topicMastery(topic, state);
     const diagnostic = state.diagnostic?.byTopic[topic.id];
     const reasons: string[] = [];
@@ -353,7 +357,12 @@ export function reviewQueue(
   state: LearningState,
   now: number = Date.now(),
 ): ReviewItem[] {
-  const scope = profile ? topicsForSubject(topics, profile.subjectId) : [...topics];
+  const scope = profile
+    ? [
+        ...topics.filter((topic) => topic.custom),
+        ...topicsForSubject(topics, profile.subjectId).filter((topic) => !topic.custom),
+      ]
+    : [...topics];
 
   const items: ReviewItem[] = [];
   for (const topic of scope) {
@@ -459,7 +468,12 @@ export function learningSummary(
   profile: LearningProfile | null,
   state: LearningState,
 ): LearningSummary {
-  const scope = profile ? topicsForSubject(topics, profile.subjectId) : [...topics];
+  const scope = profile
+    ? [
+        ...topics.filter((topic) => topic.custom),
+        ...topicsForSubject(topics, profile.subjectId).filter((topic) => !topic.custom),
+      ]
+    : [...topics];
   const totalTasks = scope.reduce((sum, topic) => sum + topic.tasks.length, 0);
   const solvedTasks = scope.reduce(
     (sum, topic) => sum + Math.min(topicStateOf(state, topic.id).solved.length, topic.tasks.length),

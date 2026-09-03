@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   canAccessUniversityLayer,
+  canShowUniversityLayer,
   filterNavLinksForGrade,
+  filterNavLinksForUniversityAccess,
   goalsForGrade,
   nextOnboardingStepIndex,
   sanitizeGoalsForGrade,
@@ -51,6 +53,21 @@ describe("goals and nav for grade", () => {
         8,
       ).map((item) => item.href),
     ).toEqual(["/learning", "/portfolio"]);
+  });
+
+  it("hides university layer until grade 10–12 and a subject diagnostic exist", () => {
+    const done = { subjectId: "math", total: 8 };
+    expect(canShowUniversityLayer(null, done)).toBe(false);
+    expect(canShowUniversityLayer(9, done)).toBe(false);
+    expect(canShowUniversityLayer(11, null)).toBe(false);
+    expect(canShowUniversityLayer(11, done)).toBe(true);
+    expect(
+      filterNavLinksForUniversityAccess(
+        [{ href: "/learning" }, { href: "/grants" }, { href: "/hub/vuzy" }],
+        null,
+        null,
+      ).map((item) => item.href),
+    ).toEqual(["/learning"]);
   });
 
   it("skips university onboarding questions for 7–9", () => {

@@ -174,6 +174,16 @@ export default function TopicScreen() {
           <Title>{t("topic.notes")}</Title>
           <SpeakButton text={topic.theory.join(" ")} label={t("topic.listenNotes")} />
           {topic.theory.map((p) => <Body key={p}>{p}</Body>)}
+          {raw?.notes ? (
+            <>
+              <Kicker>{t("topic.notes")}</Kicker>
+              <Body>{raw.notes.keyIdea}</Body>
+              {raw.notes.formula ? <Body>{raw.notes.formula}</Body> : null}
+              {raw.notes.bullets?.map((line) => <Body key={line}>{line}</Body>)}
+              <Body>{raw.notes.example}</Body>
+              <Body>{raw.notes.mistake}</Body>
+            </>
+          ) : null}
         </Card>
       ) : null}
 

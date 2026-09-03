@@ -9,11 +9,11 @@ import { readJsonResponse } from "@/lib/http-json";
 
 type ChatTurn = { role: "user" | "assistant"; text: string };
 
-export function VoiceCoach() {
+export function VoiceCoach({ embedded = false }: { embedded?: boolean }) {
   const { t, locale } = useI18n();
   const { user } = useAuth();
   const { profile, state, topics } = useLearning();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(embedded);
   const [listening, setListening] = useState(false);
   const [busy, setBusy] = useState(false);
   const [micDenied, setMicDenied] = useState(false);
@@ -138,10 +138,10 @@ export function VoiceCoach() {
     <div className="pointer-events-auto flex flex-col items-end gap-2">
       {open ? (
         <section
-          className="w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-xl"
+          className={`${embedded ? "w-full rounded-none border-0 shadow-none" : "w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-slate-200 bg-white/95 shadow-xl"} overflow-hidden`}
           aria-label={title}
         >
-          <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
+          <div className={`flex items-center justify-between border-b border-slate-100 px-3 py-2 ${embedded ? "hidden" : ""}`}>
             <p className="text-sm font-bold text-pathwise-ink">{title}</p>
             <button type="button" onClick={() => setOpen(false)} className="min-h-11 px-2 text-sm font-semibold">
               {t("voiceCoach.close")}
@@ -211,6 +211,7 @@ export function VoiceCoach() {
           )}
         </section>
       ) : null}
+      {embedded ? null : (
       <button
         type="button"
         onClick={() => {
@@ -225,6 +226,7 @@ export function VoiceCoach() {
           <path d="M12 3a4 4 0 00-4 4v5a4 4 0 008 0V7a4 4 0 00-4-4zm-7 9a1 1 0 012 0 5 5 0 0010 0 1 1 0 112 0 7 7 0 01-6 6.93V21h3a1 1 0 110 2H8a1 1 0 110-2h3v-2.07A7 7 0 015 12z" />
         </svg>
       </button>
+      )}
     </div>
   );
 }

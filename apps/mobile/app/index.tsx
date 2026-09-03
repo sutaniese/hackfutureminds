@@ -1,27 +1,61 @@
 import { useRouter } from "expo-router";
-import { Pressable, View } from "react-native";
-import { Body, Card, Kicker, PrimaryButton, SecondaryButton, Stat, Title } from "../src/components/ui";
+import { View } from "react-native";
+import { Body, Card, Kicker, PrimaryButton, SecondaryButton, Title } from "../src/components/ui";
 import { Screen } from "../src/components/Screen";
-import { canAccessUniversityLayer } from "@pathwise/shared";
 import { useAuth } from "../src/context/AuthContext";
 import { useI18n } from "../src/context/I18nContext";
 import { useLearning } from "../src/context/LearningContext";
+import { nextTask, recommendTopics } from "../src/lib/learning/recommend";
 import { cabinetPathForRole } from "../src/lib/site-nav";
 
 export default function HomeScreen() {
-  const { t, palette } = useI18n();
+  const { t } = useI18n();
   const { user, logout } = useAuth();
-  const { profile } = useLearning();
+  const { profile, state, topics } = useLearning();
   const router = useRouter();
+  const recs = recommendTopics(topics, profile, state, 1);
+  const next = recs[0];
+  const nextPractice = next ? nextTask(next.topic, state) : null;
+  const lastTopicId = state.attempts[0]?.topicId;
+  const lastTopic = lastTopicId ? topics.find((item) => item.id === lastTopicId) : null;
+  const teacherTopics = topics.filter((item) => item.custom);
 
-  if (user && user.role !== "student") {
+  if (user?.role === "teacher") {
     return (
       <Screen>
         <Card>
-          <Kicker>{t("role.kicker", { role: t(`role.${user.role}`) })}</Kicker>
+          <Kicker>{t("role.teacher")}</Kicker>
           <Title>{t("nav.cabinet")}</Title>
-          <Body>{t("role.sectionsHint")}</Body>
-          <PrimaryButton label={t("guard.cabinet")} onPress={() => router.replace(cabinetPathForRole(user.role) as never)} />
+          <Body>{t("home.teacher.lead")}</Body>
+          <PrimaryButton label={t("nav.teacherLearn")} onPress={() => router.push("/hub/obuchenie")} />
+          <SecondaryButton label={t("nav.cabinet")} onPress={() => router.push("/hub/uchitelya")} />
+        </Card>
+      </Screen>
+    );
+  }
+
+  if (user?.role === "parent") {
+    return (
+      <Screen>
+        <Card>
+          <Kicker>{t("role.parent")}</Kicker>
+          <Title>{t("parent.title")}</Title>
+          <Body>{t("home.parent.lead")}</Body>
+          <PrimaryButton label={t("parent.progress")} onPress={() => router.replace(cabinetPathForRole("parent") as never)} />
+        </Card>
+      </Screen>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Screen>
+        <Card>
+          <Kicker>{t("home.landing.kicker")}</Kicker>
+          <Title>{t("home.landing.title")}</Title>
+          <Body>{t("home.landing.subtitle")}</Body>
+          <PrimaryButton label={t("nav.login")} onPress={() => router.push("/login")} />
+          <SecondaryButton label={t("nav.register")} onPress={() => router.push("/register")} />
         </Card>
       </Screen>
     );
@@ -30,64 +64,46 @@ export default function HomeScreen() {
   return (
     <Screen>
       <Card>
-        <Kicker>{t("home.landing.kicker")}</Kicker>
-        <Title>{t("home.landing.title")}</Title>
-        <Body>{t("home.landing.subtitle")}</Body>
-        <PrimaryButton
-          label={t("home.landing.ctaPrimary")}
-          onPress={() => router.push(user ? "/learning" : "/register")}
-        />
-        <SecondaryButton label={t("home.landing.ctaSecondary")} onPress={() => router.push("/learning/diagnostics")} />
-        {canAccessUniversityLayer(profile?.grade) ? (
-          <SecondaryButton label={t("home.landing.ctaGrants")} onPress={() => router.push("/grants")} />
-        ) : null}
+        <Kicker>{t("home.start.kicker")}</Kicker>
+        <Title>{t("home.start.title")}</Title>
+        {lastTopic ? (
+          <PrimaryButton
+            label={t("home.start.continue", { title: lastTopic.title })}
+            onPress={() => router.push(`/learning/topic/${lastTopic.id}`)}
+          />
+        ) : (
+          <PrimaryButton label={t("learn.takeDiag")} onPress={() => router.push("/learning/diagnostics")} />
+        )}
       </Card>
 
-      <View style={{ flexDirection: "row", gap: 8 }}>
-        <Stat value={t("home.landing.stat1v")} label={t("home.landing.stat1l")} />
-        <Stat value={t("home.landing.stat2v")} label={t("home.landing.stat2l")} />
-      </View>
-      <View style={{ flexDirection: "row", gap: 8 }}>
-        <Stat value={t("home.landing.stat3v")} label={t("home.landing.stat3l")} />
-        <Stat value={t("home.landing.stat4v")} label={t("home.landing.stat4l")} />
-      </View>
+      {next ? (
+        <Card>
+          <Kicker>{t("learn.recs")}</Kicker>
+          <Title>{next.topic.title}</Title>
+          <Body>{nextPractice?.prompt ?? next.topic.summary}</Body>
+          <PrimaryButton
+            label={t("learn.openTopic")}
+            onPress={() => router.push(`/learning/topic/${next.topic.id}`)}
+          />
+        </Card>
+      ) : null}
 
       <Card>
-        <Kicker>{t("home.learn.kicker")}</Kicker>
-        <Title>{t("home.learn.title")}</Title>
-        <Body>{t("home.learn.lead")}</Body>
+        <Kicker>{t("nav.class")}</Kicker>
+        <Title>{t("class.title")}</Title>
+        <Body>
+          {teacherTopics.length > 0
+            ? t("home.class.hw", { n: teacherTopics.length })
+            : t("home.class.join")}
+        </Body>
+        <PrimaryButton label={t("learn.classLink")} onPress={() => router.push("/learning/class")} />
       </Card>
 
-      {(["student", "parent", "teacher"] as const).map((role) => (
-        <Pressable
-          key={role}
-          onPress={() => router.push(user ? (cabinetPathForRole(role) as never) : ("/register" as never))}
-          style={{
-            backgroundColor: palette.surface,
-            borderColor: palette.border,
-            borderWidth: 1,
-            borderRadius: 22,
-            padding: 16,
-            minHeight: 72,
-          }}
-        >
-          <Kicker>{t(`role.${role}`)}</Kicker>
-          <Body>{t(`home.role.${role}`)}</Body>
-        </Pressable>
-      ))}
-
-      {!user ? (
-        <View style={{ gap: 10 }}>
-          <PrimaryButton label={t("nav.login")} onPress={() => router.push("/login")} />
-          <SecondaryButton label={t("nav.register")} onPress={() => router.push("/register")} />
-        </View>
-      ) : (
-        <View style={{ gap: 10 }}>
-          <PrimaryButton label={t("learn.classLink")} onPress={() => router.push("/learning/class")} />
-          <SecondaryButton label={t("learn.clips")} onPress={() => router.push("/learning/clips")} />
-          <SecondaryButton label={t("nav.logout")} onPress={() => void logout()} />
-        </View>
-      )}
+      <View style={{ gap: 10 }}>
+        <SecondaryButton label={t("learn.plan")} onPress={() => router.push("/learning")} />
+        <SecondaryButton label={t("learn.clips")} onPress={() => router.push("/learning/clips")} />
+        <SecondaryButton label={t("nav.logout")} onPress={() => void logout()} />
+      </View>
     </Screen>
   );
 }

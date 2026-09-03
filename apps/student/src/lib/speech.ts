@@ -29,22 +29,39 @@ export function pickSpeechVoice(language: string): SpeechSynthesisVoice | null {
   return null;
 }
 
-export function speakText(text: string, locale: string, onEnd?: () => void): void {
-  if (!isSpeechSupported()) return;
-  window.speechSynthesis.cancel();
+let activeUtterance: SpeechSynthesisUtterance | null = null;
+
+export function speakText(text: string, locale: string, onEnd?: () => void): boolean {
+  if (!isSpeechSupported()) return false;
+  stopSpeaking();
   const utterance = new SpeechSynthesisUtterance(text);
   const voice = pickSpeechVoice(locale);
   if (voice) utterance.voice = voice;
   utterance.lang = voice?.lang || (locale === "kk" ? "ru-RU" : speechLanguage(locale));
   utterance.rate = 0.96;
   if (onEnd) {
-    utterance.onend = () => onEnd();
-    utterance.onerror = () => onEnd();
+    utterance.onend = () => {
+      if (activeUtterance !== utterance) return;
+      activeUtterance = null;
+      onEnd();
+    };
+    utterance.onerror = () => {
+      if (activeUtterance !== utterance) return;
+      activeUtterance = null;
+      onEnd();
+    };
   }
+  activeUtterance = utterance;
   window.speechSynthesis.speak(utterance);
+  return true;
 }
 
 export function stopSpeaking(): void {
   if (!isSpeechSupported()) return;
+  if (activeUtterance) {
+    activeUtterance.onend = null;
+    activeUtterance.onerror = null;
+    activeUtterance = null;
+  }
   window.speechSynthesis.cancel();
 }
