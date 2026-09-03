@@ -39,7 +39,7 @@ describe("invite join handler auth", () => {
     const blocked = createClient("https://example.supabase.co", "anon-key", {
       accessToken: async () => JWT,
     });
-    await expect(blocked.auth.getClaims(JWT)).rejects.toThrow(/getClaims is not possible/);
+    expect(() => blocked.auth.getClaims).toThrow(/getClaims is not possible/);
 
     const client = createBearerSupabaseClient("https://example.supabase.co", "anon-key", JWT);
     client.auth.getClaims = async (jwt?: string) => {

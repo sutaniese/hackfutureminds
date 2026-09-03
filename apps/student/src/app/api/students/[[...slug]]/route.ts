@@ -92,7 +92,8 @@ function normalizeStudent(body: Record<string, unknown>, fallbackId?: string): P
 async function listPortalStudents(user: AuthedUser): Promise<PortalStudent[]> {
   if (user.role !== "teacher") return [];
   const board = await classBoard(user);
-  return asArray(board.students).map(mapBoardStudent);
+  const students = Array.isArray(board.students) ? board.students : [];
+  return students.map(mapBoardStudent);
 }
 
 async function handleSupabase(request: Request, ctx: { params: Promise<{ slug?: string[] }> }) {

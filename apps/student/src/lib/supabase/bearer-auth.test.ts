@@ -15,7 +15,7 @@ const JWT = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJ1c2VyLTEiLCJlbWFpbCI6InN0dWRlbnRAeC5
 describe("Bearer auth client", () => {
   it("resolves a user from a JWT argument without throwing the accessToken/getClaims error", async () => {
     const blocked = createClient(URL, KEY, { accessToken: async () => JWT });
-    await expect(blocked.auth.getClaims(JWT)).rejects.toThrow(/accessToken option.*getClaims is not possible/s);
+    expect(() => blocked.auth.getClaims).toThrow(/accessToken option.*getClaims is not possible/s);
 
     const client = createBearerSupabaseClient(URL, KEY, JWT);
     let accessTokenBlocked = false;
@@ -31,7 +31,7 @@ describe("Bearer auth client", () => {
 
   it("invite API path does not call getClaims on an accessToken-configured client", async () => {
     const accessTokenClient = createClient(URL, KEY, { accessToken: async () => JWT });
-    await expect(accessTokenClient.auth.getClaims(JWT)).rejects.toThrow(/getClaims is not possible/);
+    expect(() => accessTokenClient.auth.getClaims).toThrow(/getClaims is not possible/);
     await expect(resolveUserIdFromAuth(accessTokenClient, JWT)).rejects.toMatchObject({
       status: 401,
       message: "Войдите в аккаунт.",
@@ -55,7 +55,8 @@ describe("createServerSupabase source", () => {
   it("does not construct an accessToken client in the server helper used by invite join", async () => {
     const { readFileSync } = await import("node:fs");
     const { dirname, join } = await import("node:path");
-    const here = dirname(new URL(import.meta.url).pathname);
+    const { fileURLToPath } = await import("node:url");
+    const here = dirname(fileURLToPath(import.meta.url));
     const serverSrc = readFileSync(join(here, "server.ts"), "utf8");
     const bearerSrc = readFileSync(join(here, "bearer-client.ts"), "utf8");
     expect(serverSrc).not.toMatch(/accessToken:\s*async/);
