@@ -84,6 +84,11 @@ create table if not exists public.custom_topics (
 
 create index if not exists custom_topics_class_idx on public.custom_topics (class_id);
 
+-- Live teacher clip: scene JSON on the topic row. Owning teacher writes via
+-- custom_topics_* policies; students in the class read the same row.
+alter table public.custom_topics
+  add column if not exists clip_script jsonb;
+
 -- Teacher-set exams / deadlines (source = 'teacher' in the class overview).
 create table if not exists public.class_deadlines (
   id uuid primary key default gen_random_uuid(),

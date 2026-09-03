@@ -18,6 +18,14 @@ import { joinFailureMessage, publicErrorMessage } from "@/lib/server/public-erro
 import { asArray } from "@/lib/safe-list";
 
 export type { StudentClassOverview, StudentExamItem, StudentHomeworkItem };
+function topicFromCustomRow(row: { topic?: Topic | null; clip_script?: Topic["clipScript"] }): Topic | null {
+  if (!row.topic) return null;
+  return {
+    ...row.topic,
+    clipScript: row.topic.clipScript ?? row.clip_script ?? null,
+  };
+}
+
 export type ClassRow = {
   id: string;
   name: string;
@@ -181,9 +189,11 @@ export async function readOwnProgress(user: AuthedUser) {
   if (classIds.length > 0) {
     const { data: custom } = await supabase
       .from("custom_topics")
-      .select("topic, class_id")
+      .select("topic, clip_script, class_id")
       .in("class_id", classIds);
-    topics = (custom ?? []).map((row: { topic: Topic }) => row.topic).filter(Boolean);
+    topics = (custom ?? [])
+      .map((row: { topic?: Topic | null; clip_script?: Topic["clipScript"] }) => topicFromCustomRow(row))
+      .filter((topic): topic is Topic => Boolean(topic));
     const { data: cls } = await supabase
       .from("classes")
       .select("id, invite_code")
@@ -305,16 +315,17 @@ export async function getStudentClassOverview(user: AuthedUser): Promise<Student
       .filter((row: { displayName: string }) => row.displayName.length > 0);
   }
 
-  const { data: custom } = await supabase.from("custom_topics").select("topic").eq("class_id", classId);
+  const { data: custom } = await supabase.from("custom_topics").select("topic, clip_script").eq("class_id", classId);
   const homework: StudentHomeworkItem[] = (custom ?? [])
-    .map((row: { topic: Topic }) => row.topic)
-    .filter(Boolean)
+    .map((row: { topic?: Topic | null; clip_script?: Topic["clipScript"] }) => topicFromCustomRow(row))
+    .filter((topic): topic is Topic => Boolean(topic))
     .map((topic: Topic) => ({
       id: topic.id,
       title: topic.title,
       summary: topic.summary,
       author: topic.author,
       status: homeworkStatus(topic, state),
+      hasClip: Boolean(topic.clipScript?.scenes?.length),
     }));
 
   return {
@@ -389,13 +400,20 @@ export async function publishTopic(user: AuthedUser, classId: string, topic: Top
   requireRole(user, "teacher");
   const supabase = await createServerSupabase();
   if (!supabase) throw new HttpError(503, "Supabase is not configured.");
-  const { error } = await supabase.from("custom_topics").upsert({
+  const payload = {
     id: topic.id,
     class_id: classId,
     teacher_id: user.id,
     topic: { ...topic, custom: true, author: user.name || user.email },
+    clip_script: topic.clipScript ?? null,
     updated_at: new Date().toISOString(),
-  });
+  };
+  let { error } = await supabase.from("custom_topics").upsert(payload);
+  if (error && /clip_script/i.test(error.message)) {
+    const { clip_script: _ignored, ...legacy } = payload;
+    void _ignored;
+    ({ error } = await supabase.from("custom_topics").upsert(legacy));
+  }
   if (error) throw new HttpError(500, error.message);
   return { ...topic, custom: true as const, author: user.name || user.email };
 }
@@ -420,10 +438,12 @@ export async function classBoard(user: AuthedUser, classId?: string) {
     return { classes, students: [], heatmap: [] };
   }
 
-  const { data: custom } = await supabase.from("custom_topics").select("topic").eq("class_id", active.id);
+  const { data: custom } = await supabase.from("custom_topics").select("topic, clip_script").eq("class_id", active.id);
   const catalog: Topic[] = [
     ...BASE_TOPICS,
-    ...((custom ?? []).map((row: { topic: Topic }) => row.topic) as Topic[]),
+    ...((custom ?? [])
+      .map((row: { topic?: Topic | null; clip_script?: Topic["clipScript"] }) => topicFromCustomRow(row))
+      .filter((topic): topic is Topic => Boolean(topic))),
   ];
 
   const studentIds = asArray<string>(active.studentIds);

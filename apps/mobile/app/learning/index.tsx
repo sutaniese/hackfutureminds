@@ -116,7 +116,7 @@ export default function LearningScreen() {
             <Card key={item.topic.id} style={{ padding: 12 }}>
               <Kicker>{t(`priority.${item.priority}`)}</Kicker>
               <Title>{topic.title}</Title>
-              {videoClipFor(item.topic.id, locale === "kk" ? "kk" : "ru") ? (
+              {videoClipFor(item.topic.id, locale === "kk" ? "kk" : "ru") || item.topic.clipScript ? (
                 <Chip label={t("clips.badge")} selected={false} onPress={() => router.push(`/learning/topic/${item.topic.id}`)} />
               ) : null}
               <Body>{t("learn.why", { reason: whyThisTopic(item, weak, locale) })}</Body>
@@ -135,7 +135,7 @@ export default function LearningScreen() {
           <Card key={item.skill} style={{ padding: 12 }}>
             <Title>{item.skill}</Title>
             <Body>{item.topicTitle} · {item.accuracy}%</Body>
-            {item.topicId && videoClipFor(item.topicId, locale === "kk" ? "kk" : "ru") ? (
+            {item.topicId && (videoClipFor(item.topicId, locale === "kk" ? "kk" : "ru") || topics.find((topic) => topic.id === item.topicId)?.clipScript) ? (
               <Chip label={t("clips.badge")} selected={false} onPress={() => router.push(`/learning/topic/${item.topicId}`)} />
             ) : null}
             <PrimaryButton label={t("learn.drill")} onPress={() => router.push(`/learning/topic/${item.topicId}`)} />
@@ -161,7 +161,7 @@ export default function LearningScreen() {
             <Body>
               {item.topic.title} · {t("learn.srsMeta", { n: item.intervalDays, date: String(item.daysSince) })}
             </Body>
-            {videoClipFor(item.topic.id, locale === "kk" ? "kk" : "ru") ? (
+            {videoClipFor(item.topic.id, locale === "kk" ? "kk" : "ru") || item.topic.clipScript ? (
               <Chip label={t("clips.badge")} selected={false} onPress={() => router.push(`/learning/topic/${item.topic.id}`)} />
             ) : null}
           </View>
