@@ -36,13 +36,18 @@ export async function requireUser(): Promise<AuthedUser> {
   if (!supabase) throw new HttpError(503, "Supabase is not configured on this server.");
 
   const { data, error } = await supabase.auth.getClaims();
-  if (error || !data?.claims?.sub) {
-    throw new HttpError(401, "Войдите в аккаунт.");
-  }
+  let userId = data?.claims?.sub ? String(data.claims.sub) : "";
+  let emailFromClaims =
+    typeof data.claims?.email === "string" ? data.claims.email : "";
 
-  const userId = String(data.claims.sub);
-  const emailFromClaims =
-    typeof data.claims.email === "string" ? data.claims.email : "";
+  if (error || !userId) {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      throw new HttpError(401, "Войдите в аккаунт.");
+    }
+    userId = userData.user.id;
+    emailFromClaims = userData.user.email ?? emailFromClaims;
+  }
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
