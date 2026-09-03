@@ -26,7 +26,8 @@
       "@pathwise/shared/brand": ["../../packages/shared/src/brand.ts"],
       "@pathwise/shared/generate": ["../../packages/shared/src/generate-contract.ts"],
       "@pathwise/shared/universities": ["../../packages/shared/src/universities.ts"],
-      "@pathwise/shared/grants": ["../../packages/shared/src/grants.ts"]
+      "@pathwise/shared/grants": ["../../packages/shared/src/grants.ts"],
+      "@pathwise/shared/clips": ["../../packages/shared/src/clips.ts"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
