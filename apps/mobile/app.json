@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "teñ.",
+    "slug": "ten-learning",
+    "scheme": "ten",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FAFAFF"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "info.nurakhmet.ten"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FAFAFF"
+      },
+      "package": "info.nurakhmet.ten"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-asset",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}

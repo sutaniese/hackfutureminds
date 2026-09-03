@@ -2,9 +2,10 @@
   "name": "pathwise",
   "private": true,
   "version": "0.1.0",
-  "description": "PathWise (teñ) — AI-навигатор для школьников Казахстана. Монорепо: apps/student (Next.js — онбординг + /hub B2B), packages/shared (общие типы и данные).",
+  "description": "PathWise (teñ) — AI-навигатор для школьников Казахстана. Монорепо: apps/student (Next.js), apps/mobile (Expo Go), packages/shared.",
   "workspaces": [
     "apps/student",
+    "apps/mobile",
     "packages/*"
   ],
   "engines": {
@@ -13,6 +14,7 @@
   "scripts": {
     "dev": "npm run dev --workspace apps/student",
     "dev:student": "npm run dev --workspace apps/student",
+    "dev:mobile": "npm run start --workspace apps/mobile",
     "build": "npm run build --workspace apps/student",
     "build:student": "npm run build --workspace apps/student",
     "lint:student": "npm run lint --workspace apps/student",
