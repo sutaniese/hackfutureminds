@@ -27,7 +27,7 @@ export const CHROME_MESSAGES: Record<string, Record<Locale, string>> = {
   "hub.nav.student": TR("Ученик", "Student", "Оқушы"),
   "hub.nav.parent": TR("Родитель", "Parent", "Ата-ана"),
   "hub.nav.teacher": TR("Учитель", "Teacher", "Мұғалім"),
-  "hub.footer": TR("обучение для школьников Казахстана · демо", "learning for Kazakhstan students · demo", "Қазақстан оқушыларына арналған оқу · демо"),
+  "hub.footer": TR("обучение для школьников Казахстана", "learning for Kazakhstan students", "Қазақстан оқушыларына арналған оқу"),
 
   "goal.ent": TR("Подготовка к ЕНТ", "ENT exam prep", "ҰБТ-ға дайындық"),
   "goal.ent.hint": TR("Плотный график, упор на типовые задания", "Tight schedule, typical exam tasks", "Тығыз график, типтік тапсырмалар"),

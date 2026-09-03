@@ -254,7 +254,7 @@ export async function registerUser(input: RegisterInput): Promise<PublicUser> {
     if (signed.error || !signed.data.user) {
       throw new AuthFailure(
         "storage",
-        "Аккаунт создан, но сессия не открылась. В проекте Supabase отключите Confirm email для демо.",
+        "Аккаунт создан, но сессия не открылась. В проекте Supabase отключите Confirm email.",
       );
     }
     session = signed.data.session;

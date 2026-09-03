@@ -14,12 +14,12 @@ function buildReportText(m: EnterpriseCohortMember, tenantName: string) {
     `Ученик: ${m.displayName}`,
     `ID: ${m.id}`,
     `Ключевое направление: ${m.primaryProfession}`,
-    `Оценка грантов (демо): ${m.grantsSecuredKzt.toLocaleString('ru-RU')} ₸`,
+    `Оценка грантов: ${m.grantsSecuredKzt.toLocaleString('ru-RU')} ₸`,
     '',
     m.parentSummary,
     '',
     '---',
-    'Документ сформирован автоматически (MVP хакатона).',
+    'Документ сформирован автоматически.',
   ].join('\n')
 }
 

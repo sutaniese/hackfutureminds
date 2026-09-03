@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { View } from "react-native";
 import { useEventListener } from "expo";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { clipProductionUrl, videoClipFor } from "@pathwise/shared";
@@ -142,7 +141,6 @@ export function TopicClipPlayer({
         </Card>
       ) : null}
       {phase === "quiz" && !quiz ? <Body>{t("clips.loading")}</Body> : null}
-      <View />
     </Card>
   );
 }

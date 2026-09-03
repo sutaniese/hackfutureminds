@@ -42,7 +42,7 @@ export const TENANTS: Record<string, TenantBranding> = {
   },
   'ent-iq-hub': {
     id: 'ent-iq-hub',
-    displayName: 'IQ Hub — ЕНТ-центр (демо white-label)',
+    displayName: 'IQ Hub — ЕНТ-центр',
     logoUrl: null,
     logoMark: 'IQ',
     colors: {
@@ -58,7 +58,7 @@ export const TENANTS: Record<string, TenantBranding> = {
   },
   'ent-stem-lab': {
     id: 'ent-stem-lab',
-    displayName: 'STEM Lab Almaty (демо)',
+    displayName: 'STEM Lab Almaty',
     logoUrl: null,
     logoMark: 'SL',
     colors: {

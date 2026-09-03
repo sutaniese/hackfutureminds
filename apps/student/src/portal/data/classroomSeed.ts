@@ -118,7 +118,7 @@ export function buildSeedClasses(): TeacherClass[] {
   return [
     {
       id: 'class-seed-1',
-      name: '10«А» — профориентация (демо)',
+      name: '10«А» — профориентация',
       inviteCode: 'TN-H4K9L2',
       students: base,
     },

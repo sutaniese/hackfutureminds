@@ -269,12 +269,12 @@ function portfolioBlock(
     "";
   const cleaned = first.replace(/\s+/g, " ").trim().slice(0, 500);
   if (!cleaned.length) {
-    return "Aspiring student in Kazakhstan: building a structured portfolio (demo packaging).";
+    return "Aspiring student in Kazakhstan: building a structured portfolio.";
   }
   if (/\d/.test(cleaned)) {
     return `${cleaned} – framed for admissions and employers: emphasize measurable impact and your role.`;
   }
-  return `Standout: ${cleaned} — phrased for KZ and international applications (demo).`;
+  return `Standout: ${cleaned} — phrased for KZ and international applications.`;
 }
 
 function normalizeForGenerateRequest(request: GenerateRequest): {

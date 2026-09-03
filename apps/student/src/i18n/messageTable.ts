@@ -81,9 +81,9 @@ const T = {
   "lang.en": TR("EN", "EN", "EN"),
   "lang.aria": TR("Язык интерфейса", "Interface language", "Тіл"),
   "footer.line": TR(
-    "карьерная навигация для старшеклассников Казахстана · демо",
-    "career navigation for high schoolers in Kazakhstan · demo",
-    "Қазақстандағы оқушыларға арналған бағыт-бағдарлау · демо",
+    "карьерная навигация для старшеклассников Казахстана",
+    "career navigation for high schoolers in Kazakhstan",
+    "Қазақстандағы оқушыларға арналған бағыт-бағдарлау",
   ),
   "home.kicker": TR("СТУДЕНТ", "STUDENT", "СТУДЕНТ"),
   "home.title": TR(
@@ -429,8 +429,8 @@ const T = {
   ),
   "portfolio.intro": TR(
     "Короткое резюме и существующие материалы (PDF, изображения, Word) — в памяти вкладки, до закрытия окна не уходит на backend.",
-    "A short free-text and files (PDF, images) stay in the tab; session ends, data clears, no server in this demo.",
-    "Күңде сақ, серверсіз демо.",
+    "A short free-text and files (PDF, images) stay in the tab; session ends, data clears, nothing is uploaded.",
+    "Қойындыда сақталады, серверге жіберілмейді.",
   ),
   "portfolio.about": TR("Несколько слов о себе", "About you", "Өзініз туралы"),
   "portfolio.phNotes": TR(
@@ -451,8 +451,8 @@ const T = {
   "portfolio.dl": TR("Скачать копию", "Download", "Жүктеп алу"),
   "portfolio.removeFile": TR("Удалить {{n}}", "Remove {{n}}", "Өшіру: {{n}}"),
   "portfolio.errRead": TR("Файл не читается.", "Could not read file.", "Оқылмайды."),
-  "portfolio.errBig": TR("Слишком велик (демо) — сожмите.", "File too big for in-browser (demo) — use a smaller export.",
-    "Тым үлкен, демо: кішірек.",
+  "portfolio.errBig": TR("Слишком велик для вкладки — сожмите файл.", "File too big for the browser tab — use a smaller export.",
+    "Тым үлкен — кішірек файл жүктеңіз.",
   ),
   "portfolio.errMany": TR("Сначала уберите файл, максимум {{n}}", "You can have up to {{n}}. Remove one first.",
     "Е{{n}} дана, алдымен өшірініз",
@@ -597,9 +597,9 @@ const T = {
   "profile.copyUrl": TR("Скопировать ссылку", "Copy link", "Сілтемені көшіру"),
   "profile.copied": TR("Скопировано", "Copied", "Көшірілді"),
   "profile.localOnly": TR(
-    "Данные аккаунта и анкеты хранятся локально в браузере (демо без сервера).",
-    "Account and onboarding data stay in this browser (demo, no backend yet).",
-    "Аккаунт деректері осы браузерде сақталады (демо, сервер жоқ).",
+    "Данные аккаунта и анкеты хранятся локально в этом браузере.",
+    "Account and onboarding data stay in this browser.",
+    "Аккаунт деректері осы браузерде сақталады.",
   ),
   "profile.onboarding": TR("Онбординг", "Onboarding", "Онбординг"),
   "profile.subjects": TR("Предметы:", "Subjects:", "Пәндер:"),
@@ -620,7 +620,7 @@ const T = {
     "Sample profile",
     "Профиль үлгісі",
   ),
-  "profile.example.pill": TR("Демо-данные", "Demo data", "Демо деректер"),
+  "profile.example.pill": TR("Пример", "Example", "Үлгі"),
   "profile.example.note": TR(
     "Статический пример: имя, возраст и предметы заданы в коде страницы.",
     "Static example: name, age, and subjects are set in the page code.",

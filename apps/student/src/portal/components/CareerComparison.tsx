@@ -84,8 +84,8 @@ export function CareerComparison({ childProfession }: Props) {
             aria-describedby="parent-profession-hint"
           />
           <p id="parent-profession-hint" className="mt-1 text-xs text-pathwise-muted">
-            Для демо нужен ключ <code className="rounded bg-pathwise-accent-soft px-1">GEMINI_API_KEY</code> в{' '}
-            <code className="rounded bg-pathwise-accent-soft px-1">.env</code> (только dev-сервер, не в браузер).
+            Для сравнения нужен ключ <code className="rounded bg-pathwise-accent-soft px-1">GEMINI_API_KEY</code> в{' '}
+            <code className="rounded bg-pathwise-accent-soft px-1">.env</code> (только сервер, не в браузер).
           </p>
         </div>
         <button
