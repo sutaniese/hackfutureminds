@@ -26,6 +26,7 @@ import { whyThisTask } from "@/lib/learning/why-this";
 import { videoClipFor } from "@pathwise/shared";
 import { AnswerField } from "./AnswerField";
 import { ClipPlayer } from "./ClipPlayer";
+import { LiveScenePlayer } from "./LiveScenePlayer";
 import { ClipBadge, DifficultyBadge, EmptyState, Pill, ProgressBar, StatTile } from "./LearningUI";
 import { SpeakButton } from "./SpeakButton";
 import { TutorChat } from "./TutorChat";
@@ -210,7 +211,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
   const sameSubject = topicsForSubject(topics, topic.subjectId).filter((item) => item.id !== topic.id);
   const solvedCount = topicState?.solved.length ?? 0;
   const clipLocale = locale === "kk" ? "kk" : "ru";
-  const hasClip = Boolean(videoClipFor(topicId, clipLocale));
+  const hasClip = Boolean(videoClipFor(topicId, clipLocale) || topic.clipScript?.scenes?.length);
 
   return (
     <div className="flex flex-col gap-5">
@@ -221,7 +222,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
               <Pill tone="accent">{subjectTitle(topic.subjectId)}</Pill>
               <Pill>{t("learn.grade", { n: topic.grades.join(", ") })}</Pill>
               {topic.custom ? <Pill tone="good">{t("topic.teacherAdded")}</Pill> : null}
-              {hasClip ? <ClipBadge topicId={topicId} /> : null}
+              {hasClip ? <ClipBadge topicId={topicId} live={Boolean(topic.clipScript)} /> : null}
             </div>
             <h2 className="mt-3 flex flex-wrap items-center gap-3 text-2xl font-black tracking-tight text-pathwise-ink">
               {subject ? (
@@ -300,13 +301,27 @@ export function TopicPractice({ topicId }: { topicId: string }) {
 
       {showClip && hasClip ? (
         <ContentCard>
-          <ClipPlayer
-            lockedTopicId={topicId}
-            onWrongAnswer={() => {
-              setShowClip(false);
-              setTab("practice");
-            }}
-          />
+          {topic.clipScript ? (
+            <div className="flex justify-center">
+              <LiveScenePlayer
+                script={topic.clipScript}
+                topicId={topicId}
+                quizTask={topic.tasks[0] ?? null}
+                onWrongAnswer={() => {
+                  setShowClip(false);
+                  setTab("practice");
+                }}
+              />
+            </div>
+          ) : (
+            <ClipPlayer
+              lockedTopicId={topicId}
+              onWrongAnswer={() => {
+                setShowClip(false);
+                setTab("practice");
+              }}
+            />
+          )}
         </ContentCard>
       ) : null}
 
@@ -503,7 +518,7 @@ export function TopicPractice({ topicId }: { topicId: string }) {
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-sm font-black text-pathwise-ink">{item.title}</p>
-                  <ClipBadge topicId={item.id} />
+                  <ClipBadge topicId={item.id} live={Boolean(item.clipScript)} />
                 </div>
                 <p className="mt-1 line-clamp-2 text-xs leading-5 text-pathwise-muted">
                   {item.summary}

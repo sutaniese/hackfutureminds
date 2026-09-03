@@ -2,7 +2,7 @@ import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Screen } from "../../src/components/Screen";
-import { Body, Card, ErrorText, Field, Kicker, PrimaryButton, SecondaryButton, Title } from "../../src/components/ui";
+import { Body, Card, Chip, ErrorText, Field, Kicker, PrimaryButton, SecondaryButton, Title } from "../../src/components/ui";
 import { useAuth } from "../../src/context/AuthContext";
 import { useI18n } from "../../src/context/I18nContext";
 import { useLearning } from "../../src/context/LearningContext";
@@ -163,9 +163,14 @@ export default function ClassScreen() {
         <Body>{t("class.homeworkHint")}</Body>
         {!overview?.homework.length ? <Body>{t("class.hwEmpty")}</Body> : null}
         {overview?.homework.map((item) => (
-          <Body key={item.id}>
-            {item.title} · {t(item.status === "done" ? "class.hwDone" : item.status === "in_progress" ? "class.hwDoing" : "class.hwAssigned")}
-          </Body>
+          <Card key={item.id} style={{ padding: 12 }}>
+            <Body>
+              {item.title} · {t(item.status === "done" ? "class.hwDone" : item.status === "in_progress" ? "class.hwDoing" : "class.hwAssigned")}
+            </Body>
+            {item.hasClip ? (
+              <Chip label={t("clips.badge")} selected={false} onPress={() => router.push(`/learning/topic/${item.id}`)} />
+            ) : null}
+          </Card>
         ))}
       </Card>
 

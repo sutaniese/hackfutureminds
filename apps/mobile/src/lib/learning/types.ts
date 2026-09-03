@@ -1,3 +1,5 @@
+import type { LiveClipScript } from "@pathwise/shared";
+
 /**
  * Учебное ядро платформы: предметы → темы → задания.
  *
@@ -87,6 +89,8 @@ export type Topic = {
   custom?: boolean;
   /** Автор темы (учитель) — для панели учителя. */
   author?: string;
+  /** Живой клип (JSON-сцены), без видеофайла. */
+  clipScript?: LiveClipScript | null;
 };
 
 export type Subject = {
