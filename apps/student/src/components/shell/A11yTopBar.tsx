@@ -48,8 +48,13 @@ export function A11yTopBar() {
     const next = !voice;
     setVoice(next);
     try {
-      if (next) localStorage.setItem(LS_VOICE, "1");
-      else localStorage.removeItem(LS_VOICE);
+      if (next) {
+        localStorage.setItem(LS_VOICE, "1");
+        localStorage.setItem("ten-voice-control", "1");
+      } else {
+        localStorage.removeItem(LS_VOICE);
+        localStorage.removeItem("ten-voice-control");
+      }
       window.setTimeout(() => {
         window.dispatchEvent(new Event("pathwise:voice-toggle"));
       }, 0);

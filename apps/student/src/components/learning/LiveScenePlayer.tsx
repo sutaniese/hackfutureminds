@@ -12,6 +12,7 @@ import { AnswerField } from "@/components/learning/AnswerField";
 import { isAnswerCorrect, type Task } from "@/lib/learning/types";
 import { recordClipEvent } from "@/lib/learning/remote";
 import { isSpeechSupported, speakText, stopSpeaking } from "@/lib/speech";
+import { VOICE_CONTROL_EVENT, type VoiceUiEvent } from "@/lib/voice/bus";
 
 function taskFromScript(script: LiveClipScript, topicId: string): Task {
   return {
@@ -260,6 +261,18 @@ export function LiveScenePlayer({
       fire("start");
     }
   };
+
+  useEffect(() => {
+    const onVoice = (event: Event) => {
+      const detail = (event as CustomEvent<VoiceUiEvent>).detail;
+      if (!detail || detail.type !== "clip") return;
+      if (detail.verb === "play") start();
+      if (detail.verb === "pause") pause();
+      if (detail.verb === "replay") replay();
+    };
+    window.addEventListener(VOICE_CONTROL_EVENT, onVoice);
+    return () => window.removeEventListener(VOICE_CONTROL_EVENT, onVoice);
+  });
 
   const accent = CLIP_STAGE.purple;
   const shellClass = preview

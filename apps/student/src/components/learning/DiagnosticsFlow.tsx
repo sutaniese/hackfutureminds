@@ -32,6 +32,7 @@ import { localizeTopic } from "@/lib/learning/kk-overlay";
 import { useI18n } from "@/i18n/I18nProvider";
 import { AnswerField } from "./AnswerField";
 import { DifficultyBadge, Pill, ProgressBar, StatTile } from "./LearningUI";
+import { VOICE_CONTROL_EVENT, type VoiceUiEvent } from "@/lib/voice/bus";
 
 const GRADES: Grade[] = [7, 8, 9, 10, 11, 12];
 const MINUTES_OPTIONS = [15, 30, 45, 60];
@@ -184,15 +185,17 @@ export function DiagnosticsFlow() {
     setGoals((prev) => (prev.includes(goal) ? prev.filter((item) => item !== goal) : [...prev, goal]));
   }, []);
 
-  const startTest = useCallback(() => {
+  const startTest = useCallback((nextSubjectId?: string) => {
+    const subject = nextSubjectId || subjectId;
+    if (nextSubjectId) setSubjectId(nextSubjectId);
     const allTopics = readAllTopics().map((topic) => localizeTopic(topic, locale === "kk" ? "kk" : "ru"));
-    const nextPool = diagnosticPool(allTopics, subjectId, grade);
+    const nextPool = diagnosticPool(allTopics, subject, grade);
     if (nextPool.length === 0) return;
 
     const nextGoals = sanitizeGoalsForGrade(goals.length > 0 ? goals : ["school"], grade);
     writeLearningProfile({
       grade,
-      subjectId,
+      subjectId: subject,
       goals: nextGoals,
       examDate: examDate || defaultExamDate(),
       minutesPerDay,
@@ -210,7 +213,7 @@ export function DiagnosticsFlow() {
       writeDraft({
         stage: "test",
         grade,
-        subjectId,
+        subjectId: subject,
         goals: nextGoals,
         examDate: examDate || defaultExamDate(),
         minutesPerDay,
@@ -220,6 +223,11 @@ export function DiagnosticsFlow() {
       });
     }
   }, [examDate, goals, grade, locale, minutesPerDay, setProfileCompletion, subjectId]);
+
+  useEffect(() => {
+    const subject = new URLSearchParams(window.location.search).get("subject");
+    if (subject) setSubjectId(subject);
+  }, []);
 
   const finish = useCallback(
     (finalRecords: DiagnosticRecord[]) => {
@@ -333,6 +341,17 @@ export function DiagnosticsFlow() {
       targetDifficulty: difficulty2,
     });
   }, [current, examDate, finish, goals, grade, minutesPerDay, pool, records, subjectId, submitWithValue, targetDifficulty]);
+
+  useEffect(() => {
+    const onVoice = (event: Event) => {
+      const detail = (event as CustomEvent<VoiceUiEvent>).detail;
+      if (!detail || detail.type !== "diagnostic") return;
+      if (detail.verb === "start") startTest(detail.subjectId);
+      if (detail.verb === "dont_know" || detail.verb === "skip") submitDontKnow();
+    };
+    window.addEventListener(VOICE_CONTROL_EVENT, onVoice);
+    return () => window.removeEventListener(VOICE_CONTROL_EVENT, onVoice);
+  }, [startTest, submitDontKnow]);
 
   /* ------------------------------ шаг 1: профиль ------------------------------ */
 
@@ -522,7 +541,7 @@ export function DiagnosticsFlow() {
                 >
                   {t("diag.back")}
                 </button>
-                <button type="button" onClick={startTest} className="pw-btn-primary text-sm">
+                <button type="button" onClick={() => startTest()} className="pw-btn-primary text-sm">
                   {t("diag.start")}
                 </button>
                 <p className="text-xs font-semibold text-pathwise-muted">

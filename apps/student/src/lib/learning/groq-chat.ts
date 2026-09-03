@@ -3,6 +3,10 @@ import { getGroqApiKey, listGroqChatModelCandidates } from "@/lib/groq-env";
 /**
  * Server-side chat completions for learning routes.
  * Returns structured results so callers can avoid silent mock fallbacks when AI is configured.
+ *
+ * Groq's current default chat model (`openai/gpt-oss-120b`) is a reasoning model:
+ * `max_tokens` is deprecated and often ignored, while reasoning consumes the
+ * default 1024 `max_completion_tokens` budget — leaving empty/truncated JSON.
  */
 
 const AI_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions";
@@ -14,18 +18,24 @@ export type GroqChatOptions = {
   maxTokens?: number;
   temperature?: number;
   timeoutMs?: number;
+  json?: boolean;
+  reasoningEffort?: "low" | "medium" | "high";
+  models?: string[];
 };
 
 export type GroqChatResult = {
   content: string | null;
   error?: string;
+  model?: string;
+  status?: number;
 };
 
 export function isGroqConfigured(): boolean {
   return Boolean(getGroqApiKey());
 }
 
-function modelCandidates(): string[] {
+function modelCandidates(override?: string[]): string[] {
+  if (override?.length) return override;
   return listGroqChatModelCandidates();
 }
 
@@ -67,6 +77,32 @@ export function normalizeGroqMessages(messages: GroqMessage[]): GroqMessage[] {
   return normalized;
 }
 
+function flattenContent(value: unknown): string {
+  if (typeof value === "string") return value.trim();
+  if (Array.isArray(value)) {
+    return value
+      .map((part) => {
+        if (typeof part === "string") return part;
+        if (part && typeof part === "object" && "text" in part) {
+          return String((part as { text?: unknown }).text ?? "");
+        }
+        return "";
+      })
+      .join("")
+      .trim();
+  }
+  return "";
+}
+
+export function extractGroqMessageText(message: unknown): string | null {
+  if (!message || typeof message !== "object") return null;
+  const row = message as Record<string, unknown>;
+  const content = flattenContent(row.content);
+  if (content) return content;
+  const reasoning = flattenContent(row.reasoning);
+  return reasoning || null;
+}
+
 async function requestChatCompletion(
   key: string,
   model: string,
@@ -74,6 +110,20 @@ async function requestChatCompletion(
   options: GroqChatOptions,
   signal: AbortSignal,
 ): Promise<GroqChatResult> {
+  const body: Record<string, unknown> = {
+    model,
+    max_completion_tokens: options.maxTokens ?? 700,
+    temperature: options.temperature ?? 0.4,
+    messages,
+    include_reasoning: false,
+  };
+  if (options.json) {
+    body.response_format = { type: "json_object" };
+  }
+  if (options.reasoningEffort) {
+    body.reasoning_effort = options.reasoningEffort;
+  }
+
   const response = await fetch(AI_CHAT_URL, {
     method: "POST",
     signal,
@@ -81,12 +131,7 @@ async function requestChatCompletion(
       "content-type": "application/json",
       authorization: `Bearer ${key}`,
     },
-    body: JSON.stringify({
-      model,
-      max_tokens: options.maxTokens ?? 700,
-      temperature: options.temperature ?? 0.4,
-      messages,
-    }),
+    body: JSON.stringify(body),
   });
 
   const rawBody = await response.text();
@@ -95,22 +140,22 @@ async function requestChatCompletion(
     const error = detail
       ? `AI request failed (${response.status}): ${detail}`
       : `AI request failed (${response.status}).`;
-    return { content: null, error };
+    return { content: null, error, status: response.status, model };
   }
 
-  let data: { choices?: { message?: { content?: string } }[] };
+  let data: { choices?: { message?: unknown }[] };
   try {
-    data = JSON.parse(rawBody) as { choices?: { message?: { content?: string } }[] };
+    data = JSON.parse(rawBody) as { choices?: { message?: unknown }[] };
   } catch {
-    return { content: null, error: "AI returned an unreadable response." };
+    return { content: null, error: "AI returned an unreadable response.", status: response.status, model };
   }
 
-  const text = data.choices?.[0]?.message?.content?.trim();
+  const text = extractGroqMessageText(data.choices?.[0]?.message);
   if (!text) {
-    return { content: null, error: "AI returned an empty response." };
+    return { content: null, error: "AI returned an empty response.", status: response.status, model };
   }
 
-  return { content: text };
+  return { content: text, model, status: response.status };
 }
 
 export async function groqChat(
@@ -128,12 +173,14 @@ export async function groqChat(
 
   try {
     let lastError: string | undefined;
-    const models = modelCandidates();
+    let lastStatus: number | undefined;
+    const models = modelCandidates(options.models);
     for (let index = 0; index < models.length; index += 1) {
       const model = models[index]!;
       const result = await requestChatCompletion(key, model, payload, options, controller.signal);
       if (result.content) return result;
       lastError = result.error;
+      lastStatus = result.status;
       const authFailure =
         result.error?.includes("(401)") ||
         result.error?.toLowerCase().includes("invalid_api_key");
@@ -144,7 +191,7 @@ export async function groqChat(
     }
 
     if (lastError) console.error("[ai-chat]", lastError);
-    return { content: null, error: lastError ?? "AI request failed." };
+    return { content: null, error: lastError ?? "AI request failed.", status: lastStatus };
   } catch (error) {
     const message =
       error instanceof Error && error.name === "AbortError"
@@ -159,15 +206,31 @@ export async function groqChat(
   }
 }
 
+function recoverJsonText(raw: string): string {
+  let s = raw.trim();
+  if (s.startsWith("```")) {
+    s = s.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "");
+  }
+  s = s.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
+  const first = s.indexOf("{");
+  const last = s.lastIndexOf("}");
+  if (first < 0 || last <= first) return "";
+  return s.slice(first, last + 1);
+}
+
 /** Достаёт первый JSON-объект из ответа модели (модель любит добавлять текст вокруг). */
 export function extractJsonObject<T>(raw: string | null | undefined): T | null {
   if (!raw) return null;
-  const first = raw.indexOf("{");
-  const last = raw.lastIndexOf("}");
-  if (first < 0 || last <= first) return null;
+  const slice = recoverJsonText(raw);
+  if (!slice) return null;
   try {
-    return JSON.parse(raw.slice(first, last + 1)) as T;
+    return JSON.parse(slice) as T;
   } catch {
-    return null;
+    try {
+      const relaxed = slice.replace(/,\s*([}\]])/g, "$1");
+      return JSON.parse(relaxed) as T;
+    } catch {
+      return null;
+    }
   }
 }

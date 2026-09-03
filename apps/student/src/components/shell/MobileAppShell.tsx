@@ -1,7 +1,6 @@
 "use client";
 
 import { TenWordmark } from "@/components/brand/TenWordmark";
-import { VoiceAssistant } from "@/components/accessibility/VoiceAssistant";
 import { BadgeToast } from "@/components/gamification/BadgeToast";
 import { LevelUpModal } from "@/components/gamification/LevelUpModal";
 import { XPBar } from "@/components/gamification/XPBar";
@@ -65,7 +64,6 @@ export function MobileAppShell({ children }: { children: React.ReactNode }) {
         </div>
       </footer>
       {showStudentNav && !hideBottomNav ? <BottomNav /> : null}
-      <VoiceAssistant />
       <BadgeToast />
       <LevelUpModal />
     </div>

@@ -14,6 +14,7 @@ type TutorRequest = {
   grade?: number;
   theory?: string[];
   history?: TutorMessage[];
+  spoken?: boolean;
 };
 
 type TutorResponse = {
@@ -90,6 +91,11 @@ export async function POST(request: Request) {
     return NextResponse.json(localAnswer(body));
   }
 
+  const spoken = Boolean(body.spoken);
+  const system = spoken
+    ? `${SYSTEM_PROMPT} Отвечай коротко, 2–4 предложения — ответ будут произносить вслух.`
+    : SYSTEM_PROMPT;
+
   try {
     const context = [
       `Предмет: ${body.subjectTitle ?? "не указан"}`,
@@ -108,12 +114,12 @@ export async function POST(request: Request) {
       [
         {
           role: "system",
-          content: `${SYSTEM_PROMPT}\n\n${context}`,
+          content: `${system}\n\n${context}`,
         },
         ...history,
         { role: "user", content: body.question.trim() },
       ],
-      { maxTokens: 600, temperature: 0.5 },
+      { maxTokens: spoken ? 400 : 600, temperature: 0.4, reasoningEffort: "low" },
     );
 
     const answer = content?.replace(/[`*#]/g, "").trim();
