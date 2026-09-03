@@ -394,7 +394,13 @@ export async function publishTopic(user: AuthedUser, classId: string, topic: Top
   };
   let { error } = await supabase.from("custom_topics").upsert(payload);
   if (error && /live_clip/i.test(error.message)) {
-    const { live_clip: _omit, ...withoutColumn } = payload;
+    const withoutColumn = {
+      id: payload.id,
+      class_id: payload.class_id,
+      teacher_id: payload.teacher_id,
+      topic: payload.topic,
+      updated_at: payload.updated_at,
+    };
     ({ error } = await supabase.from("custom_topics").upsert(withoutColumn));
   }
   if (error) throw new HttpError(500, error.message);

@@ -44,6 +44,7 @@ export function LiveClipPlayer({
   const cancelRef = useRef<() => void>(() => undefined);
   const clipIdRef = useRef(clipId || `live-${topicId}`);
   const pausedRef = useRef(false);
+  const advancingRef = useRef(false);
 
   const scene = script.scenes[index];
   const quizTask = liveClipQuizTask(script, topicId) as Task;
@@ -81,6 +82,8 @@ export function LiveClipPlayer({
   }, [fire]);
 
   const goNext = useCallback(() => {
+    if (advancingRef.current) return;
+    advancingRef.current = true;
     setIndex((current) => {
       if (current >= script.scenes.length - 1) {
         finish();
@@ -88,6 +91,9 @@ export function LiveClipPlayer({
       }
       return current + 1;
     });
+    window.setTimeout(() => {
+      advancingRef.current = false;
+    }, 80);
   }, [finish, script.scenes.length]);
 
   useEffect(() => {
