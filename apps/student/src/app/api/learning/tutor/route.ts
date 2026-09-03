@@ -93,11 +93,8 @@ export async function POST(request: Request) {
 
   const spoken = Boolean(body.spoken);
   const system = spoken
-    ? [
-        "Ты — AI-репетитор teñ. Отвечай коротко, 2–4 предложения, без markdown — ответ будут произносить вслух.",
-        "Опирайся на конспект темы. Если вопроса нет в конспекте — скажи об этом честно.",
-      ].join(" ")
-    : SYSTEM_PROMPT.join(" ");
+    ? `${SYSTEM_PROMPT} Отвечай коротко, 2–4 предложения — ответ будут произносить вслух.`
+    : SYSTEM_PROMPT;
 
   try {
     const context = [

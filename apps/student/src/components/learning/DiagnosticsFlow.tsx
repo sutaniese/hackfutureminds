@@ -541,7 +541,7 @@ export function DiagnosticsFlow() {
                 >
                   {t("diag.back")}
                 </button>
-                <button type="button" onClick={startTest} className="pw-btn-primary text-sm">
+                <button type="button" onClick={() => startTest()} className="pw-btn-primary text-sm">
                   {t("diag.start")}
                 </button>
                 <p className="text-xs font-semibold text-pathwise-muted">
