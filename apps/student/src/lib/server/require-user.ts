@@ -1,5 +1,5 @@
 import { isUserRole, type UserRole } from "@/lib/site-nav";
-import { createServerSupabase } from "@/lib/supabase/server";
+import { createServerSupabase, readRequestAccessToken } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 export type AuthedUser = {
@@ -25,8 +25,9 @@ function jsonError(status: number, message: string): Response {
 }
 
 /**
- * Resolve the signed-in user from cookies and the RLS-protected profiles table.
- * Role is never read from user_metadata.
+ * Resolve the signed-in user from cookies OR `Authorization: Bearer <jwt>`
+ * (Expo). Role is never read from user_metadata — only `profiles` (and the
+ * app_metadata mirror written by the database trigger).
  */
 export async function requireUser(): Promise<AuthedUser> {
   if (!isSupabaseConfigured()) {
@@ -35,13 +36,18 @@ export async function requireUser(): Promise<AuthedUser> {
   const supabase = await createServerSupabase();
   if (!supabase) throw new HttpError(503, "Supabase is not configured on this server.");
 
-  const { data, error } = await supabase.auth.getClaims();
+  const bearer = await readRequestAccessToken();
+  const { data, error } = bearer
+    ? await supabase.auth.getClaims(bearer)
+    : await supabase.auth.getClaims();
   let userId = data?.claims?.sub ? String(data.claims.sub) : "";
   let emailFromClaims =
     typeof data?.claims?.email === "string" ? data.claims.email : "";
 
   if (error || !userId) {
-    const { data: userData } = await supabase.auth.getUser();
+    const { data: userData } = bearer
+      ? await supabase.auth.getUser(bearer)
+      : await supabase.auth.getUser();
     if (!userData.user) {
       throw new HttpError(401, "Войдите в аккаунт.");
     }
