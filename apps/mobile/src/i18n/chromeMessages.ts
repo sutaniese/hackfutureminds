@@ -821,6 +821,7 @@ export const CHROME_MESSAGES: Record<string, Record<Locale, string>> = {
   "builder.clipReady": TR("Клип готов — {{n}} сцен, около {{sec}} с.", "Clip ready — {{n}} scenes, about {{sec}}s.", "Клип дайын — {{n}} сахна, шамамен {{sec}} с."),
   "builder.clipNeedPrompt": TR("Напишите, что объяснить в клипе.", "Write what the clip should explain.", "Клипте не түсіндіру керектігін жазыңыз."),
   "builder.clipFail": TR("Не удалось собрать клип. Показан сценарий из вашего текста.", "Could not build the clip. Showing a script from your text.", "Клип жиналмады. Сіздің мәтіннен сценарий көрсетіледі."),
+  "builder.clipFallback": TR("Groq не собрал клип. Показан запасной сценарий из брифа — это не сгенерированный урок.", "Groq did not build the clip. Showing a backup script from the brief — this is not a generated lesson.", "Groq клип жинамады. Брифтен резерв сценарий көрсетілді — бұл генерацияланған сабақ емес."),
   "clips.tapToPlay": TR("Нажмите, чтобы смотреть", "Tap to play", "Көру үшін түртіңіз"),
   "clips.pause": TR("Пауза", "Pause", "Пауза"),
   "clips.replay": TR("Сначала", "Replay", "Басынан"),

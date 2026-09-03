@@ -5,7 +5,7 @@ import {
   LIVE_CLIP_MAX_SEC,
   LIVE_CLIP_MIN_SEC,
 } from "@pathwise/shared";
-import { parseLiveClipScript, parseLiveClipScriptFromModel } from "./live-script";
+import { parseLiveClipScript, parseLiveClipScriptFromModel, liveClipScriptOrFallback } from "./live-script";
 
 const TEACHER_TEXT =
   "Квадратное уравнение ax^2+bx+c=0. Дискриминант D=b^2-4ac. Если D>0 — два корня, D=0 — один корень, D<0 — нет действительных корней. Формула корней x=(-b±√D)/(2a).";
@@ -110,6 +110,112 @@ describe("deterministic fallback", () => {
     });
     expect(script.language).toBe("kk");
     expect(script.quiz.question.includes("тақырыбында") || script.scenes[0]?.narration.includes("тақырыбын")).toBe(true);
+  });
+});
+
+const DERIVATIVES_BRIEF =
+  "Объясни производную для 10 класса. Начни с смысла: производная — скорость измене";
+
+function groqDerivativesPayload() {
+  return {
+    title: "Производная",
+    durationSec: 50,
+    language: "ru" as const,
+    scenes: [
+      {
+        id: "s1",
+        heading: "Скорость изменения",
+        body: "Производная показывает, как быстро меняется величина.",
+        narration:
+          "Производная — это скорость изменения функции. Если путь зависит от времени, производная даёт мгновенную скорость.",
+        visual: "diagram" as const,
+      },
+      {
+        id: "s2",
+        heading: "Предел",
+        formula: "f'(x)=lim_{h->0}(f(x+h)-f(x))/h",
+        narration:
+          "Строго: производная в точке — предел отношения приращения функции к приращению аргумента, когда шаг стремится к нулю.",
+        visual: "formula" as const,
+      },
+      {
+        id: "s3",
+        heading: "Степень и синус",
+        formula: "(x^n)'=n x^{n-1}; (sin x)'=cos x",
+        narration:
+          "Таблица: производная x в степени n равна n x в степени n минус один. Производная синуса — косинус.",
+        visual: "formula" as const,
+      },
+      {
+        id: "s4",
+        heading: "Пример",
+        formula: "f(x)=x^3-3x",
+        narration:
+          "Разберём f от x равно x куб минус три x. Производная: три x квадрат минус три. В точке один это ноль.",
+        visual: "bullets" as const,
+      },
+      {
+        id: "s5",
+        heading: "Вывод",
+        narration:
+          "Запомните: производная — скорость изменения, через предел. Считайте степень и синус по таблице, затем подставьте точку.",
+        visual: "bullets" as const,
+      },
+    ],
+    quiz: {
+      question: "Чему равна производная f(x)=x^3-3x?",
+      options: ["3x^2-3", "x^2-3", "3x^3-3"],
+      correctIndex: 0,
+      explanation: "Степень: (x^3)'=3x^2, константа даёт -3.",
+      skillId: "derivative",
+    },
+  };
+}
+
+describe("Groq JSON is the happy path", () => {
+  it("accepts a Groq-shaped derivatives payload without echoing the brief as a heading", () => {
+    const parsed = parseLiveClipScriptFromModel(JSON.stringify(groqDerivativesPayload()), {
+      language: "ru",
+      skillId: "derivative",
+      brief: DERIVATIVES_BRIEF,
+    });
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    const headings = parsed.script.scenes.map((scene) => scene.heading.toLowerCase());
+    expect(headings.some((heading) => heading.includes("объясни производную"))).toBe(false);
+    expect(parsed.script.quiz.question.includes("Объясни производную")).toBe(false);
+    expect(parsed.script.scenes.some((scene) => /скорост/i.test(scene.heading + scene.narration))).toBe(true);
+    expect(parsed.script.scenes.some((scene) => /предел|lim/i.test(scene.heading + (scene.formula ?? "") + scene.narration))).toBe(true);
+    expect(parsed.script.scenes.some((scene) => /sin|синус/i.test(`${scene.formula ?? ""} ${scene.narration}`))).toBe(true);
+    expect(parsed.script.scenes.some((scene) => /x\^3|x³/.test(`${scene.formula ?? ""} ${scene.narration}`))).toBe(true);
+  });
+
+  it("does not return the deterministic template when Groq JSON is valid", () => {
+    const result = liveClipScriptOrFallback(JSON.stringify(groqDerivativesPayload()), {
+      title: DERIVATIVES_BRIEF,
+      prompt: DERIVATIVES_BRIEF,
+      language: "ru",
+      skillId: "derivative",
+    });
+    expect(result.source).toBe("ai");
+    expect(result.script.quiz.options).not.toContain("Другое правило из соседней темы");
+    expect(result.script.quiz.options).not.toContain("Случайный факт без связи с условием");
+    const fallback = fallbackLiveClipScript({
+      title: DERIVATIVES_BRIEF,
+      prompt: DERIVATIVES_BRIEF,
+      language: "ru",
+    });
+    expect(fallback.quiz.options).toContain("Другое правило из соседней темы");
+    expect(result.script.quiz.question).not.toBe(fallback.quiz.question);
+  });
+
+  it("coerces string correctIndex and extra prose wrapping", () => {
+    const wrapped = `Вот клип:\n${JSON.stringify({
+      ...groqDerivativesPayload(),
+      quiz: { ...groqDerivativesPayload().quiz, correctIndex: "0" },
+    })}`;
+    const parsed = parseLiveClipScriptFromModel(wrapped, { language: "ru", brief: DERIVATIVES_BRIEF });
+    expect(parsed.ok).toBe(true);
   });
 });
 

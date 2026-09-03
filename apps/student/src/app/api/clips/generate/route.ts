@@ -1,12 +1,13 @@
-import { clipPublicPath, fallbackLiveClipScript, videoClipFor } from "@pathwise/shared";
+import { clipPublicPath, videoClipFor } from "@pathwise/shared";
 import { groqChat, isGroqConfigured } from "@/lib/learning/groq-chat";
 import { parseBeatsFromModel, fallbackBeats, type LearningClip } from "@/lib/learning/clips/types";
-import { parseLiveClipScriptFromModel } from "@/lib/learning/clips/live-script";
+import { generateLiveClipScript, teacherFallbackLine } from "@/lib/learning/clips/generate-live-script";
 import { bakedClipFor, localClipForTopic } from "@/lib/learning/clips";
 import { BASE_TOPICS, findTopic } from "@/lib/learning/catalog";
 import { localizeTopic } from "@/lib/learning/kk-overlay";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -41,9 +42,13 @@ function teacherPrompt(body: GenerateBody, language: "ru" | "kk"): {
 } {
   const topic = body.topicId ? findTopic(BASE_TOPICS, body.topicId) : null;
   const localized = topic ? localizeTopic(topic, language) : null;
-  const title = (body.title || localized?.title || "").trim();
-  const prompt = (body.prompt || localized?.theory.join(" ") || title).trim();
-  const skillId = (body.skillId || localized?.skills[0] || title).trim();
+  const rawTitle = (body.title || localized?.title || "").trim();
+  const prompt = (body.prompt || localized?.theory.join(" ") || rawTitle).trim();
+  const skillId = (body.skillId || localized?.skills[0] || rawTitle).trim();
+  const titleLooksLikeBrief = rawTitle.length > 48 && prompt.startsWith(rawTitle.slice(0, 40));
+  const title = titleLooksLikeBrief
+    ? localized?.title || (language === "kk" ? "Тақырып" : "Тема")
+    : rawTitle || localized?.title || (language === "kk" ? "Тақырып" : "Тема");
   return {
     title: title || (language === "kk" ? "Тақырып" : "Тема"),
     prompt: prompt || title,
@@ -53,69 +58,20 @@ function teacherPrompt(body: GenerateBody, language: "ru" | "kk"): {
   };
 }
 
-function systemPrompt(language: "ru" | "kk"): string {
-  const langName = language === "kk" ? "қазақ тілінде" : "на русском языке";
-  return `Ты режиссёр 40–60-секундного учебного клипа. Ответ — только JSON, без markdown.
-Язык всех строк: ${langName}.
-Схема:
-{"title":"string","durationSec":48,"language":"${language}","scenes":[{"id":"s1","heading":"string","body":"string?","formula":"string?","narration":"string","visual":"formula"|"bullets"|"diagram"|"compare"}],"quiz":{"question":"string","options":["a","b","c"],"correctIndex":0,"explanation":"string","skillId":"string"}}
-Правила:
-- 3–6 сцен, не больше 6.
-- Суммарно 120–140 слов narration, чтобы звучание заняло 40–60 секунд.
-- formulas — обычный текст, безопасный для KaTeX (без $ и без \\n внутри формулы).
-- quiz.options ровно 3 строки, correctIndex 0|1|2.
-- Не выдумывай факты сверх текста учителя.`;
-}
-
 async function generateScript(body: GenerateBody, language: "ru" | "kk") {
   const seed = teacherPrompt(body, language);
-  const fallbackInput = {
+  const result = await generateLiveClipScript({
     title: seed.title,
     prompt: seed.prompt,
     language,
     skillId: seed.skillId,
     subject: seed.subject,
     grade: seed.grade,
+  });
+  return {
+    ...result,
+    notice: result.source === "fallback" ? teacherFallbackLine(result.reason, language) : null,
   };
-  const fallback = fallbackLiveClipScript(fallbackInput);
-
-  if (!isGroqConfigured()) {
-    return { script: fallback, source: "fallback" as const };
-  }
-
-  const messages = [
-    { role: "system" as const, content: systemPrompt(language) },
-    {
-      role: "user" as const,
-      content:
-        language === "kk"
-          ? `Тақырып: ${seed.title}\nПән: ${seed.subject ?? ""}\nСынып: ${seed.grade ?? ""}\nМұғалімнің мәтіні:\n${seed.prompt}`
-          : `Тема: ${seed.title}\nПредмет: ${seed.subject ?? ""}\nКласс: ${seed.grade ?? ""}\nТекст учителя:\n${seed.prompt}`,
-    },
-  ];
-
-  const first = await groqChat(messages, { maxTokens: 1100, temperature: 0.3 });
-  const parsed = parseLiveClipScriptFromModel(first.content);
-  if (parsed.ok) return { script: parsed.script, source: "ai" as const };
-
-  const retry = await groqChat(
-    [
-      ...messages,
-      { role: "assistant" as const, content: first.content || "" },
-      {
-        role: "user" as const,
-        content:
-          language === "kk"
-            ? "JSON схемасы бұзылған. Толық жарамды JSON ғана қайтар, басқа мәтінсіз."
-            : "JSON не подошёл к схеме. Верни только полный валидный JSON, без текста вокруг.",
-      },
-    ],
-    { maxTokens: 1100, temperature: 0.1 },
-  );
-  const second = parseLiveClipScriptFromModel(retry.content);
-  if (second.ok) return { script: second.script, source: "ai" as const };
-
-  return { script: fallback, source: "fallback" as const };
 }
 
 export async function GET(request: Request) {
@@ -136,8 +92,15 @@ export async function POST(request: Request) {
   const wantsScript = Boolean(body?.prompt || body?.title || body?.language);
 
   if (wantsScript || !body?.topicId) {
-    const { script, source } = await generateScript(body ?? {}, language);
-    return json({ script, source });
+    const generated = await generateScript(body ?? {}, language);
+    return json({
+      script: generated.script,
+      source: generated.source,
+      reason: generated.reason,
+      notice: generated.notice,
+      issues: generated.issues,
+      model: generated.model,
+    });
   }
 
   const topicId = body.topicId || "math-quadratic";
@@ -148,11 +111,16 @@ export async function POST(request: Request) {
   const topic = findTopic(BASE_TOPICS, topicId);
   const localized = topic ? localizeTopic(topic, locale) : null;
   if (!localized) {
-    const { script, source } = await generateScript(body, language);
-    return json({ script, source });
+    const generated = await generateScript(body, language);
+    return json({
+      script: generated.script,
+      source: generated.source,
+      reason: generated.reason,
+      notice: generated.notice,
+    });
   }
 
-  const { script, source: scriptSource } = await generateScript(
+  const generated = await generateScript(
     {
       ...body,
       title: localized.title,
@@ -165,8 +133,8 @@ export async function POST(request: Request) {
   );
 
   let beats = fallbackBeats(localized.title, localized.theory, locale);
-  let source: "ai" | "local" | "script" = scriptSource === "ai" ? "ai" : "local";
-  if (isGroqConfigured() && scriptSource !== "ai") {
+  let source: "ai" | "local" | "script" = generated.source === "ai" ? "ai" : "local";
+  if (isGroqConfigured() && generated.source !== "ai") {
     const result = await groqChat(
       [
         {
@@ -179,7 +147,7 @@ export async function POST(request: Request) {
           content: `Тема: ${localized.title}\nКонспект:\n${localized.theory.join("\n")}\nЯзык: ${locale}`,
         },
       ],
-      { maxTokens: 500, temperature: 0.4 },
+      { maxTokens: 800, temperature: 0.3, json: true, reasoningEffort: "low" },
     );
     if (result.content) {
       beats = parseBeatsFromModel(result.content, localized.title, localized.theory);
@@ -196,5 +164,11 @@ export async function POST(request: Request) {
     quizTaskId: localized.tasks[0]?.id ?? "",
     beats,
   };
-  return json({ clip, script, source: source === "local" ? scriptSource : source });
+  return json({
+    clip,
+    script: generated.script,
+    source: source === "local" ? generated.source : source,
+    reason: generated.reason,
+    notice: generated.notice,
+  });
 }

@@ -141,15 +141,24 @@ export function TopicBuilder() {
           skillId: skills.split(',')[0]?.trim() || title.trim() || prompt.slice(0, 40),
         }),
       })
-      const data = (await response.json()) as { script?: LiveClipScript; source?: string }
+      const data = (await response.json()) as {
+        script?: LiveClipScript
+        source?: string
+        reason?: string
+        notice?: string | null
+      }
       if (!data.script) {
         setClipNote(t('builder.clipFail'))
         return
       }
       setClipScript(data.script)
-      setClipNote(
-        t('builder.clipReady', { n: data.script.scenes.length, sec: data.script.durationSec }),
-      )
+      if (data.source === 'fallback') {
+        setClipNote(data.notice?.trim() || t('builder.clipFallback'))
+      } else {
+        setClipNote(
+          t('builder.clipReady', { n: data.script.scenes.length, sec: data.script.durationSec }),
+        )
+      }
     } catch {
       setClipNote(t('builder.clipFail'))
     } finally {

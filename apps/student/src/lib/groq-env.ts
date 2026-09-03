@@ -66,6 +66,15 @@ export function getGroqAudioModel(fallback: string): string {
   return m && m.length > 0 ? m : fallback;
 }
 
+export const DEFAULT_GROQ_STT_MODEL = "whisper-large-v3-turbo";
+export const DEFAULT_GROQ_TTS_MODEL = "canopylabs/orpheus-v1-english";
+export const DEFAULT_GROQ_TTS_VOICE = "hannah";
+
+export function getGroqTtsModel(): string {
+  const m = process.env.GROQ_TTS_MODEL?.trim();
+  return m && m.length > 0 ? m : DEFAULT_GROQ_TTS_MODEL;
+}
+
 export function listGroqChatModelCandidates(): string[] {
   const preferred = resolveGroqChatModel();
   return [...new Set([preferred, DEFAULT_AI_CHAT_MODEL, DEFAULT_AI_CHAT_MODEL_FAST, "qwen/qwen3.6-27b"])];

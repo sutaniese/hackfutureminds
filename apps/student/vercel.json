@@ -3,8 +3,17 @@
   "buildCommand": "npm run build",
   "installCommand": "cd ../.. && npm install --legacy-peer-deps",
   "functions": {
+    "src/app/api/clips/generate/route.ts": {
+      "maxDuration": 60
+    },
     "src/app/api/voice-transcribe/route.ts": {
       "maxDuration": 60
+    },
+    "src/app/api/coach/chat/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/voice/command/route.ts": {
+      "maxDuration": 30
     },
     "src/app/api/voice-command/route.ts": {
       "maxDuration": 30
