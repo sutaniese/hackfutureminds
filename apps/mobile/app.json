@@ -34,7 +34,16 @@
           "supportsBackgroundPlayback": false,
           "supportsPictureInPicture": false
         }
-      ]
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "teñ. attaches photos to your portfolio on this device.",
+          "cameraPermission": false
+        }
+      ],
+      "expo-document-picker",
+      "expo-file-system"
     ],
     "experiments": {
       "typedRoutes": false
