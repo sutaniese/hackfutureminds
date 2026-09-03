@@ -324,6 +324,7 @@ export async function getStudentClassOverview(user: AuthedUser): Promise<Student
       summary: topic.summary,
       author: topic.author,
       status: homeworkStatus(topic, state),
+      hasClip: Boolean(topic.clipScript?.scenes?.length),
     }));
 
   return {

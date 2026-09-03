@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
+import type { LiveClipScript } from "@pathwise/shared";
 import { Screen } from "../../src/components/Screen";
 import { Body, Card, Chip, Field, Kicker, PrimaryButton, Title } from "../../src/components/ui";
+import { LiveScenePlayer } from "../../src/components/LiveScenePlayer";
 import { useAuth } from "../../src/context/AuthContext";
 import { useI18n } from "../../src/context/I18nContext";
 import { apiGet, apiPost } from "../../src/lib/api";
@@ -37,6 +39,10 @@ export default function TeachingScreen() {
   const [optA, setOptA] = useState("");
   const [optB, setOptB] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
+  const [clipPrompt, setClipPrompt] = useState("");
+  const [clipLang, setClipLang] = useState<"ru" | "kk">("ru");
+  const [clipBusy, setClipBusy] = useState(false);
+  const [clipScript, setClipScript] = useState<LiveClipScript | null>(null);
 
   useEffect(() => {
     void apiGet<{ classes?: Array<{ id: string; name: string }>; students?: BoardStudent[]; heatmap?: HeatRow[] }>(
@@ -88,6 +94,7 @@ export default function TeachingScreen() {
       theory: [title.trim()],
       materials: [],
       custom: true,
+      clipScript,
       author: user?.email,
       tasks: [
         {
@@ -225,6 +232,41 @@ export default function TeachingScreen() {
           <Field label={t("builder.prompt")} value={prompt} onChangeText={setPrompt} />
           <Field label={t("builder.option", { n: 1 })} value={optA} onChangeText={setOptA} />
           <Field label={t("builder.option", { n: 2 })} value={optB} onChangeText={setOptB} />
+          <Field label={t("builder.clipWhat")} value={clipPrompt} onChangeText={setClipPrompt} placeholder={t("builder.clipWhatPh")} multiline />
+          <Body>{t("builder.clipLang")}</Body>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <Chip label="Русский" selected={clipLang === "ru"} onPress={() => setClipLang("ru")} />
+            <Chip label="Қазақша" selected={clipLang === "kk"} onPress={() => setClipLang("kk")} />
+          </View>
+          <PrimaryButton
+            label={clipBusy ? t("builder.clipBuilding") : clipScript ? t("builder.clipRegen") : t("builder.clipBuild")}
+            onPress={() => {
+              const text = clipPrompt.trim() || title.trim();
+              if (!text) {
+                setMsg(t("builder.clipNeedPrompt"));
+                return;
+              }
+              setClipBusy(true);
+              void apiPost<{ script?: LiveClipScript }>("/api/clips/generate", {
+                prompt: text,
+                language: clipLang,
+                subject: subjectId,
+                grade: 9,
+                title: title.trim() || text.slice(0, 80),
+              })
+                .then((data) => {
+                  if (data.script) {
+                    setClipScript(data.script);
+                    setMsg(t("builder.clipReady", { n: data.script.scenes.length, sec: data.script.durationSec }));
+                  } else {
+                    setMsg(t("builder.clipFail"));
+                  }
+                })
+                .catch(() => setMsg(t("builder.clipFail")))
+                .finally(() => setClipBusy(false));
+            }}
+          />
+          {clipScript ? <LiveScenePlayer script={clipScript} topicId="teacher-preview" /> : null}
           {msg ? <Body>{msg}</Body> : null}
           <PrimaryButton label={t("builder.publish")} onPress={() => void publish()} />
         </Card>

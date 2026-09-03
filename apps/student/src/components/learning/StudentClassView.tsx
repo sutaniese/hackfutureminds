@@ -218,7 +218,7 @@ export function StudentClassView() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <p className="text-sm font-black text-pathwise-ink">{item.title}</p>
-                    <ClipBadge topicId={item.id} />
+                    <ClipBadge topicId={item.id} live={Boolean(item.hasClip)} />
                   </div>
                   <Pill tone={statusTone(item.status)}>
                     {item.status === "done"

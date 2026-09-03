@@ -29,7 +29,11 @@ const quizSchema = z.object({
 
 export const liveClipScriptSchema = z.object({
   title: z.string().min(1).max(120),
-  durationSec: z.number().int().min(40).max(60),
+  durationSec: z.preprocess((value) => {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return 48;
+    return Math.min(60, Math.max(40, Math.round(n)));
+  }, z.number().int().min(40).max(60)),
   language: z.enum(["ru", "kk"]),
   scenes: z.array(sceneSchema).min(1).max(LIVE_CLIP_MAX_SCENES),
   quiz: quizSchema,

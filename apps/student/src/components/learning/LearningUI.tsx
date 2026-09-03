@@ -104,9 +104,9 @@ export function Pill({
   );
 }
 
-export function ClipBadge({ topicId }: { topicId: string }) {
+export function ClipBadge({ topicId, live }: { topicId: string; live?: boolean }) {
   const { t, locale } = useI18n();
-  if (!videoClipFor(topicId, locale === "kk" ? "kk" : "ru")) return null;
+  if (!live && !videoClipFor(topicId, locale === "kk" ? "kk" : "ru")) return null;
   return <Pill tone="accent">{t("clips.badge")}</Pill>;
 }
 

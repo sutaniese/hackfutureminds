@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useEventListener } from "expo";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { clipProductionUrl, videoClipFor } from "@pathwise/shared";
+import { LiveScenePlayer } from "./LiveScenePlayer";
 import { Body, Card, Chip, Field, Kicker, PrimaryButton, Title } from "./ui";
 import { useI18n } from "../context/I18nContext";
 import { useLearning } from "../context/LearningContext";
@@ -27,6 +28,28 @@ function resolveUri(topicId: string, clipLocale: "ru" | "kk", useBundled: boolea
 }
 
 export function TopicClipPlayer({
+  topicId,
+  onWrongAnswer,
+}: {
+  topicId: string;
+  onWrongAnswer?: () => void;
+}) {
+  const { topics } = useLearning();
+  const topic = findTopic(topics, topicId) ?? findTopic(BASE_TOPICS, topicId);
+  if (topic?.clipScript) {
+    return (
+      <LiveScenePlayer
+        script={topic.clipScript}
+        topicId={topicId}
+        quizTask={topic.tasks[0] ?? null}
+        onWrongAnswer={onWrongAnswer}
+      />
+    );
+  }
+  return <VideoTopicClipPlayer topicId={topicId} onWrongAnswer={onWrongAnswer} />;
+}
+
+function VideoTopicClipPlayer({
   topicId,
   onWrongAnswer,
 }: {

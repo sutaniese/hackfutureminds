@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import Link from 'next/link'
+import type { LiveClipScript } from '@pathwise/shared'
 import { useI18n } from '@/i18n/I18nProvider'
 import { localizedCount } from '@/lib/i18n-labels'
 import { SUBJECTS, subjectTitle } from '@/lib/learning/catalog'
@@ -12,6 +13,7 @@ import {
 import type { Difficulty, Grade, Task, Topic } from '@/lib/learning/types'
 import { isSupabaseConfigured } from '@/lib/supabase/env'
 import { deleteCustomTopicRemote, listClassesRemote, publishCustomTopic } from '@/lib/learning/remote'
+import { LiveScenePlayer } from '@/components/learning/LiveScenePlayer'
 
 const GRADES: Grade[] = [7, 8, 9, 10, 11, 12]
 
@@ -74,6 +76,11 @@ export function TopicBuilder() {
   const [classes, setClasses] = useState<Array<{ id: string; name: string; inviteCode: string }>>([])
   const [classId, setClassId] = useState('')
   const [publishing, setPublishing] = useState(false)
+  const [clipPrompt, setClipPrompt] = useState('')
+  const [clipLang, setClipLang] = useState<'ru' | 'kk'>('ru')
+  const [clipBusy, setClipBusy] = useState(false)
+  const [clipScript, setClipScript] = useState<LiveClipScript | null>(null)
+  const [clipNote, setClipNote] = useState<string | null>(null)
 
   useEffect(() => {
     const sync = () => setCustom(readCustomTopics())
@@ -108,7 +115,47 @@ export function TopicBuilder() {
     setTheory('')
     setGrades([9])
     setTasks([emptyTask(0)])
+    setClipPrompt('')
+    setClipScript(null)
+    setClipNote(null)
   }, [])
+
+  const buildClip = useCallback(async () => {
+    const prompt = clipPrompt.trim() || theory.trim() || summary.trim() || title.trim()
+    if (!prompt) {
+      setClipNote(t('builder.clipNeedPrompt'))
+      return
+    }
+    setClipBusy(true)
+    setClipNote(null)
+    try {
+      const response = await fetch('/api/clips/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          language: clipLang,
+          subject: subjectId,
+          grade: grades[0],
+          title: title.trim() || prompt.slice(0, 80),
+          skillId: skills.split(',')[0]?.trim() || title.trim() || prompt.slice(0, 40),
+        }),
+      })
+      const data = (await response.json()) as { script?: LiveClipScript; source?: string }
+      if (!data.script) {
+        setClipNote(t('builder.clipFail'))
+        return
+      }
+      setClipScript(data.script)
+      setClipNote(
+        t('builder.clipReady', { n: data.script.scenes.length, sec: data.script.durationSec }),
+      )
+    } catch {
+      setClipNote(t('builder.clipFail'))
+    } finally {
+      setClipBusy(false)
+    }
+  }, [clipLang, clipPrompt, grades, skills, subjectId, summary, t, theory, title])
 
   const onSubmit = useCallback(
     async (event: FormEvent) => {
@@ -167,6 +214,21 @@ export function TopicBuilder() {
         .map((item) => item.trim())
         .filter(Boolean)
 
+      if (clipScript?.quiz && !builtTasks.some((task) => task.prompt === clipScript.quiz.question)) {
+        builtTasks.push({
+          id: `${topicId}-clip-quiz`,
+          topicId,
+          type: 'single',
+          difficulty: 1,
+          skill: clipScript.quiz.skillId || skillList[0] || title.trim(),
+          prompt: clipScript.quiz.question,
+          options: [...clipScript.quiz.options],
+          answer: clipScript.quiz.correctIndex,
+          explanation: clipScript.quiz.explanation,
+          minutes: 1,
+        })
+      }
+
       const topic: Topic = {
         id: topicId,
         subjectId,
@@ -181,6 +243,7 @@ export function TopicBuilder() {
         materials: [],
         tasks: builtTasks,
         custom: true,
+        clipScript,
       }
 
       setPublishing(true)
@@ -197,7 +260,7 @@ export function TopicBuilder() {
         setPublishing(false)
       }
     },
-    [classId, grades, resetForm, skills, subjectId, summary, t, tasks, theory, title],
+    [classId, clipScript, grades, resetForm, skills, subjectId, summary, t, tasks, theory, title],
   )
 
   return (
@@ -325,6 +388,86 @@ export function TopicBuilder() {
               placeholder={'Первый абзац конспекта.\n\nВторой абзац конспекта.'}
               className="pw-input mt-2 w-full px-3 py-3 text-sm"
             />
+          </div>
+
+          <div className="space-y-4 rounded-2xl border border-dashed border-slate-300 bg-white p-4">
+            <div>
+              <h3 className="text-sm font-semibold text-pathwise-ink">{t('builder.clip')}</h3>
+              <p className="mt-1 text-xs text-pathwise-muted">{t('builder.clipHint')}</p>
+            </div>
+            <div>
+              <label htmlFor="builder-clip-prompt" className="text-sm font-semibold text-pathwise-ink">
+                {t('builder.clipWhat')}
+              </label>
+              <textarea
+                id="builder-clip-prompt"
+                value={clipPrompt}
+                onChange={(event) => setClipPrompt(event.target.value)}
+                rows={4}
+                placeholder={t('builder.clipWhatPh')}
+                className="pw-input mt-2 w-full px-3 py-3 text-sm"
+              />
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label htmlFor="builder-clip-lang" className="text-sm font-semibold text-pathwise-ink">
+                  {t('builder.clipLang')}
+                </label>
+                <select
+                  id="builder-clip-lang"
+                  value={clipLang}
+                  onChange={(event) => setClipLang(event.target.value === 'kk' ? 'kk' : 'ru')}
+                  className="pw-input mt-2 w-full px-3 py-3 text-sm"
+                >
+                  <option value="ru">Русский</option>
+                  <option value="kk">Қазақша</option>
+                </select>
+              </div>
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  disabled={clipBusy}
+                  onClick={() => void buildClip()}
+                  className="pw-btn-primary w-full text-sm disabled:opacity-50"
+                >
+                  {clipBusy ? t('builder.clipBuilding') : clipScript ? t('builder.clipRegen') : t('builder.clipBuild')}
+                </button>
+              </div>
+            </div>
+            {clipNote ? <p className="text-sm font-semibold text-pathwise-ink">{clipNote}</p> : null}
+            {clipScript ? (
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(240px,320px)]">
+                <div className="space-y-3">
+                  {clipScript.scenes.map((scene, index) => (
+                    <div key={scene.id}>
+                      <label htmlFor={`clip-narration-${scene.id}`} className="text-xs font-semibold text-pathwise-muted">
+                        {t('builder.clipNarration')} · {scene.heading}
+                      </label>
+                      <textarea
+                        id={`clip-narration-${scene.id}`}
+                        value={scene.narration}
+                        onChange={(event) => {
+                          const narration = event.target.value
+                          setClipScript((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  scenes: prev.scenes.map((item, itemIndex) =>
+                                    itemIndex === index ? { ...item, narration } : item,
+                                  ),
+                                }
+                              : prev,
+                          )
+                        }}
+                        rows={2}
+                        className="pw-input mt-1 w-full px-3 py-2.5 text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <LiveScenePlayer script={clipScript} topicId="teacher-preview" preview logEvents={false} />
+              </div>
+            ) : null}
           </div>
 
           <div className="space-y-4">
@@ -462,9 +605,16 @@ export function TopicBuilder() {
               <div key={topic.id} className="rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm font-bold text-pathwise-ink">{topic.title}</p>
-                  <span className="rounded-full bg-[#6C63FF]/10 px-2.5 py-1 text-[11px] font-bold text-[#554dd6]">
-                    {subjectTitle(topic.subjectId)}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {topic.clipScript ? (
+                      <span className="rounded-full bg-[#6C63FF] px-2.5 py-1 text-[11px] font-bold text-white">
+                        {t('clips.badge')}
+                      </span>
+                    ) : null}
+                    <span className="rounded-full bg-[#6C63FF]/10 px-2.5 py-1 text-[11px] font-bold text-[#554dd6]">
+                      {subjectTitle(topic.subjectId)}
+                    </span>
+                  </div>
                 </div>
                 <p className="mt-2 text-xs leading-5 text-pathwise-muted">{topic.summary}</p>
                 <p className="mt-2 text-xs font-semibold text-pathwise-muted">

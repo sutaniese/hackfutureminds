@@ -32,7 +32,7 @@ export default function TopicScreen() {
   const [chat, setChat] = useState<Array<{ role: "user" | "assistant"; text: string }>>([]);
   const [showClip, setShowClip] = useState(false);
   const clipLocale = locale === "kk" ? "kk" : "ru";
-  const hasClip = Boolean(videoClipFor(String(topicId), clipLocale));
+  const hasClip = Boolean(videoClipFor(String(topicId), clipLocale) || raw?.clipScript?.scenes?.length);
 
   if (!topic) {
     return (
