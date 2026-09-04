@@ -5,7 +5,7 @@ import { VoiceCoach } from "./VoiceCoach";
 import { VoiceControl } from "./VoiceControl";
 import { useI18n } from "@/i18n/I18nProvider";
 
-/** One docked sheet: mentor + hands-free control. Never two competing FABs. */
+/** One docked sheet: mentor + tap-to-talk control. Never two competing FABs. */
 export function VoiceCluster() {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
@@ -19,31 +19,31 @@ export function VoiceCluster() {
             <button
               type="button"
               onClick={() => setTab("coach")}
-              className={`min-h-12 flex-1 rounded-full text-sm font-bold ${tab === "coach" ? "bg-[#6C63FF] text-white" : "bg-slate-50"}`}
+              className={`min-h-11 flex-1 rounded-full text-sm font-bold ${tab === "coach" ? "bg-[#6C63FF] text-white" : "bg-slate-50"}`}
             >
               {t("voiceDock.coach")}
             </button>
             <button
               type="button"
               onClick={() => setTab("control")}
-              className={`min-h-12 flex-1 rounded-full text-sm font-bold ${tab === "control" ? "bg-[#0F766E] text-white" : "bg-slate-50"}`}
+              className={`min-h-11 flex-1 rounded-full text-sm font-bold ${tab === "control" ? "bg-[#0F766E] text-white" : "bg-slate-50"}`}
             >
               {t("voiceDock.control")}
             </button>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="inline-flex h-12 w-12 items-center justify-center rounded-full text-2xl font-bold"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full text-2xl font-bold"
               aria-label={t("voiceCoach.close")}
             >
               ×
             </button>
           </div>
           <div className={tab === "coach" ? "block" : "hidden"}>
-            <VoiceCoach embedded />
+            <VoiceCoach embedded active={tab === "coach"} />
           </div>
           <div className={tab === "control" ? "block" : "hidden"}>
-            <VoiceControl embedded />
+            <VoiceControl embedded active={tab === "control"} />
           </div>
         </div>
       ) : null}

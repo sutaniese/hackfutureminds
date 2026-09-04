@@ -9,6 +9,11 @@ export function canStartListening(phase: VoicePhase): boolean {
   return phase !== "speaking" && phase !== "processing";
 }
 
+/** Прервать stops TTS and returns idle — it must not start a new listen. */
+export function phaseAfterInterrupt(): VoicePhase {
+  return "idle";
+}
+
 export function nextToken(current: number): number {
   return current + 1;
 }

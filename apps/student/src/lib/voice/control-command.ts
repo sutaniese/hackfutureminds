@@ -165,3 +165,33 @@ export function parseVoiceControlCommand(raw: unknown): VoiceControlCommand | nu
   const parsed = voiceControlCommandSchema.safeParse(raw);
   return parsed.success ? parsed.data : null;
 }
+
+const NAV_PLAIN: Record<VoiceNavTarget, string> = {
+  home: "Открываю главную",
+  cabinet: "Открываю кабинет",
+  learning: "Открываю обучение",
+  diagnostics: "Открываю диагностику",
+  topic: "Открываю тему",
+  clips: "Открываю клипы",
+  class: "Открываю класс",
+  students: "Открываю учеников",
+  teacher_hub: "Открываю кабинет учителя",
+  mentor: "Открываю наставника",
+  universities: "Открываю вузы",
+  grants: "Открываю гранты",
+  onboarding: "Открываю анкету",
+  results: "Открываю результаты",
+  roadmap: "Открываю маршрут",
+  portfolio: "Открываю портфолио",
+  support: "Открываю поддержку",
+  accessibility: "Открываю доступность",
+};
+
+/** Plain-language line for the control tab (what the app will do). */
+export function commandPlainLanguage(command: VoiceControlCommand): string {
+  if (command.speak.trim()) return command.speak;
+  if (command.action === "navigate") return NAV_PLAIN[command.target];
+  if (command.action === "logout") return "Выхожу из аккаунта";
+  if (command.action === "back") return "Возвращаюсь назад";
+  return command.speak;
+}

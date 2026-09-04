@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseVoiceControlCommand, resolveVoicePath } from "./control-command";
+import { parseVoiceControlCommand, resolveVoicePath, commandPlainLanguage } from "./control-command";
 
 describe("voice control whitelist", () => {
   it("accepts a diagnostics start command and rejects unknown actions", () => {
@@ -33,5 +33,14 @@ describe("voice control whitelist", () => {
       expect(resolveVoicePath(students, { role: "student", grade: 11, userRole: "student" }).blocked).toBeTruthy();
       expect(resolveVoicePath(students, { role: "teacher", grade: 11, userRole: "teacher" }).path).toBe("/hub/uchenik");
     }
+  });
+
+  it("turns a learning navigate into plain language", () => {
+    const cmd = parseVoiceControlCommand({
+      action: "navigate",
+      target: "learning",
+      speak: "Открываю обучение",
+    });
+    expect(cmd && commandPlainLanguage(cmd)).toBe("Открываю обучение");
   });
 });
